@@ -1,7 +1,7 @@
 name: bookstar
 description: "BookStar - 독서 SNS 앱"
 publish_to: 'none'
-version: 1.0.6+100
+version: 1.0.7+100
 
 environment:
   sdk: '>=3.4.3 <4.0.0'
