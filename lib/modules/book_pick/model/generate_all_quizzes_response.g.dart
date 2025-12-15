@@ -25,6 +25,7 @@ Map<String, dynamic> _$GenerateAllQuizzesResponseToJson(
     };
 
 const _$GenerateAllQuizzesStatusEnumMap = {
+  GenerateAllQuizzesStatus.PENDING: 'PENDING',
   GenerateAllQuizzesStatus.PROCESSING: 'PROCESSING',
   GenerateAllQuizzesStatus.ALREADY_EXISTS: 'ALREADY_EXISTS',
 };

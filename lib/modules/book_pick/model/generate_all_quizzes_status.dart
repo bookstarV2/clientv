@@ -1,3 +1,1 @@
-enum GenerateAllQuizzesStatus{
-  PROCESSING, ALREADY_EXISTS
-}
+enum GenerateAllQuizzesStatus { PENDING, PROCESSING, ALREADY_EXISTS }
