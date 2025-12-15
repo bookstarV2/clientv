@@ -133,15 +133,15 @@ class CurrentChallengeViewModel extends _$CurrentChallengeViewModel {
   }
 
   Future<void> fetchAndSetChallenge(String bookId) async {
-    final repo = ref.read(readingChallengeRepositoryProvider);
+    // final repo = ref.read(readingChallengeRepositoryProvider);
     try {
-      final res = await repo.getChallengeByBookId(bookId);
-      final challengeDetail = res.data;
-      state = state.copyWith(
-        totalPages: challengeDetail.totalPages,
-        challengeId: int.tryParse(challengeDetail.challengeId),
-        lastReadPage: challengeDetail.lastReadPage,
-      );
+      // final res = await repo.getChallengeByBookId(bookId);
+      // final challengeDetail = res.data;
+      // state = state.copyWith(
+      //   totalPages: challengeDetail.totalPages,
+      //   challengeId: int.tryParse(challengeDetail.challengeId),
+      //   lastReadPage: challengeDetail.lastReadPage,
+      // );
     } catch (e) {
       // TODO: Handle error
       print('Failed to fetch challenge detail: $e');

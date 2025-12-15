@@ -7,7 +7,7 @@ part of 'search_book_view_model.dart';
 // **************************************************************************
 
 String _$searchBookViewModelHash() =>
-    r'3371a13544bef2031bcb0ed01c0e4eec663efad5';
+    r'd4d586afa631b9b9ba614466bead61337892d3d6';
 
 /// See also [SearchBookViewModel].
 @ProviderFor(SearchBookViewModel)

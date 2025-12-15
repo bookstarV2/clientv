@@ -99,12 +99,11 @@ class _ChallengeQuitBooksScreenState
             itemCount: state.challenges.length,
             itemBuilder: (context, index) {
               final challenge = state.challenges[index];
-              final book = challenge.book;
               return BookWithCheckbox(
-                thumbnailUrl: book.thumbnailUrl,
-                title: book.title,
-                author: book.author,
-                lastReadAt: challenge.lastReadAt?.toString() ?? '',
+                thumbnailUrl: challenge.bookImageUrl,
+                title: challenge.bookTitle,
+                author: challenge.bookAuthor,
+                lastReadAt: challenge.createdAt.toString(),
                 checked: state.checkedList[index],
                 onChanged: (v) {
                   ref

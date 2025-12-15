@@ -5,8 +5,12 @@ import 'package:bookstar/modules/book_log/view/screens/book_related_feed_screen.
 import 'package:bookstar/modules/book_pick/view/screens/book_pick_my_likes_screen.dart';
 import 'package:bookstar/modules/my_feed/view/screens/my_feed_feed_screen.dart';
 import 'package:bookstar/modules/my_feed/view/screens/my_feed_screen.dart';
+import 'package:bookstar/modules/reading_challenge/view/screens/reading_challenge_quiz_check_screen.dart';
+import 'package:bookstar/modules/reading_challenge/view/screens/reading_challenge_quiz_deep_time_screen.dart';
+import 'package:bookstar/modules/reading_challenge/view/screens/reading_challenge_quiz_screen.dart';
 import 'package:bookstar/modules/reading_challenge/view/screens/reading_challenge_search_new_my_likes_screen.dart';
 import 'package:bookstar/modules/reading_challenge/view/screens/reading_challenge_search_new_screen.dart';
+import 'package:bookstar/modules/reading_challenge/view/screens/reading_challenge_start_screen.dart';
 import 'package:bookstar/modules/reading_diary/model/diary_update_request.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
@@ -149,8 +153,66 @@ GoRouter router(Ref ref) {
             routes: [
               GoRoute(
                 path: '/reading-challenge',
-                builder: (context, state) => const ReadingChallengeScreen(),
+                builder: (context, state) {
+                  final extra = state.extra as Map<String, dynamic>?;
+                  final challengeId = extra?['challengeId'] as int? ?? -1;
+
+                  return ReadingChallengeScreen(challengeId: challengeId);
+                },
                 routes: [
+                  GoRoute(
+                    path: 'start/:challengeId',
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) {
+                      final challengeId =
+                          int.parse(state.pathParameters['challengeId']!);
+                      final extra = state.extra as Map<String, dynamic>?;
+                      final requiredRefresh =
+                          extra?['requiredRefresh'] as bool? ?? false;
+                      return ReadingChallengeStartScreen(
+                          challengeId: challengeId,
+                          requiredRefresh: requiredRefresh);
+                    },
+                  ),
+                  GoRoute(
+                    path: ':challengeId/quiz/:chapterId/check',
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) {
+                      final challengeId =
+                          int.parse(state.pathParameters['challengeId']!);
+                      final chapterId =
+                          int.parse(state.pathParameters['chapterId']!);
+
+                      return ReadingChallengeQuizCheckScreen(
+                          chapterId: chapterId, challengeId: challengeId);
+                    },
+                  ),
+                  GoRoute(
+                    path: ':challengeId/quiz/:chapterId/deep-time',
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) {
+                      final challengeId =
+                          int.parse(state.pathParameters['challengeId']!);
+                      final chapterId =
+                          int.parse(state.pathParameters['chapterId']!);
+
+                      return ReadingChallengeQuizDeepTimeScreen(
+                          chapterId: chapterId, challengeId: challengeId);
+                    },
+                  ),
+                  GoRoute(
+                    path: ':challengeId/quiz/:chapterId',
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) {
+                      final challengeId =
+                          int.parse(state.pathParameters['challengeId']!);
+                      final chapterId =
+                          int.parse(state.pathParameters['chapterId']!);
+
+                      return ReadingChallengeQuizScreen(
+                          chapterId: chapterId, challengeId: challengeId);
+                    },
+                  ),
                   GoRoute(
                     path: 'detail/:bookId',
                     parentNavigatorKey: rootNavigatorKey,
@@ -314,10 +376,12 @@ GoRouter router(Ref ref) {
                     path: '/update/:diaryId',
                     parentNavigatorKey: rootNavigatorKey,
                     builder: (context, state) {
-                      final diaryId = int.parse(state.pathParameters['diaryId']!);
+                      final diaryId =
+                          int.parse(state.pathParameters['diaryId']!);
                       final extra = state.extra as Map<String, dynamic>;
                       final request = extra["request"] as DiaryUpdateRequest;
-                      return BookLogUpdateScreen(diaryId: diaryId, request: request);
+                      return BookLogUpdateScreen(
+                          diaryId: diaryId, request: request);
                     },
                   ),
                 ],

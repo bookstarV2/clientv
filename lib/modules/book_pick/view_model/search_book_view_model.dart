@@ -29,6 +29,7 @@ class SearchBookViewModel extends _$SearchBookViewModel {
     final initStart = 1;
     final response =
         await searchBookRepository.searchBooks(query, start: initStart);
+
     state = AsyncValue.data(prev.copyWith(
       books: response.data.data,
       hasNext: response.data.hasNext,
@@ -62,5 +63,17 @@ class SearchBookViewModel extends _$SearchBookViewModel {
         searchHistories: prev.searchHistories.where((e) => e != query).toList(),
       ));
     }
+  }
+
+  Future<(int, bool, bool)> createChallenges(int bookId) async {
+    // 책의 모든 챕터 퀴즈 일괄 생성(비동기)
+    // await searchBookRepository.generateAllQuizzes(bookId);
+    // 목차 기반 챌린지 생성
+    final response = await searchBookRepository.createChallenges(bookId);
+    return (
+      response.data.challengeId,
+      response.data.alreadyExists,
+      response.data.hasChapter
+    );
   }
 }

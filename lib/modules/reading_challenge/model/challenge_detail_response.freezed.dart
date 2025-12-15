@@ -14,9 +14,8 @@ T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$ChallengeDetailResponse {
-  int get totalPages;
-  String get challengeId;
-  int get lastReadPage;
+  ChallengeDetailBookOverview get bookOverview;
+  List<ChallengeDetailChapter> get chapters;
 
   /// Create a copy of ChallengeDetailResponse
   /// with the given fields replaced by the non-null parameter values.
@@ -34,22 +33,19 @@ mixin _$ChallengeDetailResponse {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is ChallengeDetailResponse &&
-            (identical(other.totalPages, totalPages) ||
-                other.totalPages == totalPages) &&
-            (identical(other.challengeId, challengeId) ||
-                other.challengeId == challengeId) &&
-            (identical(other.lastReadPage, lastReadPage) ||
-                other.lastReadPage == lastReadPage));
+            (identical(other.bookOverview, bookOverview) ||
+                other.bookOverview == bookOverview) &&
+            const DeepCollectionEquality().equals(other.chapters, chapters));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, totalPages, challengeId, lastReadPage);
+  int get hashCode => Object.hash(
+      runtimeType, bookOverview, const DeepCollectionEquality().hash(chapters));
 
   @override
   String toString() {
-    return 'ChallengeDetailResponse(totalPages: $totalPages, challengeId: $challengeId, lastReadPage: $lastReadPage)';
+    return 'ChallengeDetailResponse(bookOverview: $bookOverview, chapters: $chapters)';
   }
 }
 
@@ -59,7 +55,11 @@ abstract mixin class $ChallengeDetailResponseCopyWith<$Res> {
           $Res Function(ChallengeDetailResponse) _then) =
       _$ChallengeDetailResponseCopyWithImpl;
   @useResult
-  $Res call({int totalPages, String challengeId, int lastReadPage});
+  $Res call(
+      {ChallengeDetailBookOverview bookOverview,
+      List<ChallengeDetailChapter> chapters});
+
+  $ChallengeDetailBookOverviewCopyWith<$Res> get bookOverview;
 }
 
 /// @nodoc
@@ -75,24 +75,30 @@ class _$ChallengeDetailResponseCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? totalPages = null,
-    Object? challengeId = null,
-    Object? lastReadPage = null,
+    Object? bookOverview = null,
+    Object? chapters = null,
   }) {
     return _then(_self.copyWith(
-      totalPages: null == totalPages
-          ? _self.totalPages
-          : totalPages // ignore: cast_nullable_to_non_nullable
-              as int,
-      challengeId: null == challengeId
-          ? _self.challengeId
-          : challengeId // ignore: cast_nullable_to_non_nullable
-              as String,
-      lastReadPage: null == lastReadPage
-          ? _self.lastReadPage
-          : lastReadPage // ignore: cast_nullable_to_non_nullable
-              as int,
+      bookOverview: null == bookOverview
+          ? _self.bookOverview
+          : bookOverview // ignore: cast_nullable_to_non_nullable
+              as ChallengeDetailBookOverview,
+      chapters: null == chapters
+          ? _self.chapters
+          : chapters // ignore: cast_nullable_to_non_nullable
+              as List<ChallengeDetailChapter>,
     ));
+  }
+
+  /// Create a copy of ChallengeDetailResponse
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $ChallengeDetailBookOverviewCopyWith<$Res> get bookOverview {
+    return $ChallengeDetailBookOverviewCopyWith<$Res>(_self.bookOverview,
+        (value) {
+      return _then(_self.copyWith(bookOverview: value));
+    });
   }
 }
 
@@ -189,15 +195,15 @@ extension ChallengeDetailResponsePatterns on ChallengeDetailResponse {
 
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
-    TResult Function(int totalPages, String challengeId, int lastReadPage)?
+    TResult Function(ChallengeDetailBookOverview bookOverview,
+            List<ChallengeDetailChapter> chapters)?
         $default, {
     required TResult orElse(),
   }) {
     final _that = this;
     switch (_that) {
       case _ChallengeDetailResponse() when $default != null:
-        return $default(
-            _that.totalPages, _that.challengeId, _that.lastReadPage);
+        return $default(_that.bookOverview, _that.chapters);
       case _:
         return orElse();
     }
@@ -218,14 +224,14 @@ extension ChallengeDetailResponsePatterns on ChallengeDetailResponse {
 
   @optionalTypeArgs
   TResult when<TResult extends Object?>(
-    TResult Function(int totalPages, String challengeId, int lastReadPage)
+    TResult Function(ChallengeDetailBookOverview bookOverview,
+            List<ChallengeDetailChapter> chapters)
         $default,
   ) {
     final _that = this;
     switch (_that) {
       case _ChallengeDetailResponse():
-        return $default(
-            _that.totalPages, _that.challengeId, _that.lastReadPage);
+        return $default(_that.bookOverview, _that.chapters);
       case _:
         throw StateError('Unexpected subclass');
     }
@@ -245,14 +251,14 @@ extension ChallengeDetailResponsePatterns on ChallengeDetailResponse {
 
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>(
-    TResult? Function(int totalPages, String challengeId, int lastReadPage)?
+    TResult? Function(ChallengeDetailBookOverview bookOverview,
+            List<ChallengeDetailChapter> chapters)?
         $default,
   ) {
     final _that = this;
     switch (_that) {
       case _ChallengeDetailResponse() when $default != null:
-        return $default(
-            _that.totalPages, _that.challengeId, _that.lastReadPage);
+        return $default(_that.bookOverview, _that.chapters);
       case _:
         return null;
     }
@@ -263,18 +269,23 @@ extension ChallengeDetailResponsePatterns on ChallengeDetailResponse {
 @JsonSerializable()
 class _ChallengeDetailResponse implements ChallengeDetailResponse {
   const _ChallengeDetailResponse(
-      {required this.totalPages,
-      required this.challengeId,
-      required this.lastReadPage});
+      {this.bookOverview = const ChallengeDetailBookOverview(),
+      final List<ChallengeDetailChapter> chapters = const []})
+      : _chapters = chapters;
   factory _ChallengeDetailResponse.fromJson(Map<String, dynamic> json) =>
       _$ChallengeDetailResponseFromJson(json);
 
   @override
-  final int totalPages;
+  @JsonKey()
+  final ChallengeDetailBookOverview bookOverview;
+  final List<ChallengeDetailChapter> _chapters;
   @override
-  final String challengeId;
-  @override
-  final int lastReadPage;
+  @JsonKey()
+  List<ChallengeDetailChapter> get chapters {
+    if (_chapters is EqualUnmodifiableListView) return _chapters;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_chapters);
+  }
 
   /// Create a copy of ChallengeDetailResponse
   /// with the given fields replaced by the non-null parameter values.
@@ -297,22 +308,19 @@ class _ChallengeDetailResponse implements ChallengeDetailResponse {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _ChallengeDetailResponse &&
-            (identical(other.totalPages, totalPages) ||
-                other.totalPages == totalPages) &&
-            (identical(other.challengeId, challengeId) ||
-                other.challengeId == challengeId) &&
-            (identical(other.lastReadPage, lastReadPage) ||
-                other.lastReadPage == lastReadPage));
+            (identical(other.bookOverview, bookOverview) ||
+                other.bookOverview == bookOverview) &&
+            const DeepCollectionEquality().equals(other._chapters, _chapters));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, totalPages, challengeId, lastReadPage);
+  int get hashCode => Object.hash(runtimeType, bookOverview,
+      const DeepCollectionEquality().hash(_chapters));
 
   @override
   String toString() {
-    return 'ChallengeDetailResponse(totalPages: $totalPages, challengeId: $challengeId, lastReadPage: $lastReadPage)';
+    return 'ChallengeDetailResponse(bookOverview: $bookOverview, chapters: $chapters)';
   }
 }
 
@@ -324,7 +332,12 @@ abstract mixin class _$ChallengeDetailResponseCopyWith<$Res>
       __$ChallengeDetailResponseCopyWithImpl;
   @override
   @useResult
-  $Res call({int totalPages, String challengeId, int lastReadPage});
+  $Res call(
+      {ChallengeDetailBookOverview bookOverview,
+      List<ChallengeDetailChapter> chapters});
+
+  @override
+  $ChallengeDetailBookOverviewCopyWith<$Res> get bookOverview;
 }
 
 /// @nodoc
@@ -340,24 +353,30 @@ class __$ChallengeDetailResponseCopyWithImpl<$Res>
   @override
   @pragma('vm:prefer-inline')
   $Res call({
-    Object? totalPages = null,
-    Object? challengeId = null,
-    Object? lastReadPage = null,
+    Object? bookOverview = null,
+    Object? chapters = null,
   }) {
     return _then(_ChallengeDetailResponse(
-      totalPages: null == totalPages
-          ? _self.totalPages
-          : totalPages // ignore: cast_nullable_to_non_nullable
-              as int,
-      challengeId: null == challengeId
-          ? _self.challengeId
-          : challengeId // ignore: cast_nullable_to_non_nullable
-              as String,
-      lastReadPage: null == lastReadPage
-          ? _self.lastReadPage
-          : lastReadPage // ignore: cast_nullable_to_non_nullable
-              as int,
+      bookOverview: null == bookOverview
+          ? _self.bookOverview
+          : bookOverview // ignore: cast_nullable_to_non_nullable
+              as ChallengeDetailBookOverview,
+      chapters: null == chapters
+          ? _self._chapters
+          : chapters // ignore: cast_nullable_to_non_nullable
+              as List<ChallengeDetailChapter>,
     ));
+  }
+
+  /// Create a copy of ChallengeDetailResponse
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $ChallengeDetailBookOverviewCopyWith<$Res> get bookOverview {
+    return $ChallengeDetailBookOverviewCopyWith<$Res>(_self.bookOverview,
+        (value) {
+      return _then(_self.copyWith(bookOverview: value));
+    });
   }
 }
 

@@ -86,6 +86,9 @@ class $AssetsIconsGen {
   SvgGenImage get icAddPick =>
       const SvgGenImage('assets/icons/ic_add_pick.svg');
 
+  /// File path: assets/icons/ic_apps.svg
+  SvgGenImage get icApps => const SvgGenImage('assets/icons/ic_apps.svg');
+
   /// File path: assets/icons/ic_arrow_down.svg
   SvgGenImage get icArrowDown =>
       const SvgGenImage('assets/icons/ic_arrow_down.svg');
@@ -166,6 +169,34 @@ class $AssetsIconsGen {
 
   /// File path: assets/icons/ic_check.svg
   SvgGenImage get icCheck => const SvgGenImage('assets/icons/ic_check.svg');
+
+  /// File path: assets/icons/ic_choice_correct.svg
+  SvgGenImage get icChoiceCorrect =>
+      const SvgGenImage('assets/icons/ic_choice_correct.svg');
+
+  /// File path: assets/icons/ic_choice_uncorrect.svg
+  SvgGenImage get icChoiceUncorrect =>
+      const SvgGenImage('assets/icons/ic_choice_uncorrect.svg');
+
+  /// File path: assets/icons/ic_deep_time_go_to_quiz.svg
+  SvgGenImage get icDeepTimeGoToQuiz =>
+      const SvgGenImage('assets/icons/ic_deep_time_go_to_quiz.svg');
+
+  /// File path: assets/icons/ic_deep_time_lock_close.svg
+  SvgGenImage get icDeepTimeLockClose =>
+      const SvgGenImage('assets/icons/ic_deep_time_lock_close.svg');
+
+  /// File path: assets/icons/ic_deep_time_lock_open.svg
+  SvgGenImage get icDeepTimeLockOpen =>
+      const SvgGenImage('assets/icons/ic_deep_time_lock_open.svg');
+
+  /// File path: assets/icons/ic_deep_time_starting.svg
+  SvgGenImage get icDeepTimeStarting =>
+      const SvgGenImage('assets/icons/ic_deep_time_starting.svg');
+
+  /// File path: assets/icons/ic_deep_time_wait.svg
+  SvgGenImage get icDeepTimeWait =>
+      const SvgGenImage('assets/icons/ic_deep_time_wait.svg');
 
   /// File path: assets/icons/ic_deeptype_char_bottom.svg
   SvgGenImage get icDeeptypeCharBottom =>
@@ -345,6 +376,10 @@ class $AssetsIconsGen {
   /// File path: assets/icons/ic_star01.svg
   SvgGenImage get icStar01 => const SvgGenImage('assets/icons/ic_star01.svg');
 
+  /// File path: assets/icons/ic_star_4_filled.svg
+  SvgGenImage get icStar4Filled =>
+      const SvgGenImage('assets/icons/ic_star_4_filled.svg');
+
   /// File path: assets/icons/ic_user.svg
   SvgGenImage get icUser => const SvgGenImage('assets/icons/ic_user.svg');
 
@@ -361,6 +396,7 @@ class $AssetsIconsGen {
     apple,
     google,
     icAddPick,
+    icApps,
     icArrowDown,
     icArrowUpDown,
     icBook,
@@ -382,6 +418,13 @@ class $AssetsIconsGen {
     icCategorySocialSciences,
     icChatNotification,
     icCheck,
+    icChoiceCorrect,
+    icChoiceUncorrect,
+    icDeepTimeGoToQuiz,
+    icDeepTimeLockClose,
+    icDeepTimeLockOpen,
+    icDeepTimeStarting,
+    icDeepTimeWait,
     icDeeptypeCharBottom,
     icDeeptypeCharBw,
     icDeeptypeCharFront,
@@ -429,6 +472,7 @@ class $AssetsIconsGen {
     icScrapFilled,
     icStar,
     icStar01,
+    icStar4Filled,
     icUser,
     icWithdrawal,
     kakao,

@@ -8,26 +8,35 @@ part of 'challenge_response.dart';
 
 _ChallengeResponse _$ChallengeResponseFromJson(Map<String, dynamic> json) =>
     _ChallengeResponse(
-      challengeId: (json['challengeId'] as num?)?.toInt() ?? 0,
-      book: BookSummary.fromJson(json['book'] as Map<String, dynamic>),
-      currentPage: (json['currentPage'] as num?)?.toInt() ?? 0,
-      totalPages: (json['totalPages'] as num?)?.toInt() ?? 0,
-      progressPercent: (json['progressPercent'] as num?)?.toDouble() ?? 0.0,
+      challengeId: (json['challengeId'] as num?)?.toInt() ?? -1,
+      bookId: (json['bookId'] as num?)?.toInt() ?? -1,
+      bookTitle: json['bookTitle'] as String? ?? '',
+      bookAuthor: json['bookAuthor'] as String? ?? '',
+      bookImageUrl: json['bookImageUrl'] as String? ?? '',
+      totalPages: (json['totalPages'] as num?)?.toInt() ?? -1,
+      totalChapters: (json['totalChapters'] as num?)?.toInt() ?? -1,
       completed: json['completed'] as bool? ?? false,
       abandoned: json['abandoned'] as bool? ?? false,
-      lastReadAt: json['lastReadAt'] == null
-          ? null
-          : DateTime.parse(json['lastReadAt'] as String),
+      completedAt: json['completedAt'] as String? ?? '',
+      createdAt: json['createdAt'] as String? ?? '',
+      hasQuiz: json['hasQuiz'] as bool? ?? false,
+      progressPercentage:
+          (json['progressPercentage'] as num?)?.toDouble() ?? 0.0,
     );
 
 Map<String, dynamic> _$ChallengeResponseToJson(_ChallengeResponse instance) =>
     <String, dynamic>{
       'challengeId': instance.challengeId,
-      'book': instance.book,
-      'currentPage': instance.currentPage,
+      'bookId': instance.bookId,
+      'bookTitle': instance.bookTitle,
+      'bookAuthor': instance.bookAuthor,
+      'bookImageUrl': instance.bookImageUrl,
       'totalPages': instance.totalPages,
-      'progressPercent': instance.progressPercent,
+      'totalChapters': instance.totalChapters,
       'completed': instance.completed,
       'abandoned': instance.abandoned,
-      'lastReadAt': instance.lastReadAt?.toIso8601String(),
+      'completedAt': instance.completedAt,
+      'createdAt': instance.createdAt,
+      'hasQuiz': instance.hasQuiz,
+      'progressPercentage': instance.progressPercentage,
     };
