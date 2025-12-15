@@ -1,3 +1,5 @@
+import 'package:bookstar/common/components/base_screen.dart';
+import 'package:bookstar/common/components/button/cta_button_l1.dart';
 import 'package:bookstar/common/components/custom_list_view.dart';
 import 'package:bookstar/common/theme/style/app_paddings.dart';
 import 'package:bookstar/common/theme/style/app_texts.dart';
@@ -12,118 +14,137 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class ReadingChallengeScreen extends ConsumerStatefulWidget {
-  const ReadingChallengeScreen({super.key});
+class ReadingChallengeScreen extends BaseScreen {
+  const ReadingChallengeScreen({super.key, required this.challengeId});
+
+  final int challengeId;
 
   @override
-  ConsumerState<ReadingChallengeScreen> createState() =>
+  BaseScreenState<ReadingChallengeScreen> createState() =>
       _ReadingChallengeScreenState();
 }
 
 class _ReadingChallengeScreenState
-    extends ConsumerState<ReadingChallengeScreen> {
-  final GlobalKey _screenKey = GlobalKey();
+    extends BaseScreenState<ReadingChallengeScreen> {
+  @override
+  bool enableRefreshIndicator() => true;
 
-  Future<void> _onRefresh() async {
+  final GlobalKey _screenKey = GlobalKey();
+  bool _hasScrolledToTarget = false;
+  int? _targetIndex;
+  bool _hasQuiz = false;
+
+  @override
+  void onDidUpdateWidget(covariant ReadingChallengeScreen oldWidget) async {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (widget.challengeId != oldWidget.challengeId) {
+        setState(() {
+          _hasScrolledToTarget = false;
+          _targetIndex = null;
+        });
+        final notifier = ref.read(ongoingChallengeViewModelProvider.notifier);
+        await notifier.fetchChallenges();
+        final state = ref.read(ongoingChallengeViewModelProvider);
+        final targetIndex = state.challenges.value
+                ?.indexWhere((e) => e.challengeId == widget.challengeId) ??
+            -1;
+        if (targetIndex != -1 && !_hasScrolledToTarget) {
+          setState(() {
+            _hasScrolledToTarget = true;
+            _targetIndex = targetIndex;
+          });
+          if (mounted && scrollController.hasClients) {
+            scrollController.animateTo(
+              targetIndex * 170,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            );
+          }
+        }
+      }
+    });
+  }
+
+  @override
+  Future<void> onRefresh() async {
     final notifier = ref.read(ongoingChallengeViewModelProvider.notifier);
     await notifier.fetchChallenges();
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildBody(BuildContext context) {
     final state = ref.watch(ongoingChallengeViewModelProvider);
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: state.challenges.when(
-        data: (items) {
-          final totalCount = items.length;
-          final completedCount =
-              items.where((element) => element.completed).length;
-          return RefreshIndicator(
-            onRefresh: _onRefresh,
-            child: SingleChildScrollView(
-              child: RepaintBoundary(
-                key: _screenKey,
-                child: Container(
-                  constraints: BoxConstraints(
-                    minHeight: MediaQuery.of(context)
-                        .size
-                        .height, // 🔴 추가: 최소 높이를 화면 높이로 설정
+    return state.challenges.when(
+      data: (items) {
+        final totalCount = items.length;
+        final completedCount =
+            items.where((element) => element.completed).length;
+        return SingleChildScrollView(
+          controller: scrollController,
+          child: RepaintBoundary(
+            key: _screenKey,
+            child: Container(
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height,
+              ),
+              padding: AppPaddings.SCREEN_BODY_PADDING,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Header
+                  _buildHeaderSection(
+                    totalCount: totalCount,
+                    completedCount: completedCount,
+                    onScreenShot: () async {
+                      final result = await FullCaptureService.captureAndShow(
+                          context, _screenKey);
+                      bool? isSaved = result?['isSaved'];
+                      if (isSaved == true && context.mounted) {
+                        await showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            barrierColor: ColorName.b1.withValues(alpha: 0.5),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(20)),
+                            ),
+                            builder: (context) => SaveSuccessImageDialog());
+                      }
+                    },
+                    onCalender: () {
+                      /** 캘린더 */
+                      // TODO: 포인트 내역
+                    },
+                    onNew: () {
+                      /** 새로운책 읽기*/
+                      context.go('/reading-challenge/search-new');
+                    },
                   ),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomLeft,
-                      colors: [
-                        ColorName.b1,
-                        ColorName.p1,
-                      ],
-                      stops: [0.1, 1],
-                    ),
+                  SizedBox(height: 35),
+                  // 리스트
+                  _buildListSection(
+                    items: items,
+                    onTapItem: (item, index) {
+                      setState(() {
+                        _targetIndex = index;
+                        _hasQuiz = item.hasQuiz;
+                      });
+                    },
                   ),
-                  padding: AppPaddings.SCREEN_BODY_PADDING,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Header
-                      _buildHeaderSection(
-                        totalCount: totalCount,
-                        completedCount: completedCount,
-                        onScreenShot: () async {
-                          final result =
-                              await FullCaptureService.captureAndShow(
-                                  context, _screenKey);
-                          bool? isSaved = result?['isSaved'];
-                          if (isSaved == true && context.mounted) {
-                            await showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                barrierColor:
-                                    ColorName.b1.withValues(alpha: 0.5),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.vertical(
-                                      top: Radius.circular(20)),
-                                ),
-                                builder: (context) => SaveSuccessImageDialog());
-                          }
-                        },
-                        onCalender: () {
-                          /** 캘린더 */
-                          // TODO: 포인트 내역
-                        },
-                        onNew: () {
-                          /** 새로운책 읽기*/
-                          context.go('/reading-challenge/search-new');
-                        },
-                      ),
-                      SizedBox(height: 35),
-                      // 리스트
-                      _buildListSection(
-                        items: items,
-                        onTapItem: (item) {
-                          final uri = Uri(
-                            path: '/reading-challenge/detail/${item.book.id}',
-                            queryParameters: {
-                              'challengeId': item.challengeId.toString(),
-                              'totalPages': item.totalPages.toString(),
-                              'visibleDeleteChallenge': 'true',
-                            },
-                          );
-                          context.push(uri.toString());
-                        },
-                      ),
-                    ],
-                  ),
-                ),
+                  if (_targetIndex != null)
+                    SizedBox(
+                      height: 60,
+                    )
+                ],
               ),
             ),
-          );
-        },
-        error: _error("리딩챌린지 정보를 가져오는데 실패했습니다."),
-        loading: _loading,
-      ),
+          ),
+        );
+      },
+      error: error("리딩챌린지 정보를 가져오는데 실패했습니다."),
+      loading: loading,
     );
   }
 
@@ -172,11 +193,10 @@ class _ReadingChallengeScreenState
         Row(
           children: [
             /** 캡처 */
-            if (totalCount > 0)
-              GestureDetector(
-                onTap: () => onScreenShot(),
-                child: Icon(Icons.crop_free, color: ColorName.w1),
-              ),
+            GestureDetector(
+              onTap: () => onScreenShot(),
+              child: Icon(Icons.crop_free, color: ColorName.w1),
+            ),
             SizedBox(width: 8),
             /** 새로운 책 읽기 */
             GestureDetector(
@@ -191,7 +211,7 @@ class _ReadingChallengeScreenState
 
   Widget _buildListSection(
       {required List<ChallengeResponse> items,
-      required Function(ChallengeResponse) onTapItem}) {
+      required Function(ChallengeResponse, int) onTapItem}) {
     return Flexible(
       child: CustomListView(
           emptyIcon: Assets.icons.icBookpickSearchCharacter.svg(),
@@ -202,7 +222,10 @@ class _ReadingChallengeScreenState
           itemCount: items.length,
           itemBuilder: (context, index) {
             final item = items[index];
-      
+
+            final isSelectedMode = _targetIndex != null;
+            final isTarget = _targetIndex == index;
+
             double angle = 0;
             switch (index % 3) {
               case 0:
@@ -215,135 +238,122 @@ class _ReadingChallengeScreenState
                 angle = -0.2;
                 break;
             }
-      
+
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: GestureDetector(
                 onTap: () {
-                  onTapItem(item);
+                  onTapItem(item, index);
                 },
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Transform.rotate(
-                      angle: angle,
-                      child: Container(
-                        width: 125,
-                        height: 170,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(14),
-                          border: BoxBorder.all(color: Color(0xFFF5F5F5)),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(14),
-                          child: CachedNetworkImage(
-                            imageUrl: item.book.thumbnailUrl,
-                            fit: BoxFit.cover,
-                            errorWidget: (context, url, error) {
-                              return Container();
-                            },
+                child: Opacity(
+                  opacity: !isSelectedMode ? 1 : (isTarget ? 1 : 0.6),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Transform.rotate(
+                        angle: angle,
+                        child: Container(
+                          width: 125,
+                          height: 170,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(14),
+                            border: BoxBorder.all(color: Color(0xFFF5F5F5)),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(14),
+                            child: CachedNetworkImage(
+                              imageUrl: item.bookImageUrl,
+                              fit: BoxFit.cover,
+                              errorWidget: (context, url, error) {
+                                return Container();
+                              },
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    SizedBox(
-                      width: 20,
-                    ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  item.book.title,
-                                  style:
-                                      AppTexts.b7.copyWith(color: ColorName.w1),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              Container(
-                                decoration: BoxDecoration(
-                                  gradient: RadialGradient(
-                                    colors: [
-                                      ColorName.p1,
-                                      ColorName.b1,
-                                    ],
-                                    stops: [0.2, 1.0], // 20%에서 보라 → 100%에서 검정
-                                    center: Alignment.bottomCenter, // 중심 고정
-                                    radius: 0.85, // 퍼지는 정도 (1.0이면 꽉 채움)
-                                  ),
-                                  color: ColorName.b1,
-                                  border: Border.all(color: Color(0xFFA99AFF)),
-                                  borderRadius: BorderRadius.circular(100),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 6, vertical: 3),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Assets.icons.icReadingChallengeTimeRate
-                                          .svg(),
-                                      SizedBox(
-                                        width: 4,
-                                      ),
-                                      Text(
-                                        "${item.progressPercent}%",
-                                        style: AppTexts.b7
-                                            .copyWith(color: ColorName.p2),
-                                      ),
-                                    ],
+                      SizedBox(
+                        width: 20,
+                      ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    item.bookTitle,
+                                    style: AppTexts.b7
+                                        .copyWith(color: ColorName.w1),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(
-                            height: 8,
-                          ),
-                          Row(
-                            children: [
-                              Text(
-                                "저자: ",
-                                style:
-                                    AppTexts.b10.copyWith(color: ColorName.g2),
-                              ),
-                              Expanded(
-                                child: Text(
-                                  item.book.author,
+                                Container(
+                                  decoration: BoxDecoration(
+                                    gradient: RadialGradient(
+                                      colors: [
+                                        ColorName.p1,
+                                        ColorName.b1,
+                                      ],
+                                      stops: [0.2, 1.0], // 20%에서 보라 → 100%에서 검정
+                                      center: Alignment.bottomCenter, // 중심 고정
+                                      radius: 0.85, // 퍼지는 정도 (1.0이면 꽉 채움)
+                                    ),
+                                    color: ColorName.b1,
+                                    border:
+                                        Border.all(color: Color(0xFFA99AFF)),
+                                    borderRadius: BorderRadius.circular(100),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 3),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Assets.icons.icReadingChallengeTimeRate
+                                            .svg(),
+                                        SizedBox(
+                                          width: 4,
+                                        ),
+                                        Text(
+                                          "${item.progressPercentage}%",
+                                          style: AppTexts.b7
+                                              .copyWith(color: ColorName.p2),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(
+                              height: 8,
+                            ),
+                            Row(
+                              children: [
+                                Text(
+                                  "저자: ",
                                   style: AppTexts.b10
-                                      .copyWith(color: ColorName.w1),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                      .copyWith(color: ColorName.g2),
                                 ),
-                              ),
-                            ],
-                          ),
-                          // Row(
-                          //   children: [
-                          //     Text(
-                          //       "출판사: ",
-                          //       style:
-                          //           AppTexts.b10.copyWith(color: ColorName.g2),
-                          //     ),
-                          //     Expanded(
-                          //       child: Text(
-                          //         item.book.publisher,
-                          //         style: AppTexts.b10
-                          //             .copyWith(color: ColorName.w1),
-                          //         maxLines: 1,
-                          //         overflow: TextOverflow.ellipsis,
-                          //       ),
-                          //     ),
-                          //   ],
-                          // ),
-                        ],
-                      ),
-                    )
-                  ],
+                                Expanded(
+                                  child: Text(
+                                    item.bookAuthor,
+                                    style: AppTexts.b10
+                                        .copyWith(color: ColorName.w1),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
                 ),
               ),
             );
@@ -352,7 +362,58 @@ class _ReadingChallengeScreenState
     );
   }
 
-  Widget _loading() => const Center(child: CircularProgressIndicator());
-  Widget Function(Object, StackTrace) _error(String msg) => (e, st) =>
-      Center(child: Text(msg, style: TextStyle(color: ColorName.g3)));
+  @override
+  Widget? buildFloatingActionButton(BuildContext context) {
+    return _targetIndex != null
+        ? Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (!_hasQuiz)
+                Column(
+                  children: [
+                    Container(
+                        decoration: BoxDecoration(
+                          color: ColorName.dim3,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 10),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Assets.icons.icStar4Filled.svg(),
+                              SizedBox(
+                                width: 8,
+                              ),
+                              Text(
+                                "책이 더 궁금해지는 퀴즈를 준비하고 있어요",
+                                style:
+                                    AppTexts.b8.copyWith(color: ColorName.w1),
+                              ),
+                            ],
+                          ),
+                        )),
+                    SizedBox(
+                      height: 16,
+                    ),
+                  ],
+                ),
+              CtaButtonL1(
+                text: '리딩 챌린지 시작하기',
+                enabled: _hasQuiz,
+                onPressed: () {
+                  goToStartScreen();
+                },
+              ),
+            ],
+          )
+        : null;
+  }
+
+  void goToStartScreen() {
+    final state = ref.watch(ongoingChallengeViewModelProvider);
+    final challengeId = state.challenges.value![_targetIndex!].challengeId;
+    context.push('/reading-challenge/start/$challengeId');
+  }
 }

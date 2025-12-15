@@ -15,13 +15,18 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ChallengeResponse {
   int get challengeId;
-  BookSummary get book;
-  int get currentPage;
+  int get bookId;
+  String get bookTitle;
+  String get bookAuthor;
+  String get bookImageUrl;
   int get totalPages;
-  double get progressPercent;
+  int get totalChapters;
   bool get completed;
   bool get abandoned;
-  DateTime? get lastReadAt;
+  String get completedAt;
+  String get createdAt;
+  bool get hasQuiz;
+  double get progressPercentage;
 
   /// Create a copy of ChallengeResponse
   /// with the given fields replaced by the non-null parameter values.
@@ -41,29 +46,51 @@ mixin _$ChallengeResponse {
             other is ChallengeResponse &&
             (identical(other.challengeId, challengeId) ||
                 other.challengeId == challengeId) &&
-            (identical(other.book, book) || other.book == book) &&
-            (identical(other.currentPage, currentPage) ||
-                other.currentPage == currentPage) &&
+            (identical(other.bookId, bookId) || other.bookId == bookId) &&
+            (identical(other.bookTitle, bookTitle) ||
+                other.bookTitle == bookTitle) &&
+            (identical(other.bookAuthor, bookAuthor) ||
+                other.bookAuthor == bookAuthor) &&
+            (identical(other.bookImageUrl, bookImageUrl) ||
+                other.bookImageUrl == bookImageUrl) &&
             (identical(other.totalPages, totalPages) ||
                 other.totalPages == totalPages) &&
-            (identical(other.progressPercent, progressPercent) ||
-                other.progressPercent == progressPercent) &&
+            (identical(other.totalChapters, totalChapters) ||
+                other.totalChapters == totalChapters) &&
             (identical(other.completed, completed) ||
                 other.completed == completed) &&
             (identical(other.abandoned, abandoned) ||
                 other.abandoned == abandoned) &&
-            (identical(other.lastReadAt, lastReadAt) ||
-                other.lastReadAt == lastReadAt));
+            (identical(other.completedAt, completedAt) ||
+                other.completedAt == completedAt) &&
+            (identical(other.createdAt, createdAt) ||
+                other.createdAt == createdAt) &&
+            (identical(other.hasQuiz, hasQuiz) || other.hasQuiz == hasQuiz) &&
+            (identical(other.progressPercentage, progressPercentage) ||
+                other.progressPercentage == progressPercentage));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, challengeId, book, currentPage,
-      totalPages, progressPercent, completed, abandoned, lastReadAt);
+  int get hashCode => Object.hash(
+      runtimeType,
+      challengeId,
+      bookId,
+      bookTitle,
+      bookAuthor,
+      bookImageUrl,
+      totalPages,
+      totalChapters,
+      completed,
+      abandoned,
+      completedAt,
+      createdAt,
+      hasQuiz,
+      progressPercentage);
 
   @override
   String toString() {
-    return 'ChallengeResponse(challengeId: $challengeId, book: $book, currentPage: $currentPage, totalPages: $totalPages, progressPercent: $progressPercent, completed: $completed, abandoned: $abandoned, lastReadAt: $lastReadAt)';
+    return 'ChallengeResponse(challengeId: $challengeId, bookId: $bookId, bookTitle: $bookTitle, bookAuthor: $bookAuthor, bookImageUrl: $bookImageUrl, totalPages: $totalPages, totalChapters: $totalChapters, completed: $completed, abandoned: $abandoned, completedAt: $completedAt, createdAt: $createdAt, hasQuiz: $hasQuiz, progressPercentage: $progressPercentage)';
   }
 }
 
@@ -75,15 +102,18 @@ abstract mixin class $ChallengeResponseCopyWith<$Res> {
   @useResult
   $Res call(
       {int challengeId,
-      BookSummary book,
-      int currentPage,
+      int bookId,
+      String bookTitle,
+      String bookAuthor,
+      String bookImageUrl,
       int totalPages,
-      double progressPercent,
+      int totalChapters,
       bool completed,
       bool abandoned,
-      DateTime? lastReadAt});
-
-  $BookSummaryCopyWith<$Res> get book;
+      String completedAt,
+      String createdAt,
+      bool hasQuiz,
+      double progressPercentage});
 }
 
 /// @nodoc
@@ -100,35 +130,48 @@ class _$ChallengeResponseCopyWithImpl<$Res>
   @override
   $Res call({
     Object? challengeId = null,
-    Object? book = null,
-    Object? currentPage = null,
+    Object? bookId = null,
+    Object? bookTitle = null,
+    Object? bookAuthor = null,
+    Object? bookImageUrl = null,
     Object? totalPages = null,
-    Object? progressPercent = null,
+    Object? totalChapters = null,
     Object? completed = null,
     Object? abandoned = null,
-    Object? lastReadAt = freezed,
+    Object? completedAt = null,
+    Object? createdAt = null,
+    Object? hasQuiz = null,
+    Object? progressPercentage = null,
   }) {
     return _then(_self.copyWith(
       challengeId: null == challengeId
           ? _self.challengeId
           : challengeId // ignore: cast_nullable_to_non_nullable
               as int,
-      book: null == book
-          ? _self.book
-          : book // ignore: cast_nullable_to_non_nullable
-              as BookSummary,
-      currentPage: null == currentPage
-          ? _self.currentPage
-          : currentPage // ignore: cast_nullable_to_non_nullable
+      bookId: null == bookId
+          ? _self.bookId
+          : bookId // ignore: cast_nullable_to_non_nullable
               as int,
+      bookTitle: null == bookTitle
+          ? _self.bookTitle
+          : bookTitle // ignore: cast_nullable_to_non_nullable
+              as String,
+      bookAuthor: null == bookAuthor
+          ? _self.bookAuthor
+          : bookAuthor // ignore: cast_nullable_to_non_nullable
+              as String,
+      bookImageUrl: null == bookImageUrl
+          ? _self.bookImageUrl
+          : bookImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
       totalPages: null == totalPages
           ? _self.totalPages
           : totalPages // ignore: cast_nullable_to_non_nullable
               as int,
-      progressPercent: null == progressPercent
-          ? _self.progressPercent
-          : progressPercent // ignore: cast_nullable_to_non_nullable
-              as double,
+      totalChapters: null == totalChapters
+          ? _self.totalChapters
+          : totalChapters // ignore: cast_nullable_to_non_nullable
+              as int,
       completed: null == completed
           ? _self.completed
           : completed // ignore: cast_nullable_to_non_nullable
@@ -137,21 +180,23 @@ class _$ChallengeResponseCopyWithImpl<$Res>
           ? _self.abandoned
           : abandoned // ignore: cast_nullable_to_non_nullable
               as bool,
-      lastReadAt: freezed == lastReadAt
-          ? _self.lastReadAt
-          : lastReadAt // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
+      completedAt: null == completedAt
+          ? _self.completedAt
+          : completedAt // ignore: cast_nullable_to_non_nullable
+              as String,
+      createdAt: null == createdAt
+          ? _self.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as String,
+      hasQuiz: null == hasQuiz
+          ? _self.hasQuiz
+          : hasQuiz // ignore: cast_nullable_to_non_nullable
+              as bool,
+      progressPercentage: null == progressPercentage
+          ? _self.progressPercentage
+          : progressPercentage // ignore: cast_nullable_to_non_nullable
+              as double,
     ));
-  }
-
-  /// Create a copy of ChallengeResponse
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @pragma('vm:prefer-inline')
-  $BookSummaryCopyWith<$Res> get book {
-    return $BookSummaryCopyWith<$Res>(_self.book, (value) {
-      return _then(_self.copyWith(book: value));
-    });
   }
 }
 
@@ -250,13 +295,18 @@ extension ChallengeResponsePatterns on ChallengeResponse {
   TResult maybeWhen<TResult extends Object?>(
     TResult Function(
             int challengeId,
-            BookSummary book,
-            int currentPage,
+            int bookId,
+            String bookTitle,
+            String bookAuthor,
+            String bookImageUrl,
             int totalPages,
-            double progressPercent,
+            int totalChapters,
             bool completed,
             bool abandoned,
-            DateTime? lastReadAt)?
+            String completedAt,
+            String createdAt,
+            bool hasQuiz,
+            double progressPercentage)?
         $default, {
     required TResult orElse(),
   }) {
@@ -265,13 +315,18 @@ extension ChallengeResponsePatterns on ChallengeResponse {
       case _ChallengeResponse() when $default != null:
         return $default(
             _that.challengeId,
-            _that.book,
-            _that.currentPage,
+            _that.bookId,
+            _that.bookTitle,
+            _that.bookAuthor,
+            _that.bookImageUrl,
             _that.totalPages,
-            _that.progressPercent,
+            _that.totalChapters,
             _that.completed,
             _that.abandoned,
-            _that.lastReadAt);
+            _that.completedAt,
+            _that.createdAt,
+            _that.hasQuiz,
+            _that.progressPercentage);
       case _:
         return orElse();
     }
@@ -294,13 +349,18 @@ extension ChallengeResponsePatterns on ChallengeResponse {
   TResult when<TResult extends Object?>(
     TResult Function(
             int challengeId,
-            BookSummary book,
-            int currentPage,
+            int bookId,
+            String bookTitle,
+            String bookAuthor,
+            String bookImageUrl,
             int totalPages,
-            double progressPercent,
+            int totalChapters,
             bool completed,
             bool abandoned,
-            DateTime? lastReadAt)
+            String completedAt,
+            String createdAt,
+            bool hasQuiz,
+            double progressPercentage)
         $default,
   ) {
     final _that = this;
@@ -308,13 +368,18 @@ extension ChallengeResponsePatterns on ChallengeResponse {
       case _ChallengeResponse():
         return $default(
             _that.challengeId,
-            _that.book,
-            _that.currentPage,
+            _that.bookId,
+            _that.bookTitle,
+            _that.bookAuthor,
+            _that.bookImageUrl,
             _that.totalPages,
-            _that.progressPercent,
+            _that.totalChapters,
             _that.completed,
             _that.abandoned,
-            _that.lastReadAt);
+            _that.completedAt,
+            _that.createdAt,
+            _that.hasQuiz,
+            _that.progressPercentage);
       case _:
         throw StateError('Unexpected subclass');
     }
@@ -336,13 +401,18 @@ extension ChallengeResponsePatterns on ChallengeResponse {
   TResult? whenOrNull<TResult extends Object?>(
     TResult? Function(
             int challengeId,
-            BookSummary book,
-            int currentPage,
+            int bookId,
+            String bookTitle,
+            String bookAuthor,
+            String bookImageUrl,
             int totalPages,
-            double progressPercent,
+            int totalChapters,
             bool completed,
             bool abandoned,
-            DateTime? lastReadAt)?
+            String completedAt,
+            String createdAt,
+            bool hasQuiz,
+            double progressPercentage)?
         $default,
   ) {
     final _that = this;
@@ -350,13 +420,18 @@ extension ChallengeResponsePatterns on ChallengeResponse {
       case _ChallengeResponse() when $default != null:
         return $default(
             _that.challengeId,
-            _that.book,
-            _that.currentPage,
+            _that.bookId,
+            _that.bookTitle,
+            _that.bookAuthor,
+            _that.bookImageUrl,
             _that.totalPages,
-            _that.progressPercent,
+            _that.totalChapters,
             _that.completed,
             _that.abandoned,
-            _that.lastReadAt);
+            _that.completedAt,
+            _that.createdAt,
+            _that.hasQuiz,
+            _that.progressPercentage);
       case _:
         return null;
     }
@@ -367,14 +442,19 @@ extension ChallengeResponsePatterns on ChallengeResponse {
 @JsonSerializable()
 class _ChallengeResponse implements ChallengeResponse {
   const _ChallengeResponse(
-      {this.challengeId = 0,
-      required this.book,
-      this.currentPage = 0,
-      this.totalPages = 0,
-      this.progressPercent = 0.0,
+      {this.challengeId = -1,
+      this.bookId = -1,
+      this.bookTitle = '',
+      this.bookAuthor = '',
+      this.bookImageUrl = '',
+      this.totalPages = -1,
+      this.totalChapters = -1,
       this.completed = false,
       this.abandoned = false,
-      this.lastReadAt});
+      this.completedAt = '',
+      this.createdAt = '',
+      this.hasQuiz = false,
+      this.progressPercentage = 0.0});
   factory _ChallengeResponse.fromJson(Map<String, dynamic> json) =>
       _$ChallengeResponseFromJson(json);
 
@@ -382,16 +462,23 @@ class _ChallengeResponse implements ChallengeResponse {
   @JsonKey()
   final int challengeId;
   @override
-  final BookSummary book;
+  @JsonKey()
+  final int bookId;
   @override
   @JsonKey()
-  final int currentPage;
+  final String bookTitle;
+  @override
+  @JsonKey()
+  final String bookAuthor;
+  @override
+  @JsonKey()
+  final String bookImageUrl;
   @override
   @JsonKey()
   final int totalPages;
   @override
   @JsonKey()
-  final double progressPercent;
+  final int totalChapters;
   @override
   @JsonKey()
   final bool completed;
@@ -399,7 +486,17 @@ class _ChallengeResponse implements ChallengeResponse {
   @JsonKey()
   final bool abandoned;
   @override
-  final DateTime? lastReadAt;
+  @JsonKey()
+  final String completedAt;
+  @override
+  @JsonKey()
+  final String createdAt;
+  @override
+  @JsonKey()
+  final bool hasQuiz;
+  @override
+  @JsonKey()
+  final double progressPercentage;
 
   /// Create a copy of ChallengeResponse
   /// with the given fields replaced by the non-null parameter values.
@@ -423,29 +520,51 @@ class _ChallengeResponse implements ChallengeResponse {
             other is _ChallengeResponse &&
             (identical(other.challengeId, challengeId) ||
                 other.challengeId == challengeId) &&
-            (identical(other.book, book) || other.book == book) &&
-            (identical(other.currentPage, currentPage) ||
-                other.currentPage == currentPage) &&
+            (identical(other.bookId, bookId) || other.bookId == bookId) &&
+            (identical(other.bookTitle, bookTitle) ||
+                other.bookTitle == bookTitle) &&
+            (identical(other.bookAuthor, bookAuthor) ||
+                other.bookAuthor == bookAuthor) &&
+            (identical(other.bookImageUrl, bookImageUrl) ||
+                other.bookImageUrl == bookImageUrl) &&
             (identical(other.totalPages, totalPages) ||
                 other.totalPages == totalPages) &&
-            (identical(other.progressPercent, progressPercent) ||
-                other.progressPercent == progressPercent) &&
+            (identical(other.totalChapters, totalChapters) ||
+                other.totalChapters == totalChapters) &&
             (identical(other.completed, completed) ||
                 other.completed == completed) &&
             (identical(other.abandoned, abandoned) ||
                 other.abandoned == abandoned) &&
-            (identical(other.lastReadAt, lastReadAt) ||
-                other.lastReadAt == lastReadAt));
+            (identical(other.completedAt, completedAt) ||
+                other.completedAt == completedAt) &&
+            (identical(other.createdAt, createdAt) ||
+                other.createdAt == createdAt) &&
+            (identical(other.hasQuiz, hasQuiz) || other.hasQuiz == hasQuiz) &&
+            (identical(other.progressPercentage, progressPercentage) ||
+                other.progressPercentage == progressPercentage));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, challengeId, book, currentPage,
-      totalPages, progressPercent, completed, abandoned, lastReadAt);
+  int get hashCode => Object.hash(
+      runtimeType,
+      challengeId,
+      bookId,
+      bookTitle,
+      bookAuthor,
+      bookImageUrl,
+      totalPages,
+      totalChapters,
+      completed,
+      abandoned,
+      completedAt,
+      createdAt,
+      hasQuiz,
+      progressPercentage);
 
   @override
   String toString() {
-    return 'ChallengeResponse(challengeId: $challengeId, book: $book, currentPage: $currentPage, totalPages: $totalPages, progressPercent: $progressPercent, completed: $completed, abandoned: $abandoned, lastReadAt: $lastReadAt)';
+    return 'ChallengeResponse(challengeId: $challengeId, bookId: $bookId, bookTitle: $bookTitle, bookAuthor: $bookAuthor, bookImageUrl: $bookImageUrl, totalPages: $totalPages, totalChapters: $totalChapters, completed: $completed, abandoned: $abandoned, completedAt: $completedAt, createdAt: $createdAt, hasQuiz: $hasQuiz, progressPercentage: $progressPercentage)';
   }
 }
 
@@ -459,16 +578,18 @@ abstract mixin class _$ChallengeResponseCopyWith<$Res>
   @useResult
   $Res call(
       {int challengeId,
-      BookSummary book,
-      int currentPage,
+      int bookId,
+      String bookTitle,
+      String bookAuthor,
+      String bookImageUrl,
       int totalPages,
-      double progressPercent,
+      int totalChapters,
       bool completed,
       bool abandoned,
-      DateTime? lastReadAt});
-
-  @override
-  $BookSummaryCopyWith<$Res> get book;
+      String completedAt,
+      String createdAt,
+      bool hasQuiz,
+      double progressPercentage});
 }
 
 /// @nodoc
@@ -485,35 +606,48 @@ class __$ChallengeResponseCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   $Res call({
     Object? challengeId = null,
-    Object? book = null,
-    Object? currentPage = null,
+    Object? bookId = null,
+    Object? bookTitle = null,
+    Object? bookAuthor = null,
+    Object? bookImageUrl = null,
     Object? totalPages = null,
-    Object? progressPercent = null,
+    Object? totalChapters = null,
     Object? completed = null,
     Object? abandoned = null,
-    Object? lastReadAt = freezed,
+    Object? completedAt = null,
+    Object? createdAt = null,
+    Object? hasQuiz = null,
+    Object? progressPercentage = null,
   }) {
     return _then(_ChallengeResponse(
       challengeId: null == challengeId
           ? _self.challengeId
           : challengeId // ignore: cast_nullable_to_non_nullable
               as int,
-      book: null == book
-          ? _self.book
-          : book // ignore: cast_nullable_to_non_nullable
-              as BookSummary,
-      currentPage: null == currentPage
-          ? _self.currentPage
-          : currentPage // ignore: cast_nullable_to_non_nullable
+      bookId: null == bookId
+          ? _self.bookId
+          : bookId // ignore: cast_nullable_to_non_nullable
               as int,
+      bookTitle: null == bookTitle
+          ? _self.bookTitle
+          : bookTitle // ignore: cast_nullable_to_non_nullable
+              as String,
+      bookAuthor: null == bookAuthor
+          ? _self.bookAuthor
+          : bookAuthor // ignore: cast_nullable_to_non_nullable
+              as String,
+      bookImageUrl: null == bookImageUrl
+          ? _self.bookImageUrl
+          : bookImageUrl // ignore: cast_nullable_to_non_nullable
+              as String,
       totalPages: null == totalPages
           ? _self.totalPages
           : totalPages // ignore: cast_nullable_to_non_nullable
               as int,
-      progressPercent: null == progressPercent
-          ? _self.progressPercent
-          : progressPercent // ignore: cast_nullable_to_non_nullable
-              as double,
+      totalChapters: null == totalChapters
+          ? _self.totalChapters
+          : totalChapters // ignore: cast_nullable_to_non_nullable
+              as int,
       completed: null == completed
           ? _self.completed
           : completed // ignore: cast_nullable_to_non_nullable
@@ -522,21 +656,23 @@ class __$ChallengeResponseCopyWithImpl<$Res>
           ? _self.abandoned
           : abandoned // ignore: cast_nullable_to_non_nullable
               as bool,
-      lastReadAt: freezed == lastReadAt
-          ? _self.lastReadAt
-          : lastReadAt // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
+      completedAt: null == completedAt
+          ? _self.completedAt
+          : completedAt // ignore: cast_nullable_to_non_nullable
+              as String,
+      createdAt: null == createdAt
+          ? _self.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as String,
+      hasQuiz: null == hasQuiz
+          ? _self.hasQuiz
+          : hasQuiz // ignore: cast_nullable_to_non_nullable
+              as bool,
+      progressPercentage: null == progressPercentage
+          ? _self.progressPercentage
+          : progressPercentage // ignore: cast_nullable_to_non_nullable
+              as double,
     ));
-  }
-
-  /// Create a copy of ChallengeResponse
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @pragma('vm:prefer-inline')
-  $BookSummaryCopyWith<$Res> get book {
-    return $BookSummaryCopyWith<$Res>(_self.book, (value) {
-      return _then(_self.copyWith(book: value));
-    });
   }
 }
 

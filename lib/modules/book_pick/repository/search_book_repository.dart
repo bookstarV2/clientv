@@ -1,3 +1,5 @@
+import 'package:bookstar/modules/book_pick/model/generate_all_quizzes_response.dart';
+import 'package:bookstar/modules/reading_challenge/model/create_challenge_response.dart';
 import 'package:bookstar/modules/reading_diary/model/search_user_response.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -39,4 +41,12 @@ abstract class SearchBookRepository {
   Future<ResponseForm<List<SearchUserResponse>>> getUsersByName(
     @Path('nickName') String nickName,
   );
+
+  @POST('/api/v3/books/{bookId}/quizzes/generate-all')
+  Future<ResponseForm<GenerateAllQuizzesResponse>> generateAllQuizzes(
+      @Path('bookId') int bookId);
+
+  @POST('/api/v3/challenges')
+  Future<ResponseForm<CreateChallengeResponse>> createChallenges(
+      @Query('bookId') int bookId);
 }

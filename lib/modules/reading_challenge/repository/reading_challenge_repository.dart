@@ -1,9 +1,14 @@
 import 'package:bookstar/common/models/response_form.dart';
 import 'package:bookstar/infra/network/dio_client.dart';
 import 'package:bookstar/modules/reading_challenge/model/challenge_creation_response.dart';
+import 'package:bookstar/modules/reading_challenge/model/post_progress_request.dart';
+import 'package:bookstar/modules/reading_challenge/model/post_reading_timer_request.dart';
+import 'package:bookstar/modules/reading_challenge/model/submit_quiz_request.dart';
+import 'package:bookstar/modules/reading_challenge/model/challenge_detail_chapter_detail_response.dart';
 import 'package:bookstar/modules/reading_challenge/model/challenge_progress_request.dart';
 import 'package:bookstar/modules/reading_challenge/model/challenge_progress_response.dart';
 import 'package:bookstar/modules/reading_challenge/model/reading_challenge_request.dart';
+import 'package:bookstar/modules/reading_challenge/model/submit_quiz_response.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:retrofit/retrofit.dart';
@@ -30,6 +35,44 @@ abstract class ReadingChallengeRepository {
   factory ReadingChallengeRepository(Dio dio, {String baseUrl}) =
       _ReadingChallengeRepository;
 
+  @GET('/api/v3/challenges/ongoing')
+  Future<ResponseForm<List<ChallengeResponse>>> getOngoingChallenges();
+
+  @GET('/api/v3/challenges/abandoned')
+  Future<ResponseForm<List<ChallengeResponse>>> getAbandonedChallenges();
+
+  @DELETE('/api/v3/challenges/{challengeId}')
+  Future<ResponseForm<dynamic>> deleteChallenge(
+    @Path('challengeId') int challengeId,
+  );
+
+  @GET('/api/v3/challenges/{challengeId}')
+  Future<ResponseForm<ChallengeDetailResponse>> getChallenge(
+    @Path('challengeId') int challengeId,
+  );
+
+  @POST('/api/v3/chapters/quizzes')
+  Future<ResponseForm<ChallengeDetailChapterDetailResponse>> getQuizzes(
+    @Body() List<int> chapterIds,
+  );
+
+  @POST('/api/v3/quizzes/{quizId}/submit')
+  Future<ResponseForm<SubmitQuizResponse>> submitQuiz(
+    @Path('quizId') int quizId,
+    @Body() SubmitQuizRequest request,
+  );
+
+  @POST('/api/v1/reading-timers')
+  Future<ResponseForm<void>> postReadingTimers(
+    @Body() PostReadingTimerRequest request,
+  );
+
+  @POST('/api/v3/challenges/{challengeId}/progress')
+  Future<ResponseForm<void>> postProgress(
+    @Path('challengeId') int challengeId,
+    @Body() PostProgressRequest request,
+  );
+
   @POST('/api/v2/reading-challenges')
   Future<ResponseForm<ChallengeCreationResponse>> createChallenge(
     @Body() ReadingChallengeRequest request,
@@ -41,14 +84,8 @@ abstract class ReadingChallengeRepository {
     @Body() ChallengeProgressRequest request,
   );
 
-  @GET('/api/v2/reading-challenges/ongoing')
-  Future<ResponseForm<List<ChallengeResponse>>> getOngoingChallenges();
-
   @GET('/api/v2/reading-challenges/completed')
   Future<ResponseForm<List<ChallengeResponse>>> getCompletedChallenges();
-
-  @GET('/api/v2/reading-challenges/abandoned')
-  Future<ResponseForm<List<ChallengeResponse>>> getAbandonedChallenges();
 
   @GET('/api/v2/reading-challenges/members/{memberId}')
   Future<ResponseForm<List<ChallengeResponse>>> getChallengesByMember(
@@ -73,11 +110,6 @@ abstract class ReadingChallengeRepository {
 
   @POST('/api/v2/reading-challenges/{challengeId}/abandon')
   Future<ResponseForm<dynamic>> abandonChallenge(
-    @Path('challengeId') int challengeId,
-  );
-
-  @DELETE('/api/v2/reading-challenges/{challengeId}')
-  Future<ResponseForm<dynamic>> deleteChallenge(
     @Path('challengeId') int challengeId,
   );
 

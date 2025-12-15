@@ -17,6 +17,7 @@ abstract class BaseScreenState<T extends BaseScreen> extends ConsumerState<T>
   late FocusNode focusNode;
   late ItemScrollController itemScrollController;
   late ItemPositionsListener itemPositionsListener;
+  late PageController pageController;
 
   bool _isKeyboardVisible = false;
 
@@ -45,6 +46,8 @@ abstract class BaseScreenState<T extends BaseScreen> extends ConsumerState<T>
   // 디바운싱 시간 (밀리초)
   final double _scrollDebounceDuration = 1000;
 
+  int currentPageIndex = 0;
+
   @override
   void initState() {
     super.initState();
@@ -52,10 +55,12 @@ abstract class BaseScreenState<T extends BaseScreen> extends ConsumerState<T>
     focusNode = FocusNode();
     itemScrollController = ItemScrollController();
     itemPositionsListener = ItemPositionsListener.create();
+    pageController = PageController();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       scrollController.addListener(_scrollListener);
       itemPositionsListener.itemPositions.addListener(_itemPositionsListener);
+      pageController.addListener(_pageListener);
       focusNode.addListener(_focusListener);
       WidgetsBinding.instance.addObserver(this);
     });
@@ -65,8 +70,10 @@ abstract class BaseScreenState<T extends BaseScreen> extends ConsumerState<T>
   @override
   void dispose() {
     scrollController.removeListener(_scrollListener);
+    pageController.removeListener(_pageListener);
     focusNode.removeListener(_focusListener);
     scrollController.dispose();
+    pageController.dispose();
     focusNode.dispose();
     itemPositionsListener.itemPositions.removeListener(_itemPositionsListener);
 
@@ -247,6 +254,21 @@ abstract class BaseScreenState<T extends BaseScreen> extends ConsumerState<T>
     }
   }
 
+  void _pageListener() {
+    if (pageController.hasClients) {
+      final page = pageController.page;
+      if (page != null) {
+        final newPageIndex = page.round();
+        if (newPageIndex != currentPageIndex) {
+          setState(() {
+            currentPageIndex = newPageIndex;
+          });
+          onPageChanged(newPageIndex);
+        }
+      }
+    }
+  }
+
   void jumpToTop() {
     scrollController.animateTo(
       0,
@@ -258,6 +280,12 @@ abstract class BaseScreenState<T extends BaseScreen> extends ConsumerState<T>
       duration: const Duration(milliseconds: 500), // 애니메이션 시간
       curve: Curves.easeInOut,
     );
+  }
+
+  @override
+  void didUpdateWidget(covariant T oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    onDidUpdateWidget(oldWidget);
   }
 
   @override
@@ -369,4 +397,6 @@ abstract class BaseScreenState<T extends BaseScreen> extends ConsumerState<T>
   void onFocusGained() {}
   void onFocusLost() {}
   void onScreenTap() {}
+  void onPageChanged(int pageIndex) {}
+  void onDidUpdateWidget(covariant T oldWidget) {}
 }

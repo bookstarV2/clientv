@@ -9,15 +9,20 @@ part of 'challenge_detail_response.dart';
 _ChallengeDetailResponse _$ChallengeDetailResponseFromJson(
         Map<String, dynamic> json) =>
     _ChallengeDetailResponse(
-      totalPages: (json['totalPages'] as num).toInt(),
-      challengeId: json['challengeId'] as String,
-      lastReadPage: (json['lastReadPage'] as num).toInt(),
+      bookOverview: json['bookOverview'] == null
+          ? const ChallengeDetailBookOverview()
+          : ChallengeDetailBookOverview.fromJson(
+              json['bookOverview'] as Map<String, dynamic>),
+      chapters: (json['chapters'] as List<dynamic>?)
+              ?.map((e) =>
+                  ChallengeDetailChapter.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
     );
 
 Map<String, dynamic> _$ChallengeDetailResponseToJson(
         _ChallengeDetailResponse instance) =>
     <String, dynamic>{
-      'totalPages': instance.totalPages,
-      'challengeId': instance.challengeId,
-      'lastReadPage': instance.lastReadPage,
+      'bookOverview': instance.bookOverview,
+      'chapters': instance.chapters,
     };

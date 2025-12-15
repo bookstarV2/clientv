@@ -10,6 +10,7 @@ class CtaButtonL1 extends StatefulWidget {
   final Color? borderColor;
   final double height;
   final double borderRadius;
+  final LinearGradient? gradient;
 
   const CtaButtonL1({
     Key? key,
@@ -20,6 +21,7 @@ class CtaButtonL1 extends StatefulWidget {
     this.borderColor,
     this.height = 56,
     this.borderRadius = 10,
+    this.gradient,
   }) : super(key: key);
 
   @override
@@ -86,6 +88,7 @@ class _CtaButtonL1State extends State<CtaButtonL1> {
             color: backgroundColor,
             borderRadius: BorderRadius.circular(widget.borderRadius),
             border: Border.all(color: borderColor, width: 1),
+            gradient: widget.gradient,
           ),
           alignment: Alignment.center,
           child: Text(
