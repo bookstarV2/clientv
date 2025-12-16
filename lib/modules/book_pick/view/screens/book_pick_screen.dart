@@ -1,3 +1,4 @@
+import 'package:bookstar/common/components/base_screen.dart';
 import 'package:bookstar/common/components/custom_list_view.dart';
 import 'package:bookstar/common/components/text_field/search_text_field.dart';
 import 'package:bookstar/common/theme/style/app_texts.dart';
@@ -19,24 +20,21 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../gen/colors.gen.dart';
 import '../../view_model/book_pick_view_model.dart';
 
-class BookPickScreen extends ConsumerStatefulWidget {
+class BookPickScreen extends BaseScreen {
   const BookPickScreen({super.key});
 
   @override
-  ConsumerState<BookPickScreen> createState() => _BookPickScreenState();
+  BaseScreenState<BookPickScreen> createState() => _BookPickScreenState();
 }
 
-class _BookPickScreenState extends ConsumerState<BookPickScreen> {
+class _BookPickScreenState extends BaseScreenState<BookPickScreen> {
+  @override
+  bool enableRefreshIndicator() => true;
   int _currentIndex = 0;
-
-  final ScrollController _scrollController = ScrollController();
-  bool _isLoadingMore = false;
-  DateTime? _lastRightReachedTime;
 
   @override
   void initState() {
     super.initState();
-    _setupScrollListener();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       checkPolicyAgreed();
     });
@@ -69,48 +67,22 @@ class _BookPickScreenState extends ConsumerState<BookPickScreen> {
     }
   }
 
-  void _setupScrollListener() {
-    _scrollController.addListener(() {
-      if (_scrollController.position.axis == Axis.horizontal &&
-          _scrollController.position.pixels >=
-              _scrollController.position.maxScrollExtent * 0.8 &&
-          !_isLoadingMore) {
-        _onRightReached();
-      }
-    });
-  }
-
-  void _onRightReached() {
-    final now = DateTime.now();
-    // 디바운싱: 마지막 호출로부터 2초가 지나지 않았으면 무시
-    if (_lastRightReachedTime != null &&
-        now.difference(_lastRightReachedTime!).inSeconds < 2) {
-      return;
-    }
-    // 이미 로딩 중이면 무시
-    if (_isLoadingMore) {
-      return;
-    }
-    _lastRightReachedTime = now;
-    _isLoadingMore = true;
-    // 실제 로딩 로직 실행
-    _loadMoreLikeBooks();
-  }
-
-  void _loadMoreLikeBooks() async {
-    await ref.read(bookPickViewModelProvider.notifier).refreshLikeBooks();
-
-    _isLoadingMore = false;
-  }
-
   void _updateIndex(int index) {
     setState(() {
       _currentIndex = index;
     });
   }
 
-  Future<void> _onRefresh() async {
-    await ref.read(bookPickViewModelProvider.notifier).initState();
+  @override
+  void onRightReached() {
+    final notifier = ref.read(bookPickViewModelProvider.notifier);
+    notifier.refreshLikeBooks();
+  }
+
+  @override
+  Future<void> onRefresh() async {
+    final notifier = ref.read(bookPickViewModelProvider.notifier);
+    notifier.initState();
   }
 
   Future<void> _otherRecommend() async {
@@ -131,66 +103,57 @@ class _BookPickScreenState extends ConsumerState<BookPickScreen> {
   }
 
   @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget buildBody(BuildContext context) {
     final bookPickStateAsync = ref.watch(bookPickViewModelProvider);
 
     return bookPickStateAsync.when(
-      data: (bookPickState) => RefreshIndicator(
-        onRefresh: _onRefresh,
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSearchBook(
-                    onTap: () => context.push('/book-pick/search'),
-                  ),
-                  SizedBox(
-                    height: 60,
-                  ),
-                  _buildYoutubeBook(
-                    ctx: context,
-                    list: bookPickState.youtubeRecommends,
-                    currentIndex: _currentIndex,
-                    updateIndex: _updateIndex,
-                    onItemTap: (index) {
-                      final videoId =
-                          bookPickState.youtubeRecommends[index].videoId;
-                      _launchYouTube(videoId);
-                    },
-                    onDirectShow: () {
-                      final videoId = bookPickState
-                          .youtubeRecommends[_currentIndex].videoId;
-                      _launchYouTube(videoId);
-                    },
-                    onOtherRecommend: _otherRecommend,
-                  ),
-                  SizedBox(
-                    height: 60,
-                  ),
-                  _buildBookPick(
-                    controller: _scrollController,
-                    list: bookPickState.likeBook.likeBooks,
-                    onAllView: () {
-                      context.push('/book-pick/my-likes');
-                    },
-                    onItemTap: (index) {
-                      final item = bookPickState.likeBook.likeBooks[index];
-                      context.push('/book-pick/overview/${item.bookId}');
-                    },
-                  ),
-                ],
-              ),
-            )
-          ],
-        ),
+      data: (bookPickState) => CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSearchBook(
+                  onTap: () => context.push('/book-pick/search'),
+                ),
+                SizedBox(
+                  height: 60,
+                ),
+                _buildYoutubeBook(
+                  ctx: context,
+                  list: bookPickState.youtubeRecommends,
+                  currentIndex: _currentIndex,
+                  updateIndex: _updateIndex,
+                  onItemTap: (index) {
+                    final videoId =
+                        bookPickState.youtubeRecommends[index].videoId;
+                    _launchYouTube(videoId);
+                  },
+                  onDirectShow: () {
+                    final videoId =
+                        bookPickState.youtubeRecommends[_currentIndex].videoId;
+                    _launchYouTube(videoId);
+                  },
+                  onOtherRecommend: _otherRecommend,
+                ),
+                SizedBox(
+                  height: 60,
+                ),
+                _buildBookPick(
+                  controller: scrollController,
+                  list: bookPickState.likeBook.likeBooks,
+                  onAllView: () {
+                    context.push('/book-pick/my-likes');
+                  },
+                  onItemTap: (index) {
+                    final item = bookPickState.likeBook.likeBooks[index];
+                    context.push('/book-pick/overview/${item.bookId}');
+                  },
+                ),
+              ],
+            ),
+          )
+        ],
       ),
       error: _error("책픽 정보를 불러올 수 없습니다."),
       loading: _loading,
