@@ -14,9 +14,11 @@ T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$ReadingDataState {
-  RankingWeeklyTop3Response? get top1;
-  RankingWeeklyTop3Response? get top2;
-  RankingWeeklyTop3Response? get top3;
+  RankingWeeklyResponse? get top1;
+  RankingWeeklyResponse? get top2;
+  RankingWeeklyResponse? get top3;
+  List<RankingWeeklyResponse> get list;
+  RankingWeeklyResponse get my;
 
   /// Create a copy of ReadingDataState
   /// with the given fields replaced by the non-null parameter values.
@@ -33,15 +35,18 @@ mixin _$ReadingDataState {
             other is ReadingDataState &&
             (identical(other.top1, top1) || other.top1 == top1) &&
             (identical(other.top2, top2) || other.top2 == top2) &&
-            (identical(other.top3, top3) || other.top3 == top3));
+            (identical(other.top3, top3) || other.top3 == top3) &&
+            const DeepCollectionEquality().equals(other.list, list) &&
+            (identical(other.my, my) || other.my == my));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, top1, top2, top3);
+  int get hashCode => Object.hash(runtimeType, top1, top2, top3,
+      const DeepCollectionEquality().hash(list), my);
 
   @override
   String toString() {
-    return 'ReadingDataState(top1: $top1, top2: $top2, top3: $top3)';
+    return 'ReadingDataState(top1: $top1, top2: $top2, top3: $top3, list: $list, my: $my)';
   }
 }
 
@@ -52,13 +57,16 @@ abstract mixin class $ReadingDataStateCopyWith<$Res> {
       _$ReadingDataStateCopyWithImpl;
   @useResult
   $Res call(
-      {RankingWeeklyTop3Response? top1,
-      RankingWeeklyTop3Response? top2,
-      RankingWeeklyTop3Response? top3});
+      {RankingWeeklyResponse? top1,
+      RankingWeeklyResponse? top2,
+      RankingWeeklyResponse? top3,
+      List<RankingWeeklyResponse> list,
+      RankingWeeklyResponse my});
 
-  $RankingWeeklyTop3ResponseCopyWith<$Res>? get top1;
-  $RankingWeeklyTop3ResponseCopyWith<$Res>? get top2;
-  $RankingWeeklyTop3ResponseCopyWith<$Res>? get top3;
+  $RankingWeeklyResponseCopyWith<$Res>? get top1;
+  $RankingWeeklyResponseCopyWith<$Res>? get top2;
+  $RankingWeeklyResponseCopyWith<$Res>? get top3;
+  $RankingWeeklyResponseCopyWith<$Res> get my;
 }
 
 /// @nodoc
@@ -77,20 +85,30 @@ class _$ReadingDataStateCopyWithImpl<$Res>
     Object? top1 = freezed,
     Object? top2 = freezed,
     Object? top3 = freezed,
+    Object? list = null,
+    Object? my = null,
   }) {
     return _then(_self.copyWith(
       top1: freezed == top1
           ? _self.top1
           : top1 // ignore: cast_nullable_to_non_nullable
-              as RankingWeeklyTop3Response?,
+              as RankingWeeklyResponse?,
       top2: freezed == top2
           ? _self.top2
           : top2 // ignore: cast_nullable_to_non_nullable
-              as RankingWeeklyTop3Response?,
+              as RankingWeeklyResponse?,
       top3: freezed == top3
           ? _self.top3
           : top3 // ignore: cast_nullable_to_non_nullable
-              as RankingWeeklyTop3Response?,
+              as RankingWeeklyResponse?,
+      list: null == list
+          ? _self.list
+          : list // ignore: cast_nullable_to_non_nullable
+              as List<RankingWeeklyResponse>,
+      my: null == my
+          ? _self.my
+          : my // ignore: cast_nullable_to_non_nullable
+              as RankingWeeklyResponse,
     ));
   }
 
@@ -98,12 +116,12 @@ class _$ReadingDataStateCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-  $RankingWeeklyTop3ResponseCopyWith<$Res>? get top1 {
+  $RankingWeeklyResponseCopyWith<$Res>? get top1 {
     if (_self.top1 == null) {
       return null;
     }
 
-    return $RankingWeeklyTop3ResponseCopyWith<$Res>(_self.top1!, (value) {
+    return $RankingWeeklyResponseCopyWith<$Res>(_self.top1!, (value) {
       return _then(_self.copyWith(top1: value));
     });
   }
@@ -112,12 +130,12 @@ class _$ReadingDataStateCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-  $RankingWeeklyTop3ResponseCopyWith<$Res>? get top2 {
+  $RankingWeeklyResponseCopyWith<$Res>? get top2 {
     if (_self.top2 == null) {
       return null;
     }
 
-    return $RankingWeeklyTop3ResponseCopyWith<$Res>(_self.top2!, (value) {
+    return $RankingWeeklyResponseCopyWith<$Res>(_self.top2!, (value) {
       return _then(_self.copyWith(top2: value));
     });
   }
@@ -126,13 +144,23 @@ class _$ReadingDataStateCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-  $RankingWeeklyTop3ResponseCopyWith<$Res>? get top3 {
+  $RankingWeeklyResponseCopyWith<$Res>? get top3 {
     if (_self.top3 == null) {
       return null;
     }
 
-    return $RankingWeeklyTop3ResponseCopyWith<$Res>(_self.top3!, (value) {
+    return $RankingWeeklyResponseCopyWith<$Res>(_self.top3!, (value) {
       return _then(_self.copyWith(top3: value));
+    });
+  }
+
+  /// Create a copy of ReadingDataState
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $RankingWeeklyResponseCopyWith<$Res> get my {
+    return $RankingWeeklyResponseCopyWith<$Res>(_self.my, (value) {
+      return _then(_self.copyWith(my: value));
     });
   }
 }
@@ -230,15 +258,20 @@ extension ReadingDataStatePatterns on ReadingDataState {
 
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
-    TResult Function(RankingWeeklyTop3Response? top1,
-            RankingWeeklyTop3Response? top2, RankingWeeklyTop3Response? top3)?
+    TResult Function(
+            RankingWeeklyResponse? top1,
+            RankingWeeklyResponse? top2,
+            RankingWeeklyResponse? top3,
+            List<RankingWeeklyResponse> list,
+            RankingWeeklyResponse my)?
         $default, {
     required TResult orElse(),
   }) {
     final _that = this;
     switch (_that) {
       case _ReadingDataState() when $default != null:
-        return $default(_that.top1, _that.top2, _that.top3);
+        return $default(
+            _that.top1, _that.top2, _that.top3, _that.list, _that.my);
       case _:
         return orElse();
     }
@@ -259,14 +292,19 @@ extension ReadingDataStatePatterns on ReadingDataState {
 
   @optionalTypeArgs
   TResult when<TResult extends Object?>(
-    TResult Function(RankingWeeklyTop3Response? top1,
-            RankingWeeklyTop3Response? top2, RankingWeeklyTop3Response? top3)
+    TResult Function(
+            RankingWeeklyResponse? top1,
+            RankingWeeklyResponse? top2,
+            RankingWeeklyResponse? top3,
+            List<RankingWeeklyResponse> list,
+            RankingWeeklyResponse my)
         $default,
   ) {
     final _that = this;
     switch (_that) {
       case _ReadingDataState():
-        return $default(_that.top1, _that.top2, _that.top3);
+        return $default(
+            _that.top1, _that.top2, _that.top3, _that.list, _that.my);
       case _:
         throw StateError('Unexpected subclass');
     }
@@ -286,14 +324,19 @@ extension ReadingDataStatePatterns on ReadingDataState {
 
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>(
-    TResult? Function(RankingWeeklyTop3Response? top1,
-            RankingWeeklyTop3Response? top2, RankingWeeklyTop3Response? top3)?
+    TResult? Function(
+            RankingWeeklyResponse? top1,
+            RankingWeeklyResponse? top2,
+            RankingWeeklyResponse? top3,
+            List<RankingWeeklyResponse> list,
+            RankingWeeklyResponse my)?
         $default,
   ) {
     final _that = this;
     switch (_that) {
       case _ReadingDataState() when $default != null:
-        return $default(_that.top1, _that.top2, _that.top3);
+        return $default(
+            _that.top1, _that.top2, _that.top3, _that.list, _that.my);
       case _:
         return null;
     }
@@ -304,17 +347,34 @@ extension ReadingDataStatePatterns on ReadingDataState {
 
 class _ReadingDataState implements ReadingDataState {
   const _ReadingDataState(
-      {this.top1 = null, this.top2 = null, this.top3 = null});
+      {this.top1 = null,
+      this.top2 = null,
+      this.top3 = null,
+      final List<RankingWeeklyResponse> list = const [],
+      this.my = const RankingWeeklyResponse()})
+      : _list = list;
 
   @override
   @JsonKey()
-  final RankingWeeklyTop3Response? top1;
+  final RankingWeeklyResponse? top1;
   @override
   @JsonKey()
-  final RankingWeeklyTop3Response? top2;
+  final RankingWeeklyResponse? top2;
   @override
   @JsonKey()
-  final RankingWeeklyTop3Response? top3;
+  final RankingWeeklyResponse? top3;
+  final List<RankingWeeklyResponse> _list;
+  @override
+  @JsonKey()
+  List<RankingWeeklyResponse> get list {
+    if (_list is EqualUnmodifiableListView) return _list;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_list);
+  }
+
+  @override
+  @JsonKey()
+  final RankingWeeklyResponse my;
 
   /// Create a copy of ReadingDataState
   /// with the given fields replaced by the non-null parameter values.
@@ -331,15 +391,18 @@ class _ReadingDataState implements ReadingDataState {
             other is _ReadingDataState &&
             (identical(other.top1, top1) || other.top1 == top1) &&
             (identical(other.top2, top2) || other.top2 == top2) &&
-            (identical(other.top3, top3) || other.top3 == top3));
+            (identical(other.top3, top3) || other.top3 == top3) &&
+            const DeepCollectionEquality().equals(other._list, _list) &&
+            (identical(other.my, my) || other.my == my));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, top1, top2, top3);
+  int get hashCode => Object.hash(runtimeType, top1, top2, top3,
+      const DeepCollectionEquality().hash(_list), my);
 
   @override
   String toString() {
-    return 'ReadingDataState(top1: $top1, top2: $top2, top3: $top3)';
+    return 'ReadingDataState(top1: $top1, top2: $top2, top3: $top3, list: $list, my: $my)';
   }
 }
 
@@ -352,16 +415,20 @@ abstract mixin class _$ReadingDataStateCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {RankingWeeklyTop3Response? top1,
-      RankingWeeklyTop3Response? top2,
-      RankingWeeklyTop3Response? top3});
+      {RankingWeeklyResponse? top1,
+      RankingWeeklyResponse? top2,
+      RankingWeeklyResponse? top3,
+      List<RankingWeeklyResponse> list,
+      RankingWeeklyResponse my});
 
   @override
-  $RankingWeeklyTop3ResponseCopyWith<$Res>? get top1;
+  $RankingWeeklyResponseCopyWith<$Res>? get top1;
   @override
-  $RankingWeeklyTop3ResponseCopyWith<$Res>? get top2;
+  $RankingWeeklyResponseCopyWith<$Res>? get top2;
   @override
-  $RankingWeeklyTop3ResponseCopyWith<$Res>? get top3;
+  $RankingWeeklyResponseCopyWith<$Res>? get top3;
+  @override
+  $RankingWeeklyResponseCopyWith<$Res> get my;
 }
 
 /// @nodoc
@@ -380,20 +447,30 @@ class __$ReadingDataStateCopyWithImpl<$Res>
     Object? top1 = freezed,
     Object? top2 = freezed,
     Object? top3 = freezed,
+    Object? list = null,
+    Object? my = null,
   }) {
     return _then(_ReadingDataState(
       top1: freezed == top1
           ? _self.top1
           : top1 // ignore: cast_nullable_to_non_nullable
-              as RankingWeeklyTop3Response?,
+              as RankingWeeklyResponse?,
       top2: freezed == top2
           ? _self.top2
           : top2 // ignore: cast_nullable_to_non_nullable
-              as RankingWeeklyTop3Response?,
+              as RankingWeeklyResponse?,
       top3: freezed == top3
           ? _self.top3
           : top3 // ignore: cast_nullable_to_non_nullable
-              as RankingWeeklyTop3Response?,
+              as RankingWeeklyResponse?,
+      list: null == list
+          ? _self._list
+          : list // ignore: cast_nullable_to_non_nullable
+              as List<RankingWeeklyResponse>,
+      my: null == my
+          ? _self.my
+          : my // ignore: cast_nullable_to_non_nullable
+              as RankingWeeklyResponse,
     ));
   }
 
@@ -401,12 +478,12 @@ class __$ReadingDataStateCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-  $RankingWeeklyTop3ResponseCopyWith<$Res>? get top1 {
+  $RankingWeeklyResponseCopyWith<$Res>? get top1 {
     if (_self.top1 == null) {
       return null;
     }
 
-    return $RankingWeeklyTop3ResponseCopyWith<$Res>(_self.top1!, (value) {
+    return $RankingWeeklyResponseCopyWith<$Res>(_self.top1!, (value) {
       return _then(_self.copyWith(top1: value));
     });
   }
@@ -415,12 +492,12 @@ class __$ReadingDataStateCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-  $RankingWeeklyTop3ResponseCopyWith<$Res>? get top2 {
+  $RankingWeeklyResponseCopyWith<$Res>? get top2 {
     if (_self.top2 == null) {
       return null;
     }
 
-    return $RankingWeeklyTop3ResponseCopyWith<$Res>(_self.top2!, (value) {
+    return $RankingWeeklyResponseCopyWith<$Res>(_self.top2!, (value) {
       return _then(_self.copyWith(top2: value));
     });
   }
@@ -429,13 +506,23 @@ class __$ReadingDataStateCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-  $RankingWeeklyTop3ResponseCopyWith<$Res>? get top3 {
+  $RankingWeeklyResponseCopyWith<$Res>? get top3 {
     if (_self.top3 == null) {
       return null;
     }
 
-    return $RankingWeeklyTop3ResponseCopyWith<$Res>(_self.top3!, (value) {
+    return $RankingWeeklyResponseCopyWith<$Res>(_self.top3!, (value) {
       return _then(_self.copyWith(top3: value));
+    });
+  }
+
+  /// Create a copy of ReadingDataState
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $RankingWeeklyResponseCopyWith<$Res> get my {
+    return $RankingWeeklyResponseCopyWith<$Res>(_self.my, (value) {
+      return _then(_self.copyWith(my: value));
     });
   }
 }

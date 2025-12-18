@@ -1,14 +1,14 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'ranking_weekly_top3_response.dart';
+part of 'ranking_weekly_response.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-_RankingWeeklyTop3Response _$RankingWeeklyTop3ResponseFromJson(
+_RankingWeeklyResponse _$RankingWeeklyResponseFromJson(
         Map<String, dynamic> json) =>
-    _RankingWeeklyTop3Response(
+    _RankingWeeklyResponse(
       rank: (json['rank'] as num?)?.toInt() ?? -1,
       memberId: (json['memberId'] as num?)?.toInt() ?? -1,
       nickname: json['nickname'] as String? ?? "",
@@ -19,8 +19,8 @@ _RankingWeeklyTop3Response _$RankingWeeklyTop3ResponseFromJson(
       myRank: json['myRank'] as bool? ?? false,
     );
 
-Map<String, dynamic> _$RankingWeeklyTop3ResponseToJson(
-        _RankingWeeklyTop3Response instance) =>
+Map<String, dynamic> _$RankingWeeklyResponseToJson(
+        _RankingWeeklyResponse instance) =>
     <String, dynamic>{
       'rank': instance.rank,
       'memberId': instance.memberId,

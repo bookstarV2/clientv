@@ -7,7 +7,7 @@ part of 'reading_data_view_model.dart';
 // **************************************************************************
 
 String _$readingDataViewModelHash() =>
-    r'959a83af0fae852c0d91277db2212bbcd560fff9';
+    r'aabad64f8e24f169f7a0ff06191ee5ea8b5c541d';
 
 /// See also [ReadingDataViewModel].
 @ProviderFor(ReadingDataViewModel)
