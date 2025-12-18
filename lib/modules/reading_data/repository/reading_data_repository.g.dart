@@ -18,14 +18,13 @@ class _ReadingDataRepository implements ReadingDataRepository {
   final ParseErrorLogger? errorLogger;
 
   @override
-  Future<ResponseForm<List<RankingWeeklyTop3Response>>>
+  Future<ResponseForm<List<RankingWeeklyResponse>>>
       getRankingWeeklyTop3() async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
-    final _options =
-        _setStreamType<ResponseForm<List<RankingWeeklyTop3Response>>>(
+    final _options = _setStreamType<ResponseForm<List<RankingWeeklyResponse>>>(
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
@@ -33,24 +32,90 @@ class _ReadingDataRepository implements ReadingDataRepository {
             queryParameters: queryParameters,
             data: _data,
           )
-          .copyWith(
-            baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl),
-          ),
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late ResponseForm<List<RankingWeeklyTop3Response>> _value;
+    late ResponseForm<List<RankingWeeklyResponse>> _value;
     try {
-      _value = ResponseForm<List<RankingWeeklyTop3Response>>.fromJson(
+      _value = ResponseForm<List<RankingWeeklyResponse>>.fromJson(
         _result.data!,
         (json) => json is List<dynamic>
             ? json
-                .map<RankingWeeklyTop3Response>(
-                  (i) => RankingWeeklyTop3Response.fromJson(
+                .map<RankingWeeklyResponse>(
+                  (i) => RankingWeeklyResponse.fromJson(
                     i as Map<String, dynamic>,
                   ),
                 )
                 .toList()
             : List.empty(),
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<ResponseForm<List<RankingWeeklyResponse>>> getRankingWeekly() async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<ResponseForm<List<RankingWeeklyResponse>>>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/api/v1/ranking/weekly',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late ResponseForm<List<RankingWeeklyResponse>> _value;
+    try {
+      _value = ResponseForm<List<RankingWeeklyResponse>>.fromJson(
+        _result.data!,
+        (json) => json is List<dynamic>
+            ? json
+                .map<RankingWeeklyResponse>(
+                  (i) => RankingWeeklyResponse.fromJson(
+                    i as Map<String, dynamic>,
+                  ),
+                )
+                .toList()
+            : List.empty(),
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<ResponseForm<RankingWeeklyResponse>> getRankingWeeklyMy() async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<ResponseForm<RankingWeeklyResponse>>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/api/v1/ranking/weekly/my',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late ResponseForm<RankingWeeklyResponse> _value;
+    try {
+      _value = ResponseForm<RankingWeeklyResponse>.fromJson(
+        _result.data!,
+        (json) => RankingWeeklyResponse.fromJson(json as Map<String, dynamic>),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);

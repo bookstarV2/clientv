@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
-part of 'ranking_weekly_top3_response.dart';
+part of 'ranking_weekly_response.dart';
 
 // **************************************************************************
 // FreezedGenerator
@@ -13,7 +13,7 @@ part of 'ranking_weekly_top3_response.dart';
 T _$identity<T>(T value) => value;
 
 /// @nodoc
-mixin _$RankingWeeklyTop3Response {
+mixin _$RankingWeeklyResponse {
   int get rank;
   int get memberId;
   String get nickname;
@@ -23,22 +23,22 @@ mixin _$RankingWeeklyTop3Response {
   int get correctCount;
   bool get myRank;
 
-  /// Create a copy of RankingWeeklyTop3Response
+  /// Create a copy of RankingWeeklyResponse
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   @pragma('vm:prefer-inline')
-  $RankingWeeklyTop3ResponseCopyWith<RankingWeeklyTop3Response> get copyWith =>
-      _$RankingWeeklyTop3ResponseCopyWithImpl<RankingWeeklyTop3Response>(
-          this as RankingWeeklyTop3Response, _$identity);
+  $RankingWeeklyResponseCopyWith<RankingWeeklyResponse> get copyWith =>
+      _$RankingWeeklyResponseCopyWithImpl<RankingWeeklyResponse>(
+          this as RankingWeeklyResponse, _$identity);
 
-  /// Serializes this RankingWeeklyTop3Response to a JSON map.
+  /// Serializes this RankingWeeklyResponse to a JSON map.
   Map<String, dynamic> toJson();
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is RankingWeeklyTop3Response &&
+            other is RankingWeeklyResponse &&
             (identical(other.rank, rank) || other.rank == rank) &&
             (identical(other.memberId, memberId) ||
                 other.memberId == memberId) &&
@@ -62,15 +62,15 @@ mixin _$RankingWeeklyTop3Response {
 
   @override
   String toString() {
-    return 'RankingWeeklyTop3Response(rank: $rank, memberId: $memberId, nickname: $nickname, profileImage: $profileImage, participationDays: $participationDays, solvedCount: $solvedCount, correctCount: $correctCount, myRank: $myRank)';
+    return 'RankingWeeklyResponse(rank: $rank, memberId: $memberId, nickname: $nickname, profileImage: $profileImage, participationDays: $participationDays, solvedCount: $solvedCount, correctCount: $correctCount, myRank: $myRank)';
   }
 }
 
 /// @nodoc
-abstract mixin class $RankingWeeklyTop3ResponseCopyWith<$Res> {
-  factory $RankingWeeklyTop3ResponseCopyWith(RankingWeeklyTop3Response value,
-          $Res Function(RankingWeeklyTop3Response) _then) =
-      _$RankingWeeklyTop3ResponseCopyWithImpl;
+abstract mixin class $RankingWeeklyResponseCopyWith<$Res> {
+  factory $RankingWeeklyResponseCopyWith(RankingWeeklyResponse value,
+          $Res Function(RankingWeeklyResponse) _then) =
+      _$RankingWeeklyResponseCopyWithImpl;
   @useResult
   $Res call(
       {int rank,
@@ -84,14 +84,14 @@ abstract mixin class $RankingWeeklyTop3ResponseCopyWith<$Res> {
 }
 
 /// @nodoc
-class _$RankingWeeklyTop3ResponseCopyWithImpl<$Res>
-    implements $RankingWeeklyTop3ResponseCopyWith<$Res> {
-  _$RankingWeeklyTop3ResponseCopyWithImpl(this._self, this._then);
+class _$RankingWeeklyResponseCopyWithImpl<$Res>
+    implements $RankingWeeklyResponseCopyWith<$Res> {
+  _$RankingWeeklyResponseCopyWithImpl(this._self, this._then);
 
-  final RankingWeeklyTop3Response _self;
-  final $Res Function(RankingWeeklyTop3Response) _then;
+  final RankingWeeklyResponse _self;
+  final $Res Function(RankingWeeklyResponse) _then;
 
-  /// Create a copy of RankingWeeklyTop3Response
+  /// Create a copy of RankingWeeklyResponse
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
@@ -142,8 +142,8 @@ class _$RankingWeeklyTop3ResponseCopyWithImpl<$Res>
   }
 }
 
-/// Adds pattern-matching-related methods to [RankingWeeklyTop3Response].
-extension RankingWeeklyTop3ResponsePatterns on RankingWeeklyTop3Response {
+/// Adds pattern-matching-related methods to [RankingWeeklyResponse].
+extension RankingWeeklyResponsePatterns on RankingWeeklyResponse {
   /// A variant of `map` that fallback to returning `orElse`.
   ///
   /// It is equivalent to doing:
@@ -158,12 +158,12 @@ extension RankingWeeklyTop3ResponsePatterns on RankingWeeklyTop3Response {
 
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>(
-    TResult Function(_RankingWeeklyTop3Response value)? $default, {
+    TResult Function(_RankingWeeklyResponse value)? $default, {
     required TResult orElse(),
   }) {
     final _that = this;
     switch (_that) {
-      case _RankingWeeklyTop3Response() when $default != null:
+      case _RankingWeeklyResponse() when $default != null:
         return $default(_that);
       case _:
         return orElse();
@@ -185,11 +185,11 @@ extension RankingWeeklyTop3ResponsePatterns on RankingWeeklyTop3Response {
 
   @optionalTypeArgs
   TResult map<TResult extends Object?>(
-    TResult Function(_RankingWeeklyTop3Response value) $default,
+    TResult Function(_RankingWeeklyResponse value) $default,
   ) {
     final _that = this;
     switch (_that) {
-      case _RankingWeeklyTop3Response():
+      case _RankingWeeklyResponse():
         return $default(_that);
       case _:
         throw StateError('Unexpected subclass');
@@ -210,11 +210,11 @@ extension RankingWeeklyTop3ResponsePatterns on RankingWeeklyTop3Response {
 
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>(
-    TResult? Function(_RankingWeeklyTop3Response value)? $default,
+    TResult? Function(_RankingWeeklyResponse value)? $default,
   ) {
     final _that = this;
     switch (_that) {
-      case _RankingWeeklyTop3Response() when $default != null:
+      case _RankingWeeklyResponse() when $default != null:
         return $default(_that);
       case _:
         return null;
@@ -249,7 +249,7 @@ extension RankingWeeklyTop3ResponsePatterns on RankingWeeklyTop3Response {
   }) {
     final _that = this;
     switch (_that) {
-      case _RankingWeeklyTop3Response() when $default != null:
+      case _RankingWeeklyResponse() when $default != null:
         return $default(
             _that.rank,
             _that.memberId,
@@ -292,7 +292,7 @@ extension RankingWeeklyTop3ResponsePatterns on RankingWeeklyTop3Response {
   ) {
     final _that = this;
     switch (_that) {
-      case _RankingWeeklyTop3Response():
+      case _RankingWeeklyResponse():
         return $default(
             _that.rank,
             _that.memberId,
@@ -334,7 +334,7 @@ extension RankingWeeklyTop3ResponsePatterns on RankingWeeklyTop3Response {
   ) {
     final _that = this;
     switch (_that) {
-      case _RankingWeeklyTop3Response() when $default != null:
+      case _RankingWeeklyResponse() when $default != null:
         return $default(
             _that.rank,
             _that.memberId,
@@ -352,8 +352,8 @@ extension RankingWeeklyTop3ResponsePatterns on RankingWeeklyTop3Response {
 
 /// @nodoc
 @JsonSerializable()
-class _RankingWeeklyTop3Response implements RankingWeeklyTop3Response {
-  const _RankingWeeklyTop3Response(
+class _RankingWeeklyResponse implements RankingWeeklyResponse {
+  const _RankingWeeklyResponse(
       {this.rank = -1,
       this.memberId = -1,
       this.nickname = "",
@@ -362,8 +362,8 @@ class _RankingWeeklyTop3Response implements RankingWeeklyTop3Response {
       this.solvedCount = -1,
       this.correctCount = -1,
       this.myRank = false});
-  factory _RankingWeeklyTop3Response.fromJson(Map<String, dynamic> json) =>
-      _$RankingWeeklyTop3ResponseFromJson(json);
+  factory _RankingWeeklyResponse.fromJson(Map<String, dynamic> json) =>
+      _$RankingWeeklyResponseFromJson(json);
 
   @override
   @JsonKey()
@@ -390,19 +390,18 @@ class _RankingWeeklyTop3Response implements RankingWeeklyTop3Response {
   @JsonKey()
   final bool myRank;
 
-  /// Create a copy of RankingWeeklyTop3Response
+  /// Create a copy of RankingWeeklyResponse
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   @pragma('vm:prefer-inline')
-  _$RankingWeeklyTop3ResponseCopyWith<_RankingWeeklyTop3Response>
-      get copyWith =>
-          __$RankingWeeklyTop3ResponseCopyWithImpl<_RankingWeeklyTop3Response>(
-              this, _$identity);
+  _$RankingWeeklyResponseCopyWith<_RankingWeeklyResponse> get copyWith =>
+      __$RankingWeeklyResponseCopyWithImpl<_RankingWeeklyResponse>(
+          this, _$identity);
 
   @override
   Map<String, dynamic> toJson() {
-    return _$RankingWeeklyTop3ResponseToJson(
+    return _$RankingWeeklyResponseToJson(
       this,
     );
   }
@@ -411,7 +410,7 @@ class _RankingWeeklyTop3Response implements RankingWeeklyTop3Response {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _RankingWeeklyTop3Response &&
+            other is _RankingWeeklyResponse &&
             (identical(other.rank, rank) || other.rank == rank) &&
             (identical(other.memberId, memberId) ||
                 other.memberId == memberId) &&
@@ -435,16 +434,16 @@ class _RankingWeeklyTop3Response implements RankingWeeklyTop3Response {
 
   @override
   String toString() {
-    return 'RankingWeeklyTop3Response(rank: $rank, memberId: $memberId, nickname: $nickname, profileImage: $profileImage, participationDays: $participationDays, solvedCount: $solvedCount, correctCount: $correctCount, myRank: $myRank)';
+    return 'RankingWeeklyResponse(rank: $rank, memberId: $memberId, nickname: $nickname, profileImage: $profileImage, participationDays: $participationDays, solvedCount: $solvedCount, correctCount: $correctCount, myRank: $myRank)';
   }
 }
 
 /// @nodoc
-abstract mixin class _$RankingWeeklyTop3ResponseCopyWith<$Res>
-    implements $RankingWeeklyTop3ResponseCopyWith<$Res> {
-  factory _$RankingWeeklyTop3ResponseCopyWith(_RankingWeeklyTop3Response value,
-          $Res Function(_RankingWeeklyTop3Response) _then) =
-      __$RankingWeeklyTop3ResponseCopyWithImpl;
+abstract mixin class _$RankingWeeklyResponseCopyWith<$Res>
+    implements $RankingWeeklyResponseCopyWith<$Res> {
+  factory _$RankingWeeklyResponseCopyWith(_RankingWeeklyResponse value,
+          $Res Function(_RankingWeeklyResponse) _then) =
+      __$RankingWeeklyResponseCopyWithImpl;
   @override
   @useResult
   $Res call(
@@ -459,14 +458,14 @@ abstract mixin class _$RankingWeeklyTop3ResponseCopyWith<$Res>
 }
 
 /// @nodoc
-class __$RankingWeeklyTop3ResponseCopyWithImpl<$Res>
-    implements _$RankingWeeklyTop3ResponseCopyWith<$Res> {
-  __$RankingWeeklyTop3ResponseCopyWithImpl(this._self, this._then);
+class __$RankingWeeklyResponseCopyWithImpl<$Res>
+    implements _$RankingWeeklyResponseCopyWith<$Res> {
+  __$RankingWeeklyResponseCopyWithImpl(this._self, this._then);
 
-  final _RankingWeeklyTop3Response _self;
-  final $Res Function(_RankingWeeklyTop3Response) _then;
+  final _RankingWeeklyResponse _self;
+  final $Res Function(_RankingWeeklyResponse) _then;
 
-  /// Create a copy of RankingWeeklyTop3Response
+  /// Create a copy of RankingWeeklyResponse
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
@@ -480,7 +479,7 @@ class __$RankingWeeklyTop3ResponseCopyWithImpl<$Res>
     Object? correctCount = null,
     Object? myRank = null,
   }) {
-    return _then(_RankingWeeklyTop3Response(
+    return _then(_RankingWeeklyResponse(
       rank: null == rank
           ? _self.rank
           : rank // ignore: cast_nullable_to_non_nullable
