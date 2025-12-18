@@ -11,6 +11,7 @@ import 'package:bookstar/modules/reading_challenge/view/screens/reading_challeng
 import 'package:bookstar/modules/reading_challenge/view/screens/reading_challenge_search_new_my_likes_screen.dart';
 import 'package:bookstar/modules/reading_challenge/view/screens/reading_challenge_search_new_screen.dart';
 import 'package:bookstar/modules/reading_challenge/view/screens/reading_challenge_start_screen.dart';
+import 'package:bookstar/modules/reading_data/view/screens/reading_data_screen.dart';
 import 'package:bookstar/modules/reading_diary/model/diary_update_request.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
@@ -144,6 +145,17 @@ GoRouter router(Ref ref) {
                     },
                   ),
                 ],
+              ),
+            ],
+          ),
+
+          /// 리딩데이터
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/reading-data',
+                builder: (context, state) => const ReadingDataScreen(),
+                routes: [],
               ),
             ],
           ),

@@ -123,6 +123,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     switch (currentRoute) {
       case "/book-log":
       case "/reading-challenge":
+      case "/reading-data":
         {
           return EdgeInsets.zero;
         }
