@@ -363,6 +363,18 @@ class $AssetsIconsGen {
   SvgGenImage get icReadingComplete =>
       const SvgGenImage('assets/icons/ic_reading_complete.svg');
 
+  /// File path: assets/icons/ic_reading_data_correct_count.svg
+  SvgGenImage get icReadingDataCorrectCount =>
+      const SvgGenImage('assets/icons/ic_reading_data_correct_count.svg');
+
+  /// File path: assets/icons/ic_reading_data_participation_days.svg
+  SvgGenImage get icReadingDataParticipationDays =>
+      const SvgGenImage('assets/icons/ic_reading_data_participation_days.svg');
+
+  /// File path: assets/icons/ic_reading_data_solved_count.svg
+  SvgGenImage get icReadingDataSolvedCount =>
+      const SvgGenImage('assets/icons/ic_reading_data_solved_count.svg');
+
   /// File path: assets/icons/ic_scrap.svg
   SvgGenImage get icScrap => const SvgGenImage('assets/icons/ic_scrap.svg');
 
@@ -468,6 +480,9 @@ class $AssetsIconsGen {
     icReadingChallengeNotCompleted,
     icReadingChallengeTimeRate,
     icReadingComplete,
+    icReadingDataCorrectCount,
+    icReadingDataParticipationDays,
+    icReadingDataSolvedCount,
     icScrap,
     icScrapFilled,
     icStar,
