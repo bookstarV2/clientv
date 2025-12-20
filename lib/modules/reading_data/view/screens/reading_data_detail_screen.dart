@@ -3,7 +3,6 @@ import 'package:bookstar/common/components/custom_list_view.dart';
 import 'package:bookstar/common/theme/style/app_texts.dart';
 import 'package:bookstar/gen/assets.gen.dart';
 import 'package:bookstar/gen/colors.gen.dart';
-import 'package:bookstar/modules/reading_data/model/ranking_weekly_response.dart';
 import 'package:bookstar/modules/reading_data/view_model/reading_data_view_model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';

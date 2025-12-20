@@ -298,6 +298,7 @@ abstract class BaseScreenState<T extends BaseScreen> extends ConsumerState<T>
         body: _buildBodyWithRefresh(context),
         // bottomNavigationBar: _buildBottomNavigationBar(context),
         floatingActionButton: buildFloatingActionButton(context),
+        floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
         drawer: buildDrawer(context),
       ),
     );

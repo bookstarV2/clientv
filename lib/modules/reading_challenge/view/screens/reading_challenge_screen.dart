@@ -32,6 +32,7 @@ class _ReadingChallengeScreenState
   final GlobalKey _screenKey = GlobalKey();
   bool _hasScrolledToTarget = false;
   int? _targetIndex;
+  int? _newIndex;
   bool _hasQuiz = false;
 
   @override
@@ -52,6 +53,7 @@ class _ReadingChallengeScreenState
           setState(() {
             _hasScrolledToTarget = true;
             _targetIndex = targetIndex;
+            _newIndex = targetIndex;
           });
           if (mounted && scrollController.hasClients) {
             scrollController.animateTo(
@@ -132,10 +134,12 @@ class _ReadingChallengeScreenState
                         _hasQuiz = item.hasQuiz;
                       });
                     },
+                    targetIndex: _targetIndex,
+                    newIndex: _newIndex,
                   ),
                   if (_targetIndex != null)
                     SizedBox(
-                      height: 60,
+                      height: 80,
                     )
                 ],
               ),
@@ -209,9 +213,12 @@ class _ReadingChallengeScreenState
     );
   }
 
-  Widget _buildListSection(
-      {required List<ChallengeResponse> items,
-      required Function(ChallengeResponse, int) onTapItem}) {
+  Widget _buildListSection({
+    required List<ChallengeResponse> items,
+    required Function(ChallengeResponse, int) onTapItem,
+    required int? targetIndex,
+    required int? newIndex,
+  }) {
     return Flexible(
       child: CustomListView(
           emptyIcon: Assets.icons.icBookpickSearchCharacter.svg(),
@@ -223,8 +230,9 @@ class _ReadingChallengeScreenState
           itemBuilder: (context, index) {
             final item = items[index];
 
-            final isSelectedMode = _targetIndex != null;
-            final isTarget = _targetIndex == index;
+            final isSelectedMode = targetIndex != null;
+            final isTarget = targetIndex == index;
+            final isNew = newIndex == index;
 
             double angle = 0;
             switch (index % 3) {
@@ -252,23 +260,46 @@ class _ReadingChallengeScreenState
                     children: [
                       Transform.rotate(
                         angle: angle,
-                        child: Container(
-                          width: 125,
-                          height: 170,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(14),
-                            border: BoxBorder.all(color: Color(0xFFF5F5F5)),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(14),
-                            child: CachedNetworkImage(
-                              imageUrl: item.bookImageUrl,
-                              fit: BoxFit.cover,
-                              errorWidget: (context, url, error) {
-                                return Container();
-                              },
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Container(
+                              width: 125,
+                              height: 170,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(14),
+                                border: BoxBorder.all(color: Color(0xFFF5F5F5)),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(14),
+                                child: CachedNetworkImage(
+                                  imageUrl: item.bookImageUrl,
+                                  fit: BoxFit.cover,
+                                  errorWidget: (context, url, error) {
+                                    return Container();
+                                  },
+                                ),
+                              ),
                             ),
-                          ),
+                            if (isNew)
+                              Positioned(
+                                top: -8, // 음수 값으로 위로 올림
+                                left: -8, // 왼쪽 여백
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(50),
+                                    color: ColorName.p1,
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 1),
+                                    child: Text("NEW",
+                                        style: AppTexts.b9
+                                            .copyWith(color: ColorName.w1)),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                       SizedBox(
@@ -364,49 +395,55 @@ class _ReadingChallengeScreenState
 
   @override
   Widget? buildFloatingActionButton(BuildContext context) {
+    final deviceWidth = MediaQuery.of(context).size.width;
     return _targetIndex != null
-        ? Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (!_hasQuiz)
-                Column(
-                  children: [
-                    Container(
-                        decoration: BoxDecoration(
-                          color: ColorName.dim3,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 10),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Assets.icons.icStar4Filled.svg(),
-                              SizedBox(
-                                width: 8,
-                              ),
-                              Text(
-                                "책이 더 궁금해지는 퀴즈를 준비하고 있어요",
-                                style:
-                                    AppTexts.b8.copyWith(color: ColorName.w1),
-                              ),
-                            ],
+        ? SizedBox(
+            width: deviceWidth * 0.9,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                if (!_hasQuiz)
+                  Column(
+                    children: [
+                      Container(
+                          decoration: BoxDecoration(
+                            color: ColorName.dim3,
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                        )),
-                    SizedBox(
-                      height: 16,
-                    ),
-                  ],
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 10),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Assets.icons.icStar4Filled.svg(),
+                                SizedBox(
+                                  width: 8,
+                                ),
+                                Text(
+                                  "책이 더 궁금해지는 퀴즈를 준비하고 있어요",
+                                  style:
+                                      AppTexts.b8.copyWith(color: ColorName.w1),
+                                ),
+                              ],
+                            ),
+                          )),
+                      SizedBox(
+                        height: 16,
+                      ),
+                    ],
+                  ),
+                CtaButtonL1(
+                  text: '리딩 챌린지 시작하기',
+                  enabled: _hasQuiz,
+                  onPressed: () {
+                    goToStartScreen();
+                  },
                 ),
-              CtaButtonL1(
-                text: '리딩 챌린지 시작하기',
-                enabled: _hasQuiz,
-                onPressed: () {
-                  goToStartScreen();
-                },
-              ),
-            ],
+              ],
+            ),
           )
         : null;
   }
