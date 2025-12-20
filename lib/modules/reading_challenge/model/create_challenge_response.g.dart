@@ -28,6 +28,7 @@ Map<String, dynamic> _$CreateChallengeResponseToJson(
     };
 
 const _$QuizGenerationStatusEnumMap = {
+  QuizGenerationStatus.PENDING: 'PENDING',
   QuizGenerationStatus.PROCESSING: 'PROCESSING',
   QuizGenerationStatus.ALREADY_EXISTS: 'ALREADY_EXISTS',
 };
