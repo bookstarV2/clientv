@@ -78,16 +78,13 @@ class CurrentChallengeViewModel extends _$CurrentChallengeViewModel {
       ref.invalidate(
           getChallengesByMemberViewModelProvider(memberId: memberId));
       // 완독한 챌린지 목록도 다시 가져오기
-      final notifier =
-          ref.read(ongoingChallengeViewModelProvider.notifier);
-      await notifier.fetchChallenges();
+      final notifier = ref.read(ongoingChallengeViewModelProvider.notifier);
+      await notifier.initState();
       return res.data.progressId;
     } catch (e) {
       print('Failed to create challenge: $e');
       rethrow;
     }
-
-    
   }
 
   Future<int> updateChallengeProgress(WidgetRef ref) async {
@@ -116,9 +113,8 @@ class CurrentChallengeViewModel extends _$CurrentChallengeViewModel {
       ref.invalidate(
           getChallengesByMemberViewModelProvider(memberId: memberId));
       // 완독한 챌린지 목록도 다시 가져오기
-      final notifier =
-          ref.read(ongoingChallengeViewModelProvider.notifier);
-      await notifier.fetchChallenges();
+      final notifier = ref.read(ongoingChallengeViewModelProvider.notifier);
+      await notifier.initState();
       return res.data.progressId;
     } catch (e) {
       debugPrint('Failed to update challenge progress: $e');

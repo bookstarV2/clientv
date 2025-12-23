@@ -163,7 +163,7 @@ class _ReadingChallengeDetailScreenState
                             (user is AuthSuccess) ? user.memberId : 0;
                         ref.invalidate(getChallengesByMemberViewModelProvider(
                             memberId: memberId));
-                        await notifier.fetchChallenges();
+                        await notifier.initState();
                         if (context.mounted) {
                           await _showDeleteSuccessDialog(context);
                         }
