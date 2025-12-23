@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$OngoingChallengeScreenState {
-  AsyncValue<List<ChallengeResponse>> get challenges;
+  List<ChallengeResponse> get challenges;
   bool get isSelectionMode;
   Set<int> get selectedChallengeIds;
 
@@ -32,8 +32,8 @@ mixin _$OngoingChallengeScreenState {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is OngoingChallengeScreenState &&
-            (identical(other.challenges, challenges) ||
-                other.challenges == challenges) &&
+            const DeepCollectionEquality()
+                .equals(other.challenges, challenges) &&
             (identical(other.isSelectionMode, isSelectionMode) ||
                 other.isSelectionMode == isSelectionMode) &&
             const DeepCollectionEquality()
@@ -41,7 +41,10 @@ mixin _$OngoingChallengeScreenState {
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, challenges, isSelectionMode,
+  int get hashCode => Object.hash(
+      runtimeType,
+      const DeepCollectionEquality().hash(challenges),
+      isSelectionMode,
       const DeepCollectionEquality().hash(selectedChallengeIds));
 
   @override
@@ -58,7 +61,7 @@ abstract mixin class $OngoingChallengeScreenStateCopyWith<$Res> {
       _$OngoingChallengeScreenStateCopyWithImpl;
   @useResult
   $Res call(
-      {AsyncValue<List<ChallengeResponse>> challenges,
+      {List<ChallengeResponse> challenges,
       bool isSelectionMode,
       Set<int> selectedChallengeIds});
 }
@@ -84,7 +87,7 @@ class _$OngoingChallengeScreenStateCopyWithImpl<$Res>
       challenges: null == challenges
           ? _self.challenges
           : challenges // ignore: cast_nullable_to_non_nullable
-              as AsyncValue<List<ChallengeResponse>>,
+              as List<ChallengeResponse>,
       isSelectionMode: null == isSelectionMode
           ? _self.isSelectionMode
           : isSelectionMode // ignore: cast_nullable_to_non_nullable
@@ -190,8 +193,8 @@ extension OngoingChallengeScreenStatePatterns on OngoingChallengeScreenState {
 
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
-    TResult Function(AsyncValue<List<ChallengeResponse>> challenges,
-            bool isSelectionMode, Set<int> selectedChallengeIds)?
+    TResult Function(List<ChallengeResponse> challenges, bool isSelectionMode,
+            Set<int> selectedChallengeIds)?
         $default, {
     required TResult orElse(),
   }) {
@@ -220,8 +223,8 @@ extension OngoingChallengeScreenStatePatterns on OngoingChallengeScreenState {
 
   @optionalTypeArgs
   TResult when<TResult extends Object?>(
-    TResult Function(AsyncValue<List<ChallengeResponse>> challenges,
-            bool isSelectionMode, Set<int> selectedChallengeIds)
+    TResult Function(List<ChallengeResponse> challenges, bool isSelectionMode,
+            Set<int> selectedChallengeIds)
         $default,
   ) {
     final _that = this;
@@ -248,8 +251,8 @@ extension OngoingChallengeScreenStatePatterns on OngoingChallengeScreenState {
 
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>(
-    TResult? Function(AsyncValue<List<ChallengeResponse>> challenges,
-            bool isSelectionMode, Set<int> selectedChallengeIds)?
+    TResult? Function(List<ChallengeResponse> challenges, bool isSelectionMode,
+            Set<int> selectedChallengeIds)?
         $default,
   ) {
     final _that = this;
@@ -267,14 +270,21 @@ extension OngoingChallengeScreenStatePatterns on OngoingChallengeScreenState {
 
 class _OngoingChallengeScreenState implements OngoingChallengeScreenState {
   const _OngoingChallengeScreenState(
-      {this.challenges = const AsyncData([]),
+      {final List<ChallengeResponse> challenges = const [],
       this.isSelectionMode = false,
       final Set<int> selectedChallengeIds = const {}})
-      : _selectedChallengeIds = selectedChallengeIds;
+      : _challenges = challenges,
+        _selectedChallengeIds = selectedChallengeIds;
 
+  final List<ChallengeResponse> _challenges;
   @override
   @JsonKey()
-  final AsyncValue<List<ChallengeResponse>> challenges;
+  List<ChallengeResponse> get challenges {
+    if (_challenges is EqualUnmodifiableListView) return _challenges;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_challenges);
+  }
+
   @override
   @JsonKey()
   final bool isSelectionMode;
@@ -302,8 +312,8 @@ class _OngoingChallengeScreenState implements OngoingChallengeScreenState {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _OngoingChallengeScreenState &&
-            (identical(other.challenges, challenges) ||
-                other.challenges == challenges) &&
+            const DeepCollectionEquality()
+                .equals(other._challenges, _challenges) &&
             (identical(other.isSelectionMode, isSelectionMode) ||
                 other.isSelectionMode == isSelectionMode) &&
             const DeepCollectionEquality()
@@ -311,7 +321,10 @@ class _OngoingChallengeScreenState implements OngoingChallengeScreenState {
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, challenges, isSelectionMode,
+  int get hashCode => Object.hash(
+      runtimeType,
+      const DeepCollectionEquality().hash(_challenges),
+      isSelectionMode,
       const DeepCollectionEquality().hash(_selectedChallengeIds));
 
   @override
@@ -330,7 +343,7 @@ abstract mixin class _$OngoingChallengeScreenStateCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {AsyncValue<List<ChallengeResponse>> challenges,
+      {List<ChallengeResponse> challenges,
       bool isSelectionMode,
       Set<int> selectedChallengeIds});
 }
@@ -354,9 +367,9 @@ class __$OngoingChallengeScreenStateCopyWithImpl<$Res>
   }) {
     return _then(_OngoingChallengeScreenState(
       challenges: null == challenges
-          ? _self.challenges
+          ? _self._challenges
           : challenges // ignore: cast_nullable_to_non_nullable
-              as AsyncValue<List<ChallengeResponse>>,
+              as List<ChallengeResponse>,
       isSelectionMode: null == isSelectionMode
           ? _self.isSelectionMode
           : isSelectionMode // ignore: cast_nullable_to_non_nullable

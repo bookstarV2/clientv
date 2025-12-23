@@ -12,7 +12,7 @@ _CreateChallengeResponse _$CreateChallengeResponseFromJson(
       challengeId: (json['challengeId'] as num?)?.toInt() ?? -1,
       quizGenerationStatus: $enumDecodeNullable(
               _$QuizGenerationStatusEnumMap, json['quizGenerationStatus']) ??
-          QuizGenerationStatus.PROCESSING,
+          QuizGenerationStatus.PENDING,
       alreadyExists: json['alreadyExists'] as bool? ?? false,
       hasChapter: json['hasChapter'] as bool? ?? false,
     );

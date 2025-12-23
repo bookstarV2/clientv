@@ -7,11 +7,11 @@ part of 'ongoing_challenge_view_model.dart';
 // **************************************************************************
 
 String _$ongoingChallengeViewModelHash() =>
-    r'02cf88c57e41c7b5a01e47d8170d60455725ebb3';
+    r'371e760cdfd233ac601420be71752ae879abd5b4';
 
 /// See also [OngoingChallengeViewModel].
 @ProviderFor(OngoingChallengeViewModel)
-final ongoingChallengeViewModelProvider = AutoDisposeNotifierProvider<
+final ongoingChallengeViewModelProvider = AutoDisposeAsyncNotifierProvider<
     OngoingChallengeViewModel, OngoingChallengeScreenState>.internal(
   OngoingChallengeViewModel.new,
   name: r'ongoingChallengeViewModelProvider',
@@ -23,6 +23,6 @@ final ongoingChallengeViewModelProvider = AutoDisposeNotifierProvider<
 );
 
 typedef _$OngoingChallengeViewModel
-    = AutoDisposeNotifier<OngoingChallengeScreenState>;
+    = AutoDisposeAsyncNotifier<OngoingChallengeScreenState>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

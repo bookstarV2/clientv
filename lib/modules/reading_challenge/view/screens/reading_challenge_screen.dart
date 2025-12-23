@@ -33,7 +33,6 @@ class _ReadingChallengeScreenState
   bool _hasScrolledToTarget = false;
   int? _targetIndex;
   int? _newIndex;
-  bool _hasQuiz = false;
 
   @override
   void onDidUpdateWidget(covariant ReadingChallengeScreen oldWidget) async {
@@ -44,10 +43,10 @@ class _ReadingChallengeScreenState
           _targetIndex = null;
         });
         final notifier = ref.read(ongoingChallengeViewModelProvider.notifier);
-        await notifier.fetchChallenges();
+        await notifier.initState();
         final state = ref.read(ongoingChallengeViewModelProvider);
-        final targetIndex = state.challenges.value
-                ?.indexWhere((e) => e.challengeId == widget.challengeId) ??
+        final targetIndex = state.value?.challenges
+                .indexWhere((e) => e.challengeId == widget.challengeId) ??
             -1;
         if (targetIndex != -1 && !_hasScrolledToTarget) {
           setState(() {
@@ -62,6 +61,12 @@ class _ReadingChallengeScreenState
               curve: Curves.easeOut,
             );
           }
+
+          final hasQuiz = state.value!.challenges[targetIndex].hasQuiz;
+          print("hasQuiz: $hasQuiz");
+          if (mounted && !hasQuiz) {
+            await notifier.pollingUntilHasQuiz(widget.challengeId);
+          }
         }
       }
     });
@@ -70,15 +75,16 @@ class _ReadingChallengeScreenState
   @override
   Future<void> onRefresh() async {
     final notifier = ref.read(ongoingChallengeViewModelProvider.notifier);
-    await notifier.fetchChallenges();
+    await notifier.initState();
   }
 
   @override
   Widget buildBody(BuildContext context) {
     final state = ref.watch(ongoingChallengeViewModelProvider);
 
-    return state.challenges.when(
-      data: (items) {
+    return state.when(
+      data: (data) {
+        final items = data.challenges;
         final totalCount = items.length;
         final completedCount =
             items.where((element) => element.completed).length;
@@ -131,7 +137,6 @@ class _ReadingChallengeScreenState
                     onTapItem: (item, index) {
                       setState(() {
                         _targetIndex = index;
-                        _hasQuiz = item.hasQuiz;
                       });
                     },
                     targetIndex: _targetIndex,
@@ -396,6 +401,8 @@ class _ReadingChallengeScreenState
   @override
   Widget? buildFloatingActionButton(BuildContext context) {
     final deviceWidth = MediaQuery.of(context).size.width;
+    final state = ref.watch(ongoingChallengeViewModelProvider);
+    final hasQuiz = state.value?.challenges[_targetIndex ?? 0].hasQuiz ?? false;
     return _targetIndex != null
         ? SizedBox(
             width: deviceWidth * 0.9,
@@ -404,7 +411,7 @@ class _ReadingChallengeScreenState
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                if (!_hasQuiz)
+                if (!hasQuiz)
                   Column(
                     children: [
                       Container(
@@ -437,7 +444,7 @@ class _ReadingChallengeScreenState
                   ),
                 CtaButtonL1(
                   text: '리딩 챌린지 시작하기',
-                  enabled: _hasQuiz,
+                  enabled: hasQuiz,
                   onPressed: () {
                     goToStartScreen();
                   },
@@ -450,7 +457,7 @@ class _ReadingChallengeScreenState
 
   void goToStartScreen() {
     final state = ref.watch(ongoingChallengeViewModelProvider);
-    final challengeId = state.challenges.value![_targetIndex!].challengeId;
+    final challengeId = state.value!.challenges[_targetIndex!].challengeId;
     context.push('/reading-challenge/start/$challengeId');
   }
 }

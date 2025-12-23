@@ -282,7 +282,7 @@ extension CreateChallengeResponsePatterns on CreateChallengeResponse {
 class _CreateChallengeResponse implements CreateChallengeResponse {
   const _CreateChallengeResponse(
       {this.challengeId = -1,
-      this.quizGenerationStatus = QuizGenerationStatus.PROCESSING,
+      this.quizGenerationStatus = QuizGenerationStatus.PENDING,
       this.alreadyExists = false,
       this.hasChapter = false});
   factory _CreateChallengeResponse.fromJson(Map<String, dynamic> json) =>
