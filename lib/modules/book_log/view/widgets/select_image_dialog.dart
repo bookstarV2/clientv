@@ -141,16 +141,13 @@ class _SelectImageDialogState extends BaseScreenState<SelectImageDialog> {
   PreferredSizeWidget? buildAppBar(BuildContext context) {
     return AppBar(
       title: const Text('책로그'),
-      leading: IconButton(
-        icon: const BackButton(),
-        onPressed: () => Navigator.of(context).pop(),
-      ),
+      automaticallyImplyLeading: false,
       actions: [
         GestureDetector(
           onTap: () => Navigator.of(context).pop(_selectedImages),
           child: Text("완료", style: AppTexts.b8.copyWith(color: ColorName.g1)),
         ),
-        SizedBox(width: 8),
+        SizedBox(width: 16),
       ],
     );
   }
@@ -206,6 +203,7 @@ class _SelectImageDialogState extends BaseScreenState<SelectImageDialog> {
               SizedBox(height: 12),
               _albums.isNotEmpty
                   ? PopupMenuButton<int>(
+                      color: ColorName.dim3.withValues(alpha: 0.7),
                       offset: Offset(0, 25),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -227,8 +225,8 @@ class _SelectImageDialogState extends BaseScreenState<SelectImageDialog> {
                         return _albums.asMap().entries.map((entry) {
                           int index = entry.key;
                           AssetPathEntity album = entry.value;
-
                           return PopupMenuItem<int>(
+                            height: 32,
                             value: index,
                             child: Text(album.name),
                           );

@@ -110,6 +110,7 @@ class _BookLogUpdateScreenState extends BaseScreenState<BookLogUpdateScreen> {
   @override
   Widget buildBody(BuildContext context) {
     return ReadingDiaryEditForm(
+        isEdit: true,
         textController: _textController,
         images: _images,
         currentImageIndex: _currentImageIndex,

@@ -34,6 +34,7 @@ class GalleryImage extends ImageItem {
 class ReadingDiaryEditForm extends BaseScreen {
   const ReadingDiaryEditForm({
     super.key,
+    required this.isEdit,
     required this.textController,
     required this.images,
     required this.currentImageIndex,
@@ -52,6 +53,7 @@ class ReadingDiaryEditForm extends BaseScreen {
     required this.onUpdateSelectedBookId,
   });
 
+  final bool isEdit;
   final TextEditingController textController;
   final List<ImageItem> images;
   final int currentImageIndex;
@@ -180,7 +182,11 @@ class _ReadingDiaryEditFormState extends BaseScreenState<ReadingDiaryEditForm> {
             _buildRegisterBookButton(
               selectedBookId: widget.selectedBookId,
               bookOverview: state.value,
-              onPressed: _openSelectBookDialog,
+              onPressed: () {
+                if (!widget.isEdit) {
+                  _openSelectBookDialog();
+                }
+              },
             ),
             SizedBox(height: 12),
             _buildPrivacyButton(
@@ -189,16 +195,16 @@ class _ReadingDiaryEditFormState extends BaseScreenState<ReadingDiaryEditForm> {
                 widget.onUpdatePrivacy(!widget.privacy);
               },
             ),
-            if (isNotEmptyText &&
-                isOver10lines &&
-                widget.selectedBookId != null)
-              _buildSubmitButton(
-                  disabled: widget.disabledSave,
-                  onSave: () async {
-                    widget.onUpdateDisabledSave(true);
-                    await widget.onSave();
-                    widget.onUpdateDisabledSave(false);
-                  }),
+            _buildSubmitButton(
+                disabled: widget.disabledSave ||
+                    !isNotEmptyText ||
+                    !isOver10lines ||
+                    widget.selectedBookId == null,
+                onSave: () async {
+                  widget.onUpdateDisabledSave(true);
+                  await widget.onSave();
+                  widget.onUpdateDisabledSave(false);
+                }),
             SizedBox(
               height: 16,
             )
@@ -272,7 +278,7 @@ class _ReadingDiaryEditFormState extends BaseScreenState<ReadingDiaryEditForm> {
                               Container(),
                             Positioned(
                                 top: 16,
-                                right: 16,
+                                right: 0,
                                 child: Container(
                                   decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(100),
