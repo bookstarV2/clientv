@@ -36,7 +36,7 @@ class _ScrappedDiariesScreenState
   @override
   PreferredSizeWidget? buildAppBar(BuildContext context) {
     return AppBar(
-      title: const Text('스크랩한 다이어리'),
+      title: const Text('스크랩한 책로그'),
       leading: IconButton(
         icon: const BackButton(),
         onPressed: () => Navigator.of(context).pop(),

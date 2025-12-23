@@ -1,3 +1,5 @@
+import 'package:bookstar/common/theme/style/app_texts.dart';
+import 'package:bookstar/gen/assets.gen.dart';
 import 'package:bookstar/modules/reading_diary/model/diary_thumbnail_response.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,16 +40,33 @@ class _BookLogThumbnailGridState extends ConsumerState<BookLogThumbnailGrid> {
         onTap: (index) {
           widget.onClickThumbnail(index);
         },
-        emptyWidget: const Center(
-          child: Text(
-            '아직 책로그가 없습니다.',
-            style: TextStyle(
-              color: ColorName.g7,
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
+        emptyWidget: LayoutBuilder(builder: (context, constraints) {
+          return SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: constraints.maxHeight,
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Assets.icons.icBooktalkSearchCharacter.svg(
+                      width: 110,
+                      height: 110,
+                    ),
+                    SizedBox(height: 18),
+                    Text(
+                      "아직 책로그가 없습니다.",
+                      textAlign: TextAlign.center,
+                      style: AppTexts.b7.copyWith(color: ColorName.w1),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-        ),
+          );
+        }),
       ),
     );
   }

@@ -46,7 +46,7 @@ class _LikedDiaryFeedScreenState extends BaseScreenState<LikedDiaryFeedScreen> {
   @override
   PreferredSizeWidget? buildAppBar(BuildContext context) {
     return AppBar(
-      title: const Text('좋아요 누른 다이어리'),
+      title: const Text('좋아요 누른 책로그'),
       leading: IconButton(
         icon: const BackButton(),
         onPressed: () => Navigator.of(context).pop(),
