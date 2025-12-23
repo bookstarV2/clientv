@@ -57,13 +57,13 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
               Text('활동 내역', style: AppTexts.b5.copyWith(color: ColorName.w1)),
               const SizedBox(height: 8),
               CustomTextButton(
-                label: '좋아요 누른 다이어리',
+                label: '좋아요 누른 책로그',
                 onTap: () {
                   context.go('/my-feed/my-page/liked-diaries');
                 },
               ),
               CustomTextButton(
-                label: '스크랩한 다이어리',
+                label: '스크랩한 책로그',
                 onTap: () {
                   context.go('/my-feed/my-page/scrapped-diaries');
                 },

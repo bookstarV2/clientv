@@ -33,6 +33,11 @@ class _BookPickScreenState extends BaseScreenState<BookPickScreen> {
   int _currentIndex = 0;
 
   @override
+  int getListTotalItemCount() =>
+      ref.watch(bookPickViewModelProvider).value?.likeBook.likeBooks.length ??
+      0;
+
+  @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {

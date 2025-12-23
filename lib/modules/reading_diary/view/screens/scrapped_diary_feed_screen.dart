@@ -28,38 +28,40 @@ class _ScrappedDiaryFeedScreenState
   @override
   bool enableRefreshIndicator() => true;
 
-    @override
+  @override
   int getListTotalItemCount() =>
       ref.watch(scrappedDiaryViewModelProvider).value?.feeds.length ?? 0;
 
-    @override
+  @override
   Future<void> onRefresh() async {
-    final likedDiaryNotifier = ref.read(scrappedDiaryViewModelProvider.notifier);
+    final likedDiaryNotifier =
+        ref.read(scrappedDiaryViewModelProvider.notifier);
     await likedDiaryNotifier.initState();
   }
 
   @override
   Future<void> onBottomReached() async {
-    final likedDiaryNotifier = ref.read(scrappedDiaryViewModelProvider.notifier);
+    final likedDiaryNotifier =
+        ref.read(scrappedDiaryViewModelProvider.notifier);
     await likedDiaryNotifier.refreshState();
   }
 
   @override
   PreferredSizeWidget? buildAppBar(BuildContext context) {
     return AppBar(
-        title: const Text('스크랩한 다이어리'),
-        leading: IconButton(
-          icon: const BackButton(),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      );
+      title: const Text('스크랩한 책로그'),
+      leading: IconButton(
+        icon: const BackButton(),
+        onPressed: () => Navigator.of(context).pop(),
+      ),
+    );
   }
-
 
   @override
   Widget buildBody(BuildContext context) {
     final scrappedDiaryAsync = ref.watch(scrappedDiaryViewModelProvider);
-    final scrappedDiaryNotifier = ref.read(scrappedDiaryViewModelProvider.notifier);
+    final scrappedDiaryNotifier =
+        ref.read(scrappedDiaryViewModelProvider.notifier);
     return scrappedDiaryAsync.when(
       data: (scrappedDiary) => BookLogFeedList(
         visibleMenu: false,
