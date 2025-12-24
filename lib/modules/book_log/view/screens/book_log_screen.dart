@@ -1,5 +1,6 @@
 import 'package:bookstar/common/components/base_screen.dart';
 import 'package:bookstar/common/models/image_request.dart';
+import 'package:bookstar/common/service/analytics_service.dart';
 import 'package:bookstar/common/theme/style/app_texts.dart';
 import 'package:bookstar/gen/assets.gen.dart';
 import 'package:bookstar/modules/auth/view_model/auth_view_model.dart';
@@ -66,6 +67,8 @@ class _BookLogScreenState extends BaseScreenState<BookLogScreen> {
       actions: [
         GestureDetector(
           onTap: () {
+            AnalyticsService.logEvent('click_search_user',
+                parameters: {'screen_name': 'book_log'});
             showDialog(
               context: context,
               barrierColor: ColorName.dim3.withValues(alpha: 0.7),
@@ -85,6 +88,8 @@ class _BookLogScreenState extends BaseScreenState<BookLogScreen> {
   Widget? buildFloatingActionButton(BuildContext context) {
     return GestureDetector(
       onTap: () {
+        AnalyticsService.logEvent('click_create_diary',
+            parameters: {'screen_name': 'book_log'});
         context.push('/book-log/create');
       },
       child: Container(
