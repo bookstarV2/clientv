@@ -1,9 +1,11 @@
+import 'package:bookstar/common/service/analytics_service.dart';
 import 'package:bookstar/common/theme/style/app_texts.dart';
 import 'package:bookstar/gen/assets.gen.dart';
 import 'package:bookstar/gen/colors.gen.dart';
 import 'package:bookstar/modules/book_log/view/widgets/feed_card.dart';
 import 'package:bookstar/modules/reading_diary/model/diary_response.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 class BookLogFeedList extends StatefulWidget {
@@ -45,7 +47,6 @@ class BookLogFeedList extends StatefulWidget {
 }
 
 class BookLogFeedListState extends State<BookLogFeedList> {
-
   @override
   void initState() {
     super.initState();
@@ -80,24 +81,78 @@ class BookLogFeedListState extends State<BookLogFeedList> {
   @override
   Widget build(BuildContext context) {
     final feeds = widget.feeds;
+    final currentRoute = GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
 
     return feeds.isNotEmpty
         ? ScrollablePositionedList.separated(
             itemScrollController: widget.itemScrollController,
             itemPositionsListener: widget.itemPositionsListener,
             itemCount: feeds.length,
-            itemBuilder: (context, index) => FeedCard(
-              feed: feeds[index],
-              onLike: () => widget.onLike(index),
-              onMessage: () => widget.onMessage(context, index),
-              onDelete: () => widget.onDelete(context, index),
-              onReport: () => widget.onReport(context, index),
-              onProfile: () => widget.onProfile(index),
-              onScrap: () => widget.onScrap(index),
-              onUpdate: () => widget.onUpdate(index),
-              onBookTitle: () => widget.onBookTitle(index),
-              visibleMenu: widget.visibleMenu,
-            ),
+            itemBuilder: (context, index) {
+              final feed = feeds[index];
+              return FeedCard(
+                feed: feed,
+                onLike: () {
+                  AnalyticsService.logEvent(
+                    'click_feed_like',
+                    parameters: {
+                      'screen_name': currentRoute,
+                      'diary_id': feed.diaryId,
+                      'book_id': feed.bookId,
+                    },
+                  );
+                  widget.onLike(index);
+                },
+                onMessage: () {
+                  AnalyticsService.logEvent(
+                    'click_feed_comment',
+                    parameters: {
+                      'screen_name': currentRoute,
+                      'diary_id': feed.diaryId,
+                      'book_id': feed.bookId,
+                    },
+                  );
+                  widget.onMessage(context, index);
+                },
+                onDelete: () => widget.onDelete(context, index),
+                onReport: () => widget.onReport(context, index),
+                onProfile: () {
+                  AnalyticsService.logEvent(
+                    'click_feed_profile',
+                    parameters: {
+                      'screen_name': currentRoute,
+                      'diary_id': feed.diaryId,
+                      'member_id': feed.memberId,
+                    },
+                  );
+                  widget.onProfile(index);
+                },
+                onScrap: () {
+                  AnalyticsService.logEvent(
+                    'click_feed_scrap',
+                    parameters: {
+                      'screen_name': currentRoute,
+                      'diary_id': feed.diaryId,
+                      'book_id': feed.bookId,
+                    },
+                  );
+                  widget.onScrap(index);
+                },
+                onUpdate: () => widget.onUpdate(index),
+                onBookTitle: () {
+                  AnalyticsService.logEvent(
+                    'click_feed_book_title',
+                    parameters: {
+                      'screen_name': currentRoute,
+                      'diary_id': feed.diaryId,
+                      'book_id': feed.bookId,
+                    },
+                  );
+                  widget.onBookTitle(index);
+                },
+                visibleMenu: widget.visibleMenu,
+              );
+            },
             separatorBuilder: (context, index) => const Divider(
               color: ColorName.g7,
               height: 0,
