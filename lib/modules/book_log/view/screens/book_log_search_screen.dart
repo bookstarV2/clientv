@@ -1,5 +1,6 @@
 import 'package:bookstar/common/components/custom_list_view.dart';
 import 'package:bookstar/common/components/text_field/search_text_field.dart';
+import 'package:bookstar/common/service/analytics_service.dart';
 import 'package:bookstar/common/theme/style/app_paddings.dart';
 import 'package:bookstar/common/theme/style/app_texts.dart';
 import 'package:bookstar/gen/assets.gen.dart';
@@ -36,6 +37,10 @@ class _BookLogSearchScreenState extends ConsumerState<BookLogSearchScreen> {
 
   void _searchUser() async {
     if (_textController.text.isNotEmpty) {
+      AnalyticsService.logEvent('click_search_user_icon', parameters: {
+        'screen_name': 'book_log_search',
+        'query': _textController.text
+      });
       final notifier = ref.read(searchUserViewModelProvider.notifier);
       setState(() {
         _disabledSearch = true;
@@ -50,6 +55,10 @@ class _BookLogSearchScreenState extends ConsumerState<BookLogSearchScreen> {
   void _unFocus() => _focusNode.unfocus();
 
   void _onTapUser(SearchUserResponse user) async {
+    AnalyticsService.logEvent('click_user_from_search', parameters: {
+      'screen_name': 'book_log_search',
+      'tapped_member_id': user.memberId
+    });
     final notifier = ref.read(searchUserViewModelProvider.notifier);
     await notifier.onTapUser(memberId: user.memberId);
     if (!mounted) return;
@@ -57,10 +66,18 @@ class _BookLogSearchScreenState extends ConsumerState<BookLogSearchScreen> {
   }
 
   Future<void> _onTapHistory(int memberId) async {
+    AnalyticsService.logEvent('click_user_from_history', parameters: {
+      'screen_name': 'book_log_search',
+      'tapped_member_id': memberId
+    });
     context.push("/book-log/thumbnail/${memberId}");
   }
 
   Future<void> _onRemoveHistory(int memberId) async {
+    AnalyticsService.logEvent('click_remove_user_history', parameters: {
+      'screen_name': 'book_log_search',
+      'removed_member_id': memberId
+    });
     final notifier = ref.read(searchUserViewModelProvider.notifier);
     await notifier.removeHistory(
       memberId: memberId,
