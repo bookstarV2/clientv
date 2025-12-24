@@ -126,6 +126,10 @@ class _ChallengeQuitBooksScreenState
                 CtaButtonL1(
                   text: '다시 시작하기',
                   enabled: state.checkedList.contains(true),
+                  analyticsEventName: 'click_restart_challenges',
+                  analyticsEventParams: const {
+                    'screen_name': 'challenge_quit_books',
+                  },
                   onPressed: state.checkedList.contains(true)
                       ? () async {
                           await ref
@@ -139,6 +143,10 @@ class _ChallengeQuitBooksScreenState
                 CtaButtonL1(
                   text: '삭제하기',
                   enabled: state.checkedList.contains(true),
+                  analyticsEventName: 'click_delete_abandoned_challenges',
+                  analyticsEventParams: const {
+                    'screen_name': 'challenge_quit_books',
+                  },
                   onPressed: state.checkedList.contains(true)
                       ? () async {
                           await ref
