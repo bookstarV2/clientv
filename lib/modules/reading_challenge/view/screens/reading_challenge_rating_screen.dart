@@ -128,6 +128,11 @@ class ReadingChallengeRatingScreen extends ConsumerWidget {
     return CtaButtonL1(
       text: '저장하기',
       enabled: viewModel.isButtonEnabled,
+      analyticsEventName: 'click_save_rating',
+      analyticsEventParams: {
+        'screen_name': 'reading_challenge_rating',
+        'rating': state.rating,
+      },
       onPressed: () => _handleSaveButton(context, ref, state),
     );
   }
@@ -135,6 +140,10 @@ class ReadingChallengeRatingScreen extends ConsumerWidget {
   Widget _buildSkipButton(BuildContext context, WidgetRef ref) {
     return CtaButtonL2(
       text: '나중에 남기기',
+      analyticsEventName: 'click_skip_rating',
+      analyticsEventParams: const {
+        'screen_name': 'reading_challenge_rating',
+      },
       onPressed: () => _handleSkipButton(context, ref),
     );
   }

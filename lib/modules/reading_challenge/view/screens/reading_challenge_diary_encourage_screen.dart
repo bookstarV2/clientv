@@ -99,6 +99,11 @@ class ReadingChallengeDiaryEncourageScreen extends ConsumerWidget {
       children: [
         CtaButtonL1(
           text: '작성하기',
+          analyticsEventName: 'click_write_diary_from_encourage',
+          analyticsEventParams: {
+            'screen_name': 'reading_challenge_diary_encourage',
+            'bookId': bookId,
+          },
           onPressed: () async {
             await _updateChallengeProgress(ref);
             final bookId =
@@ -112,6 +117,11 @@ class ReadingChallengeDiaryEncourageScreen extends ConsumerWidget {
         const SizedBox(height: 8),
         CtaButtonL2(
           text: '나중에 하기',
+          analyticsEventName: 'click_skip_diary_from_encourage',
+          analyticsEventParams: {
+            'screen_name': 'reading_challenge_diary_encourage',
+            'bookId': bookId,
+          },
           onPressed: () {
             showDialog(
               context: context,
@@ -120,6 +130,16 @@ class ReadingChallengeDiaryEncourageScreen extends ConsumerWidget {
                 content: '독서 다이어리를 작성하지 않으면\n리딩 챌린지 참여가 인정되지 않아요',
                 confirmButtonText: '바로 작성하기',
                 cancelButtonText: '나중에 하기',
+                confirmAnalyticsEventName: 'click_write_diary_now',
+                confirmAnalyticsEventParams: {
+                  'screen_name': 'reading_challenge_diary_encourage',
+                  'bookId': bookId,
+                },
+                cancelAnalyticsEventName: 'click_write_diary_later',
+                cancelAnalyticsEventParams: {
+                  'screen_name': 'reading_challenge_diary_encourage',
+                  'bookId': bookId,
+                },
                 onConfirm: () async {
                   await _updateChallengeProgress(ref);
                   if (!context.mounted) return;
@@ -137,7 +157,7 @@ class ReadingChallengeDiaryEncourageScreen extends ConsumerWidget {
                 icon: Assets.icons.icReadingChallengeChar3.svg(
                   width: 80,
                   height: 80,
-                ),
+                ), analyticsEventParams: {},
               ),
             );
           },
