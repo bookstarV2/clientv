@@ -1,3 +1,4 @@
+import 'package:bookstar/common/service/analytics_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:bookstar/gen/colors.gen.dart';
@@ -64,7 +65,11 @@ class PhotoSourceModal extends StatelessWidget {
                     label: '카메라',
                     iconColor: ColorName.g3,
                     iconSize: 24.07421875,
-                    onTap: () => onPick(ImageSource.camera),
+                    onTap: () {
+                      AnalyticsService.logEvent('click_photo_source',
+                          parameters: {'source': 'camera'});
+                      onPick(ImageSource.camera);
+                    },
                   ),
                   const SizedBox(width: 22),
                   _buildOption(
@@ -73,7 +78,11 @@ class PhotoSourceModal extends StatelessWidget {
                     label: '사진',
                     iconColor: ColorName.g3,
                     iconSize: 21.5703125,
-                    onTap: () => onPick(ImageSource.gallery),
+                    onTap: () {
+                      AnalyticsService.logEvent('click_photo_source',
+                          parameters: {'source': 'gallery'});
+                      onPick(ImageSource.gallery);
+                    },
                   ),
                 ],
               ),

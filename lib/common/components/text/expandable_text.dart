@@ -1,3 +1,4 @@
+import 'package:bookstar/common/service/analytics_service.dart';
 import 'package:bookstar/common/theme/style/app_texts.dart';
 import 'package:bookstar/gen/colors.gen.dart';
 import 'package:flutter/material.dart';
@@ -50,7 +51,11 @@ class _ExpandableTextState extends State<ExpandableText> {
             if (isOverflow) ...[
               const SizedBox(height: 6),
               GestureDetector(
-                onTap: () => setState(() => isExpanded = !isExpanded),
+                onTap: () {
+                  AnalyticsService.logEvent('click_toggle_expand_text',
+                      parameters: {'expanded': !isExpanded});
+                  setState(() => isExpanded = !isExpanded);
+                },
                 child: Text(
                   isExpanded ? "닫기" : "더보기",
                   style: AppTexts.b11.copyWith(

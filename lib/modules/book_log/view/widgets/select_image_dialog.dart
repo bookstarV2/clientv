@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:bookstar/common/components/base_screen.dart';
+import 'package:bookstar/common/service/analytics_service.dart';
 import 'package:bookstar/common/theme/style/app_texts.dart';
 import 'package:bookstar/gen/colors.gen.dart';
 import 'package:bookstar/modules/book_log/view/widgets/gallery_permission_request_dialog.dart';
@@ -68,7 +69,7 @@ class _SelectImageDialogState extends BaseScreenState<SelectImageDialog> {
           });
 
       if (response["result"]) {
-        // パーミッションが拒否された場合の処理
+        // 퍼미션이 거부된 경우의 처리
         // 端末のアプリ権限を開く
         await PhotoManager.openSetting();
       } else {
@@ -109,6 +110,11 @@ class _SelectImageDialogState extends BaseScreenState<SelectImageDialog> {
   }
 
   Future<void> _onTapImage(AssetEntity image, bool isSelected) async {
+    AnalyticsService.logEvent('click_select_image', parameters: {
+      'screen_name': 'select_image_dialog',
+      'image_id': image.id,
+      'is_selected': (!isSelected).toString()
+    });
     if (isSelected) {
       setState(() {
         _selectedImages.removeWhere((x) => x.id == image.id);
@@ -144,7 +150,14 @@ class _SelectImageDialogState extends BaseScreenState<SelectImageDialog> {
       automaticallyImplyLeading: false,
       actions: [
         GestureDetector(
-          onTap: () => Navigator.of(context).pop(_selectedImages),
+          onTap: () {
+            AnalyticsService.logEvent('click_done_selecting_images',
+                parameters: {
+                  'screen_name': 'select_image_dialog',
+                  'selected_image_count': _selectedImages.length
+                });
+            Navigator.of(context).pop(_selectedImages);
+          },
           child: Text("완료", style: AppTexts.b8.copyWith(color: ColorName.g1)),
         ),
         SizedBox(width: 16),
@@ -214,6 +227,11 @@ class _SelectImageDialogState extends BaseScreenState<SelectImageDialog> {
                       ),
                       onSelected: (int index) {
                         if (_selectedAlbumIndex != index) {
+                          AnalyticsService.logEvent('click_select_album',
+                              parameters: {
+                                'screen_name': 'select_image_dialog',
+                                'album_name': _albums[index].name
+                              });
                           setState(() {
                             _selectedAlbumIndex = index;
                             _currentPage = 0;
