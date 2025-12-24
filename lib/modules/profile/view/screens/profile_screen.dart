@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:bookstar/common/service/analytics_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -65,6 +66,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _onTapProfileImage() async {
+    AnalyticsService.logEvent('click_profile_image',
+        parameters: {'screen_name': 'profile_edit'});
     await PhotoSourceModal.show(
       context,
       onPick: (source) async {
@@ -233,6 +236,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         child: CtaButtonL1(
           text: '저장하기',
           enabled: _isEdited,
+          analyticsEventName: 'click_save_profile',
+          analyticsEventParams: const {
+            'screen_name': 'profile_edit',
+          },
           onPressed: () => _onSaveProfile(ref, context, profileAsync),
         ),
       ),

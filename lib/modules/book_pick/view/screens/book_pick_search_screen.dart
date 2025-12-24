@@ -1,5 +1,6 @@
 import 'package:bookstar/common/components/custom_grid_view.dart';
 import 'package:bookstar/common/components/custom_list_view.dart';
+import 'package:bookstar/common/service/analytics_service.dart';
 import 'package:bookstar/modules/book_pick/view/widgets/book_search_result_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -71,6 +72,8 @@ class _BookPickSearchScreenState extends ConsumerState<BookPickSearchScreen> {
 
   void _onSearchSubmitted(String value) {
     if (value.isNotEmpty) {
+      AnalyticsService.logEvent('click_search_book_icon',
+          parameters: {'screen_name': 'book_pick_search', 'query': value});
       ref.read(searchBookViewModelProvider.notifier).searchBooks(value);
     }
   }
@@ -119,9 +122,20 @@ class _BookPickSearchScreenState extends ConsumerState<BookPickSearchScreen> {
                     ? _buildSearchHistory(
                         searchHistories: data.searchHistories,
                         onRemoveItem: (query) async {
+                          AnalyticsService.logEvent(
+                              'click_remove_search_history',
+                              parameters: {
+                                'screen_name': 'book_pick_search',
+                                'query': query
+                              });
                           await notifier.removeHistory(query);
                         },
                         onSearchItem: (query) {
+                          AnalyticsService.logEvent('click_search_history_item',
+                              parameters: {
+                                'screen_name': 'book_pick_search',
+                                'query': query
+                              });
                           _textController.text = query;
                           _onSearchSubmitted(query);
                         },
@@ -130,8 +144,15 @@ class _BookPickSearchScreenState extends ConsumerState<BookPickSearchScreen> {
                         books: data.books,
                         hasNext: data.hasNext,
                         scrollController: _scrollController,
-                        onTapItem: (book) =>
-                            context.push('/book-pick/overview/${book.bookId}'),
+                        onTapItem: (book) {
+                          AnalyticsService.logEvent('click_book_from_search',
+                              parameters: {
+                                'screen_name': 'book_pick_search',
+                                'book_id': book.bookId,
+                                'book_title': book.title
+                              });
+                          context.push('/book-pick/overview/${book.bookId}');
+                        },
                       );
               },
               loading: _loading,

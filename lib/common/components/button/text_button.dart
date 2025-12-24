@@ -1,3 +1,4 @@
+import 'package:bookstar/common/service/analytics_service.dart';
 import 'package:bookstar/common/theme/style/app_texts.dart';
 import 'package:bookstar/gen/colors.gen.dart';
 import 'package:flutter/material.dart';
@@ -5,10 +6,14 @@ import 'package:flutter/material.dart';
 class CustomTextButton extends StatelessWidget {
   final String label;
   final VoidCallback? onTap;
+  final String? analyticsEventName;
+  final Map<String, dynamic>? analyticsEventParams;
 
   const CustomTextButton({
     required this.label,
     this.onTap,
+    this.analyticsEventName,
+    this.analyticsEventParams,
     super.key,
   });
 
@@ -21,7 +26,13 @@ class CustomTextButton extends StatelessWidget {
         hoverColor: Colors.transparent,
         overlayColor: WidgetStateProperty.all(Colors.transparent),
         onTap: () {
-          if (onTap != null) onTap!();
+          if (analyticsEventName != null) {
+            AnalyticsService.logEvent(
+              analyticsEventName!,
+              parameters: analyticsEventParams,
+            );
+          }
+          onTap?.call();
         },
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,

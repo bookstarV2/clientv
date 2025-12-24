@@ -1,3 +1,4 @@
+import 'package:bookstar/common/service/analytics_service.dart';
 import 'package:bookstar/common/theme/style/app_paddings.dart';
 import 'package:bookstar/common/theme/style/app_texts.dart';
 import 'package:bookstar/gen/assets.gen.dart';
@@ -57,6 +58,8 @@ class CustomerSupportScreen extends StatelessWidget {
                   Expanded(
                     child: GestureDetector(
                       onTap: () {
+                        AnalyticsService.logEvent('click_copy_email',
+                            parameters: {'screen_name': 'customer_support'});
                         Clipboard.setData(
                             const ClipboardData(text: 'bookstar816@gmail.com'));
                         ScaffoldMessenger.of(context).showSnackBar(

@@ -150,6 +150,11 @@ class _ReadingChallengeTotalPageScreenState
           CtaButtonL1(
             text: '다음으로',
             enabled: _isButtonEnabled,
+            analyticsEventName: 'click_next_from_total_page',
+            analyticsEventParams: {
+              'screen_name': 'reading_challenge_total_page',
+              'bookId': widget.book.bookId,
+            },
             onPressed: () {
               final totalPages = int.tryParse(_textController.text);
               if (totalPages != null && mounted) {

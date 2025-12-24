@@ -1,6 +1,7 @@
 import 'package:bookstar/common/components/base_screen.dart';
 import 'package:bookstar/common/components/custom_list_view.dart';
 import 'package:bookstar/common/components/text_field/search_text_field.dart';
+import 'package:bookstar/common/service/analytics_service.dart';
 import 'package:bookstar/common/theme/style/app_texts.dart';
 import 'package:bookstar/gen/assets.gen.dart';
 import 'package:bookstar/modules/auth/model/policy.dart';
@@ -91,6 +92,8 @@ class _BookPickScreenState extends BaseScreenState<BookPickScreen> {
   }
 
   Future<void> _otherRecommend() async {
+    AnalyticsService.logEvent('click_get_other_youtube_recommend',
+        parameters: {'screen_name': 'book_pick'});
     await ref.read(bookPickViewModelProvider.notifier).getOtherRecommend();
   }
 
@@ -119,7 +122,11 @@ class _BookPickScreenState extends BaseScreenState<BookPickScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildSearchBook(
-                  onTap: () => context.push('/book-pick/search'),
+                  onTap: () {
+                    AnalyticsService.logEvent('click_search_book_field',
+                        parameters: {'screen_name': 'book_pick'});
+                    context.push('/book-pick/search');
+                  },
                 ),
                 SizedBox(
                   height: 60,
@@ -130,14 +137,25 @@ class _BookPickScreenState extends BaseScreenState<BookPickScreen> {
                   currentIndex: _currentIndex,
                   updateIndex: _updateIndex,
                   onItemTap: (index) {
-                    final videoId =
-                        bookPickState.youtubeRecommends[index].videoId;
-                    _launchYouTube(videoId);
+                    final item = bookPickState.youtubeRecommends[index];
+                    AnalyticsService.logEvent('click_youtube_recommend',
+                        parameters: {
+                          'screen_name': 'book_pick',
+                          'video_id': item.videoId,
+                          'video_title': item.title,
+                        });
+                    _launchYouTube(item.videoId);
                   },
                   onDirectShow: () {
-                    final videoId =
-                        bookPickState.youtubeRecommends[_currentIndex].videoId;
-                    _launchYouTube(videoId);
+                    final item =
+                        bookPickState.youtubeRecommends[_currentIndex];
+                    AnalyticsService.logEvent('click_watch_youtube_now',
+                        parameters: {
+                          'screen_name': 'book_pick',
+                          'video_id': item.videoId,
+                          'video_title': item.title,
+                        });
+                    _launchYouTube(item.videoId);
                   },
                   onOtherRecommend: _otherRecommend,
                 ),
@@ -148,10 +166,17 @@ class _BookPickScreenState extends BaseScreenState<BookPickScreen> {
                   controller: scrollController,
                   list: bookPickState.likeBook.likeBooks,
                   onAllView: () {
+                    AnalyticsService.logEvent('click_view_all_my_picks',
+                        parameters: {'screen_name': 'book_pick'});
                     context.push('/book-pick/my-likes');
                   },
                   onItemTap: (index) {
                     final item = bookPickState.likeBook.likeBooks[index];
+                    AnalyticsService.logEvent('click_my_pick_book',
+                        parameters: {
+                          'screen_name': 'book_pick',
+                          'book_id': item.bookId
+                        });
                     context.push('/book-pick/overview/${item.bookId}');
                   },
                 ),
@@ -159,6 +184,7 @@ class _BookPickScreenState extends BaseScreenState<BookPickScreen> {
             ),
           )
         ],
+
       ),
       error: _error("책픽 정보를 불러올 수 없습니다."),
       loading: _loading,

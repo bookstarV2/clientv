@@ -83,6 +83,10 @@ class LoginScreen extends ConsumerWidget {
           label: '카카오 로그인',
           backgroundColor: const Color(0xFFFEE500),
           textColor: Colors.black87,
+          analyticsEventName: 'click_kakao_login',
+          analyticsEventParams: const {
+            'screen_name': 'login',
+          },
         ),
         SocialLoginButton(
           onPressed: () {
@@ -95,6 +99,10 @@ class LoginScreen extends ConsumerWidget {
           backgroundColor: Colors.white,
           textColor: Colors.black,
           isGoogle: true,
+          analyticsEventName: 'click_google_login',
+          analyticsEventParams: const {
+            'screen_name': 'login',
+          },
         ),
         SocialLoginButton(
           onPressed: () {
@@ -106,6 +114,10 @@ class LoginScreen extends ConsumerWidget {
           label: 'Apple로 로그인',
           backgroundColor: Colors.white,
           textColor: Colors.black,
+          analyticsEventName: 'click_apple_login',
+          analyticsEventParams: const {
+            'screen_name': 'login',
+          },
         ),
       ],
     );

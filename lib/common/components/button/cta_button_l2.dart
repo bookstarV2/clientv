@@ -1,3 +1,4 @@
+import 'package:bookstar/common/service/analytics_service.dart';
 import 'package:bookstar/common/theme/style/app_texts.dart';
 import 'package:bookstar/gen/colors.gen.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +11,8 @@ class CtaButtonL2 extends StatefulWidget {
   final Color? borderColor;
   final double height;
   final double borderRadius;
+  final String? analyticsEventName;
+  final Map<String, dynamic>? analyticsEventParams;
 
   const CtaButtonL2({
     Key? key,
@@ -20,6 +23,8 @@ class CtaButtonL2 extends StatefulWidget {
     this.borderColor,
     this.height = 56,
     this.borderRadius = 10,
+    this.analyticsEventName,
+    this.analyticsEventParams,
   }) : super(key: key);
 
   @override
@@ -77,7 +82,17 @@ class _CtaButtonL2State extends State<CtaButtonL2> {
         onTapCancel: () {
           if (!isDisabled) setState(() => _isPressed = false);
         },
-        onTap: isDisabled ? null : widget.onPressed,
+        onTap: isDisabled
+            ? null
+            : () {
+                if (widget.analyticsEventName != null) {
+                  AnalyticsService.logEvent(
+                    widget.analyticsEventName!,
+                    parameters: widget.analyticsEventParams,
+                  );
+                }
+                widget.onPressed?.call();
+              },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 100),
           width: 341,

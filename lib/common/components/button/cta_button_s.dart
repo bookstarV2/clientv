@@ -1,3 +1,4 @@
+import 'package:bookstar/common/service/analytics_service.dart';
 import 'package:bookstar/common/theme/style/app_texts.dart';
 import 'package:bookstar/gen/colors.gen.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,9 @@ class CtaButtonS extends StatefulWidget {
   final Color defaultTextColor;
   final double borderRadius;
   final Color defaultBackgroundColor;
+  final String? analyticsEventName;
+  final Map<String, dynamic>? analyticsEventParams;
+
   const CtaButtonS({
     Key? key,
     required this.text,
@@ -23,6 +27,8 @@ class CtaButtonS extends StatefulWidget {
     this.defaultTextColor = ColorName.p1,
     this.borderRadius = 5,
     this.defaultBackgroundColor = ColorName.g7,
+    this.analyticsEventName,
+    this.analyticsEventParams,
   }) : super(key: key);
 
   @override
@@ -75,7 +81,17 @@ class _CtaButtonSState extends State<CtaButtonS> {
         onTapCancel: () {
           if (!isDisabled) setState(() => _isPressed = false);
         },
-        onTap: isDisabled ? null : widget.onPressed,
+        onTap: isDisabled
+            ? null
+            : () {
+                if (widget.analyticsEventName != null) {
+                  AnalyticsService.logEvent(
+                    widget.analyticsEventName!,
+                    parameters: widget.analyticsEventParams,
+                  );
+                }
+                widget.onPressed?.call();
+              },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 100),
           width: widget.width,

@@ -1,3 +1,4 @@
+import 'package:bookstar/common/service/analytics_service.dart';
 import 'package:bookstar/gen/assets.gen.dart';
 import 'package:bookstar/modules/book_log/view/widgets/comment_list.dart';
 import 'package:bookstar/modules/book_log/view/widgets/comment_text_field.dart';
@@ -116,6 +117,17 @@ class _DiaryFeedCommentDialogState
         0;
 
     handleCommentSend() async {
+      AnalyticsService.logEvent(
+        targetParentComment == null
+            ? 'click_send_comment'
+            : 'click_send_reply',
+        parameters: {
+          'screen_name': 'diary_feed_comment',
+          'diary_id': widget.diaryId,
+          'parent_comment_id': targetParentComment?.commentId,
+        },
+      );
+
       /// 댓글 작성
       if (targetParentComment == null) {
         await ref
@@ -133,12 +145,22 @@ class _DiaryFeedCommentDialogState
     }
 
     handleCommentDelete(int commentId) async {
+      AnalyticsService.logEvent('click_delete_comment', parameters: {
+        'screen_name': 'diary_feed_comment',
+        'diary_id': widget.diaryId,
+        'comment_id': commentId,
+      });
       await ref
           .read(feedCommentViewModelProvider(widget.diaryId).notifier)
           .deleteComment(commentId);
     }
 
     handleCommentReport(int commentId) async {
+      AnalyticsService.logEvent('click_report_comment', parameters: {
+        'screen_name': 'diary_feed_comment',
+        'diary_id': widget.diaryId,
+        'comment_id': commentId,
+      });
       final result = await showModalBottomSheet(
           context: context,
           isScrollControlled: true,
@@ -215,6 +237,13 @@ class _DiaryFeedCommentDialogState
                                     handleCommentReport(commentId);
                                   },
                                   onReply: (int parentCommentId, int index) {
+                                    AnalyticsService.logEvent(
+                                        'click_reply_button',
+                                        parameters: {
+                                          'screen_name': 'diary_feed_comment',
+                                          'diary_id': widget.diaryId,
+                                          'parent_comment_id': parentCommentId,
+                                        });
                                     final targetComment = comments[index];
                                     if (targetComment.commentId ==
                                         parentCommentId) {

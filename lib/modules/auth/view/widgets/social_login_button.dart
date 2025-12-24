@@ -1,3 +1,4 @@
+import 'package:bookstar/common/service/analytics_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
@@ -8,6 +9,8 @@ class SocialLoginButton extends StatelessWidget {
   final Color backgroundColor;
   final Color textColor;
   final bool isGoogle;
+  final String? analyticsEventName;
+  final Map<String, dynamic>? analyticsEventParams;
 
   const SocialLoginButton({
     super.key,
@@ -17,12 +20,22 @@ class SocialLoginButton extends StatelessWidget {
     required this.backgroundColor,
     required this.textColor,
     this.isGoogle = false,
+    this.analyticsEventName,
+    this.analyticsEventParams,
   });
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: onPressed,
+      onPressed: () {
+        if (analyticsEventName != null) {
+          AnalyticsService.logEvent(
+            analyticsEventName!,
+            parameters: analyticsEventParams,
+          );
+        }
+        onPressed();
+      },
       style: ElevatedButton.styleFrom(
         backgroundColor: backgroundColor,
         shape: RoundedRectangleBorder(

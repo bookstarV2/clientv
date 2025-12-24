@@ -1,3 +1,4 @@
+import 'package:bookstar/common/service/analytics_service.dart';
 import 'package:bookstar/gen/assets.gen.dart';
 import 'package:bookstar/gen/colors.gen.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +27,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   // NOTE(현호): 개선 필요
   void _onTabTapped(int index) {
+    final tappedMenu = HomeBottomNavMenu.values[index];
+    AnalyticsService.logEvent('click_bottom_nav',
+        parameters: {'screen_name': tappedMenu.name});
+
     // 딥타임 같이 전체 화면을 사용하는 뷰로 이동할 때, 현재 탭(이전 탭이 될)을 저장합니다.
     // final previousIndex = widget.navigationShell.currentIndex;
     // if (index == HomeBottomNavMenu.deepTime.index) {

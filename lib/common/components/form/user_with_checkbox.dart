@@ -1,3 +1,4 @@
+import 'package:bookstar/common/service/analytics_service.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
@@ -91,7 +92,13 @@ class UserWithCheckbox extends StatelessWidget {
                   ),
                   const SizedBox(width: 10),
                   GestureDetector(
-                    onTap: onViewProfile,
+                    onTap: () {
+                      if (onViewProfile != null) {
+                        AnalyticsService.logEvent('click_view_profile',
+                            parameters: {'member_id': id});
+                        onViewProfile!();
+                      }
+                    },
                     child: Row(
                       children: [
                         SizedBox(

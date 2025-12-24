@@ -1,5 +1,6 @@
 import 'package:bookstar/common/components/button/menu_button.dart';
 import 'package:bookstar/common/components/text/expandable_text.dart';
+import 'package:bookstar/common/service/analytics_service.dart';
 import 'package:bookstar/gen/assets.gen.dart';
 import 'package:bookstar/modules/auth/model/auth_response.dart';
 import 'package:bookstar/modules/auth/view_model/auth_state.dart';
@@ -11,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:bookstar/common/theme/style/app_texts.dart';
 import 'package:bookstar/gen/colors.gen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class FeedCard extends ConsumerStatefulWidget {
@@ -59,6 +61,8 @@ class _FeedCardState extends ConsumerState<FeedCard> {
     final isMyFeed =
         widget.feed.memberId == ((user is AuthSuccess) ? user.memberId : 0);
     final isAdmin = (user as AuthSuccess?)?.memberRole == MemberRole.ADMIN;
+    final currentRoute =
+        GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -126,6 +130,15 @@ class _FeedCardState extends ConsumerState<FeedCard> {
                   ],
                   icon: Assets.icons.icMenuMore.svg(),
                   onSelected: (value) {
+                    AnalyticsService.logEvent(
+                      'click_feed_menu',
+                      parameters: {
+                        'screen_name': currentRoute,
+                        'diary_id': widget.feed.diaryId,
+                        'book_id': widget.feed.bookId,
+                        'action': value,
+                      },
+                    );
                     switch (value) {
                       case "update":
                         widget.onUpdate();

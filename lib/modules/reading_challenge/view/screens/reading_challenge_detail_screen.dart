@@ -123,6 +123,12 @@ class _ReadingChallengeDetailScreenState
             children: [
               CtaButtonL1(
                 text: '챌린지 진행하기',
+                analyticsEventName: 'click_proceed_challenge',
+                analyticsEventParams: {
+                  'screen_name': 'reading_challenge_detail',
+                  'bookId': widget.bookId,
+                  'challengeId': widget.challengeId,
+                },
                 onPressed: () {
                   final bookForRoute = SearchBookResponse(
                     bookId: book.overview.id,
@@ -148,6 +154,12 @@ class _ReadingChallengeDetailScreenState
                   text: '챌린지 중단하기',
                   backgroundColor: ColorName.g7,
                   borderColor: ColorName.g7,
+                  analyticsEventName: 'click_abandon_challenge',
+                  analyticsEventParams: {
+                    'screen_name': 'reading_challenge_detail',
+                    'bookId': widget.bookId,
+                    'challengeId': widget.challengeId,
+                  },
                   onPressed: () {
                     _showDeleteConfirmDialog(
                       context: context,
@@ -328,6 +340,18 @@ class _ReadingChallengeDetailScreenState
           onConfirm: onConfirm,
           confirmButtonText: '중단',
           cancelButtonText: '취소',
+          confirmAnalyticsEventName: 'click_abandon_challenge_confirm',
+          confirmAnalyticsEventParams: {
+            'screen_name': 'reading_challenge_detail',
+            'bookId': widget.bookId,
+            'challengeId': widget.challengeId,
+          },
+          cancelAnalyticsEventName: 'click_abandon_challenge_cancel',
+          cancelAnalyticsEventParams: {
+            'screen_name': 'reading_challenge_detail',
+            'bookId': widget.bookId,
+            'challengeId': widget.challengeId,
+          }, analyticsEventParams: {},
         );
       },
     );
@@ -345,6 +369,12 @@ class _ReadingChallengeDetailScreenState
           onCancel: () => Navigator.of(context).pop(),
           confirmButtonText: '확인',
           cancelButtonText: '',
+          confirmAnalyticsEventName: 'click_abandon_challenge_success_confirm',
+          confirmAnalyticsEventParams: {
+            'screen_name': 'reading_challenge_detail',
+            'bookId': widget.bookId,
+            'challengeId': widget.challengeId,
+          }, analyticsEventParams: {},
         );
       },
     );
