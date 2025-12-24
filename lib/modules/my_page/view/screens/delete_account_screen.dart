@@ -159,6 +159,10 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
               child: CtaButtonL1(
                 text: '북스타 종료하기',
                 enabled: true,
+                analyticsEventName: 'click_exit_app_after_withdraw',
+                analyticsEventParams: const {
+                  'screen_name': 'delete_account',
+                },
                 onPressed: () {
                   if (Platform.isAndroid) {
                     SystemNavigator.pop();
@@ -175,6 +179,12 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
         child: CtaButtonL1(
           text: showCompletedUI ? '로그인 하고 탈퇴 취소하기' : '탈퇴하기',
           enabled: showCompletedUI ? true : isChecked,
+          analyticsEventName: showCompletedUI
+              ? 'click_cancel_withdraw_from_login'
+              : 'click_confirm_withdraw',
+          analyticsEventParams: const {
+            'screen_name': 'delete_account',
+          },
           onPressed: showCompletedUI
               ? () {
                   GoRouter.of(context).go('/login');
