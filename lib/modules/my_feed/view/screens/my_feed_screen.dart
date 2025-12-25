@@ -1,6 +1,5 @@
 import 'package:bookstar/common/components/base_screen.dart';
 import 'package:bookstar/common/theme/style/app_texts.dart';
-import 'package:bookstar/gen/assets.gen.dart';
 import 'package:bookstar/modules/auth/view_model/auth_state.dart';
 import 'package:bookstar/modules/auth/view_model/auth_view_model.dart';
 import 'package:bookstar/modules/book_log/view/widgets/book_log_profile.dart';
@@ -9,15 +8,13 @@ import 'package:bookstar/modules/book_log/view/widgets/profile_speech_bubble.dar
 import 'package:bookstar/modules/book_log/view_model/book_log_view_model.dart';
 import 'package:bookstar/modules/follow/view_model/follow_info_view_model.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../gen/colors.gen.dart';
 
 class MyFeedScreen extends BaseScreen {
-  const MyFeedScreen(
-      {super.key, this.requiredRefresh = false});
+  const MyFeedScreen({super.key, this.requiredRefresh = false});
   final bool requiredRefresh;
 
   @override
@@ -74,51 +71,57 @@ class _MyFeedScreenState extends BaseScreenState<MyFeedScreen> {
     await bookLogNotifier.refreshContentState();
   }
 
-  _onTapBubble(String introduction) {
+  _onTapBubble({
+    required String nickName,
+    required String profileImageUrl,
+    required String introduction,
+  }) {
     showDialog(
       context: context,
       barrierColor: ColorName.b1.withAlpha(204),
       builder: (context) {
-        return Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: 300,
-              maxHeight: 400,
-            ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Assets.images.speechBubble.image(
-                  width: double.infinity,
-                  height: double.infinity,
-                  fit: BoxFit.fill,
-                ),
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-                  child: GestureDetector(
-                    onTap: () async {
-                      await Clipboard.setData(
-                          ClipboardData(text: introduction));
-                      Navigator.of(context).pop();
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('텍스트가 복사되었습니다'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    },
-                    child: Text(
-                      introduction,
-                      style: AppTexts.h4.copyWith(
-                          color: ColorName.w1, decoration: TextDecoration.none),
-                      textAlign: TextAlign.center,
-                      softWrap: true,
+        return Material(
+          type: MaterialType.transparency,
+          child: Center(
+            child: Container(
+              width: 300,
+              height: 200,
+              decoration: BoxDecoration(
+                  color: ColorName.g7, borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    SizedBox(
+                      width: 55,
+                      height: 55,
+                      child: CircleAvatar(
+                        backgroundColor: ColorName.g7,
+                        backgroundImage: profileImageUrl.isNotEmpty
+                            ? NetworkImage(profileImageUrl)
+                            : null,
+                      ),
                     ),
-                  ),
+                    SizedBox(
+                      height: 6,
+                    ),
+                    Text(
+                      "@$nickName",
+                      style: AppTexts.b7.copyWith(color: ColorName.p1),
+                    ),
+                    SizedBox(
+                      height: 12,
+                    ),
+                    Text(
+                      introduction,
+                      style: AppTexts.b11.copyWith(color: ColorName.g1),
+                      softWrap: true,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 4,
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         );
@@ -129,15 +132,13 @@ class _MyFeedScreenState extends BaseScreenState<MyFeedScreen> {
   @override
   PreferredSizeWidget? buildAppBar(BuildContext context) {
     final isMyProfile = true;
-    return AppBar(
-        title: const Text('마이피드'),
-        actions: [
-          if (isMyProfile)
-            IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () => context.push('/my-feed/my-page'),
-            )
-        ]);
+    return AppBar(title: const Text('마이피드'), actions: [
+      if (isMyProfile)
+        IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () => context.push('/my-feed/my-page'),
+        )
+    ]);
   }
 
   @override
@@ -183,10 +184,10 @@ class _MyFeedScreenState extends BaseScreenState<MyFeedScreen> {
                         thumbnails: bookLog.thumbnails,
                         scrollController: scrollController,
                         onClickThumbnail: (int targetIndex) {
-                          context.push('/my-feed/feed/$currentMemberId',
-                              extra: {
-                                'index': targetIndex,
-                              });
+                          context
+                              .push('/my-feed/feed/$currentMemberId', extra: {
+                            'index': targetIndex,
+                          });
                         }),
                   ],
                 ),
@@ -194,7 +195,10 @@ class _MyFeedScreenState extends BaseScreenState<MyFeedScreen> {
                   alignment: Alignment.topCenter,
                   child: ProfileSpeechBubble(
                       text: bookLog.profile.introduction,
-                      onTap: () => _onTapBubble(bookLog.profile.introduction)),
+                      onTap: () => _onTapBubble(
+                          nickName: bookLog.profile.nickName,
+                          profileImageUrl: bookLog.profile.profileImageUrl,
+                          introduction: bookLog.profile.introduction)),
                 ),
               ],
             ),
