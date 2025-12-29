@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:bookstar/common/components/base_screen.dart';
 import 'package:bookstar/common/components/button/cta_button_l1.dart';
+import 'package:bookstar/common/components/custom_switch.dart';
 import 'package:bookstar/common/models/image_request.dart';
 import 'package:bookstar/common/theme/style/app_texts.dart';
 import 'package:bookstar/gen/assets.gen.dart';
@@ -548,27 +549,11 @@ class _ReadingDiaryEditFormState extends BaseScreenState<ReadingDiaryEditForm> {
                   ],
                 ),
               ),
-              GestureDetector(
-                onTap: onPressed,
-                child: Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: privacy ? ColorName.w2 : ColorName.g1,
-                    border: Border.all(
-                      color: privacy ? ColorName.w2 : ColorName.w1,
-                      width: 2,
-                    ),
-                  ),
-                  child: privacy
-                      ? Padding(
-                          padding: const EdgeInsets.all(4.0),
-                          child: Assets.icons.icCheck.svg(),
-                        )
-                      : null,
-                ),
-              )
+              CustomSwitch(
+                  value: privacy,
+                  onChanged: (_) {
+                    onPressed();
+                  })
             ],
           ),
         ),
