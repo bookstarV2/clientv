@@ -192,17 +192,22 @@ class _ReadingChallengeRepository implements ReadingChallengeRepository {
   @override
   Future<ResponseForm<SubmitQuizResponse>> submitQuiz(
     int quizId,
-    SubmitQuizRequest request,
+    int choiceId,
+    int challengeId,
   ) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{
+      r'quizId': quizId,
+      r'choiceId': choiceId,
+      r'challengeId': challengeId,
+    };
     final _headers = <String, dynamic>{};
-    final _data = request;
+    const Map<String, dynamic>? _data = null;
     final _options = _setStreamType<ResponseForm<SubmitQuizResponse>>(
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/api/v3/quizzes/${quizId}/submit',
+            '/api/v3/quizzes/challenge-submit',
             queryParameters: queryParameters,
             data: _data,
           )

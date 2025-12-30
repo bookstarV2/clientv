@@ -7,7 +7,7 @@ part of 'ongoing_challenge_view_model.dart';
 // **************************************************************************
 
 String _$ongoingChallengeViewModelHash() =>
-    r'371e760cdfd233ac601420be71752ae879abd5b4';
+    r'0db1090f3cac2748d04625a3895aec60aab55bf4';
 
 /// See also [OngoingChallengeViewModel].
 @ProviderFor(OngoingChallengeViewModel)
