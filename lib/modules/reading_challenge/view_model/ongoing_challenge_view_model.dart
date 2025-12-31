@@ -109,4 +109,10 @@ class OngoingChallengeViewModel extends _$OngoingChallengeViewModel {
       await Future.delayed(interval);
     }
   }
+
+  Future<void> abandonChallenges(List<int> challengeIds) async {
+    for (var id in challengeIds) {
+      await _readingChallengeRepository.abandonChallenge(id);
+    }
+  }
 }

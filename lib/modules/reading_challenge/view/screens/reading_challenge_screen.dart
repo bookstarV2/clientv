@@ -1,6 +1,7 @@
 import 'package:bookstar/common/components/base_screen.dart';
 import 'package:bookstar/common/components/button/cta_button_l1.dart';
 import 'package:bookstar/common/components/custom_list_view.dart';
+import 'package:bookstar/common/components/dialog/custom_dialog.dart';
 import 'package:bookstar/common/theme/style/app_paddings.dart';
 import 'package:bookstar/common/theme/style/app_texts.dart';
 import 'package:bookstar/gen/assets.gen.dart';
@@ -33,6 +34,8 @@ class _ReadingChallengeScreenState
   bool _hasScrolledToTarget = false;
   int? _targetIndex;
   int? _newIndex;
+  bool _isAbandon = false;
+  List<int> _selectedAbandonChallenges = [];
 
   @override
   void onDidUpdateWidget(covariant ReadingChallengeScreen oldWidget) async {
@@ -103,6 +106,7 @@ class _ReadingChallengeScreenState
                 _buildHeaderSection(
                   totalCount: totalCount,
                   completedCount: completedCount,
+                  isAbandon: _isAbandon,
                   onScreenShot: () async {
                     final result = await FullCaptureService.captureAndShow(
                         context, _screenKey);
@@ -119,13 +123,20 @@ class _ReadingChallengeScreenState
                           builder: (context) => SaveSuccessImageDialog());
                     }
                   },
-                  onCalender: () {
-                    /** 캘린더 */
-                    // TODO: 포인트 내역
-                  },
                   onNew: () {
                     /** 새로운책 읽기*/
                     context.go('/reading-challenge/search-new');
+                  },
+                  onAbandon: () {
+                    /** 중단 */
+                    setState(() {
+                      _isAbandon = !_isAbandon;
+                      if (!_isAbandon) {
+                        _selectedAbandonChallenges.clear();
+                      } else {
+                        _targetIndex = null;
+                      }
+                    });
                   },
                 ),
                 SizedBox(height: 35),
@@ -134,9 +145,19 @@ class _ReadingChallengeScreenState
                   key: _screenKey,
                   child: _buildListSection(
                     items: items,
+                    selectedAbandonChallenges: _selectedAbandonChallenges,
                     onTapItem: (item, index) {
                       setState(() {
-                        _targetIndex = index;
+                        if (!_isAbandon) {
+                          _targetIndex = index;
+                        } else {
+                          if (!_selectedAbandonChallenges
+                              .contains(item.challengeId)) {
+                            _selectedAbandonChallenges.add(item.challengeId);
+                          } else {
+                            _selectedAbandonChallenges.remove(item.challengeId);
+                          }
+                        }
                       });
                     },
                     targetIndex: _targetIndex,
@@ -161,8 +182,9 @@ class _ReadingChallengeScreenState
   Widget _buildHeaderSection({
     required int totalCount,
     required int completedCount,
+    required bool isAbandon,
     required Function onScreenShot,
-    required Function onCalender,
+    required Function onAbandon,
     required Function onNew,
   }) {
     return Row(
@@ -212,6 +234,14 @@ class _ReadingChallengeScreenState
               onTap: () => onNew(),
               child: Assets.icons.icPlus.svg(),
             ),
+            SizedBox(width: 8),
+            /** 중단 */
+            GestureDetector(
+              onTap: () => onAbandon(),
+              child: isAbandon
+                  ? Assets.icons.icClose.svg()
+                  : Assets.icons.icAbandon.svg(),
+            ),
           ],
         ),
       ],
@@ -221,6 +251,7 @@ class _ReadingChallengeScreenState
   Widget _buildListSection({
     required List<ChallengeResponse> items,
     required Function(ChallengeResponse, int) onTapItem,
+    required List<int> selectedAbandonChallenges,
     required int? targetIndex,
     required int? newIndex,
   }) {
@@ -238,6 +269,8 @@ class _ReadingChallengeScreenState
             final isSelectedMode = targetIndex != null;
             final isTarget = targetIndex == index;
             final isNew = newIndex == index;
+            final isSelectedAbandon =
+                selectedAbandonChallenges.contains(item.challengeId);
 
             double angle = 0;
             switch (index % 3) {
@@ -311,79 +344,124 @@ class _ReadingChallengeScreenState
                         width: 20,
                       ),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    item.bookTitle,
-                                    style: AppTexts.b7
-                                        .copyWith(color: ColorName.w1),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    gradient: RadialGradient(
-                                      colors: [
-                                        ColorName.p1,
-                                        ColorName.b1,
-                                      ],
-                                      stops: [0.2, 1.0], // 20%에서 보라 → 100%에서 검정
-                                      center: Alignment.bottomCenter, // 중심 고정
-                                      radius: 0.85, // 퍼지는 정도 (1.0이면 꽉 채움)
+                            if (_isAbandon)
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 24,
+                                    height: 24,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: isSelectedAbandon
+                                          ? ColorName.w2
+                                          : ColorName.g1,
+                                      border: Border.all(
+                                        color: isSelectedAbandon
+                                            ? ColorName.w2
+                                            : ColorName.w1,
+                                        width: 2,
+                                      ),
                                     ),
-                                    color: ColorName.b1,
-                                    border:
-                                        Border.all(color: Color(0xFFA99AFF)),
-                                    borderRadius: BorderRadius.circular(100),
+                                    child: isSelectedAbandon
+                                        ? Padding(
+                                            padding: const EdgeInsets.all(4.0),
+                                            child: Assets.icons.icCheck.svg(),
+                                          )
+                                        : null,
                                   ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 6, vertical: 3),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Assets.icons.icReadingChallengeTimeRate
-                                            .svg(),
-                                        SizedBox(
-                                          width: 4,
-                                        ),
-                                        Text(
-                                          "${item.progressPercentage}%",
+                                  SizedBox(
+                                    width: 8,
+                                  ),
+                                ],
+                              ),
+                            Expanded(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          item.bookTitle,
                                           style: AppTexts.b7
-                                              .copyWith(color: ColorName.p2),
+                                              .copyWith(color: ColorName.w1),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          gradient: RadialGradient(
+                                            colors: [
+                                              ColorName.p1,
+                                              ColorName.b1,
+                                            ],
+                                            stops: [
+                                              0.2,
+                                              1.0
+                                            ], // 20%에서 보라 → 100%에서 검정
+                                            center:
+                                                Alignment.bottomCenter, // 중심 고정
+                                            radius: 0.85, // 퍼지는 정도 (1.0이면 꽉 채움)
+                                          ),
+                                          color: ColorName.b1,
+                                          border: Border.all(
+                                              color: Color(0xFFA99AFF)),
+                                          borderRadius:
+                                              BorderRadius.circular(100),
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 6, vertical: 3),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Assets.icons
+                                                  .icReadingChallengeTimeRate
+                                                  .svg(),
+                                              SizedBox(
+                                                width: 4,
+                                              ),
+                                              Text(
+                                                "${item.progressPercentage}%",
+                                                style: AppTexts.b7.copyWith(
+                                                    color: ColorName.p2),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(
-                              height: 8,
-                            ),
-                            Row(
-                              children: [
-                                Text(
-                                  "저자: ",
-                                  style: AppTexts.b10
-                                      .copyWith(color: ColorName.g2),
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    item.bookAuthor,
-                                    style: AppTexts.b10
-                                        .copyWith(color: ColorName.w1),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                                  SizedBox(
+                                    height: 8,
                                   ),
-                                ),
-                              ],
+                                  Row(
+                                    children: [
+                                      Text(
+                                        "저자: ",
+                                        style: AppTexts.b10
+                                            .copyWith(color: ColorName.g2),
+                                      ),
+                                      Expanded(
+                                        child: Text(
+                                          item.bookAuthor,
+                                          style: AppTexts.b10
+                                              .copyWith(color: ColorName.w1),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -402,6 +480,26 @@ class _ReadingChallengeScreenState
   Widget? buildFloatingActionButton(BuildContext context) {
     final deviceWidth = MediaQuery.of(context).size.width;
     final state = ref.watch(ongoingChallengeViewModelProvider);
+
+    if (_isAbandon) {
+      return SizedBox(
+        width: deviceWidth * 0.9,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            CtaButtonL1(
+              text: '${_selectedAbandonChallenges.length}권 리딩 챌린지 중단하기',
+              enabled: _selectedAbandonChallenges.isNotEmpty,
+              onPressed: () {
+                onAbandon();
+              },
+            ),
+          ],
+        ),
+      );
+    }
 
     if (_targetIndex == null || (state.value?.challenges.isEmpty ?? true)) {
       return null;
@@ -468,5 +566,59 @@ class _ReadingChallengeScreenState
     final state = ref.watch(ongoingChallengeViewModelProvider);
     final challengeId = state.value!.challenges[_targetIndex!].challengeId;
     context.push('/reading-challenge/start/$challengeId');
+  }
+
+  Future<void> onAbandon() async {
+    final result = await showDialog(
+        context: context,
+        builder: (_) {
+          return CustomDialog(
+            title: '${_selectedAbandonChallenges.length}권의 책의 챌린지 중단할까요?',
+            content: '마이피드 > 챌린지 중단 도서에서\n언제든지 다시 진행할 수 있어요',
+            titleStyle: AppTexts.b5.copyWith(color: ColorName.w1),
+            contentStyle: AppTexts.b8.copyWith(color: ColorName.g2),
+            icon: Assets.icons.icReadingChallengeChar1
+                .svg(width: 100, height: 105),
+            onCancel: () {
+              context.pop(false);
+            },
+            onConfirm: () {
+              context.pop(true);
+            },
+            confirmButtonText: '중단',
+            cancelButtonText: '취소',
+          );
+        });
+
+    if (result) {
+      final notifier = ref.read(ongoingChallengeViewModelProvider.notifier);
+      await notifier.abandonChallenges(_selectedAbandonChallenges);
+
+      await notifier.initState();
+      if (!mounted) return;
+
+      await showDialog(
+          context: context,
+          builder: (_) {
+            return CustomDialog(
+              title: '${_selectedAbandonChallenges.length}권의 책의 챌린지 중단했어요',
+              content: '새로운 책으로 챌린지에 도전해 보세요!',
+              titleStyle: AppTexts.b5.copyWith(color: ColorName.w1),
+              contentStyle: AppTexts.b8.copyWith(color: ColorName.g2),
+              icon: Assets.icons.icReadingChallengeChar2
+                  .svg(width: 100, height: 105),
+              onCancel: () {},
+              onConfirm: () {
+                context.pop();
+              },
+              confirmButtonText: '확인',
+              cancelButtonText: '',
+            );
+          });
+      setState(() {
+        _isAbandon = false;
+        _selectedAbandonChallenges.clear();
+      });
+    }
   }
 }

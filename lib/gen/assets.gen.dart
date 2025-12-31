@@ -82,6 +82,9 @@ class $AssetsIconsGen {
   /// File path: assets/icons/google.svg
   SvgGenImage get google => const SvgGenImage('assets/icons/google.svg');
 
+  /// File path: assets/icons/ic_abandon.svg
+  SvgGenImage get icAbandon => const SvgGenImage('assets/icons/ic_abandon.svg');
+
   /// File path: assets/icons/ic_add_pick.svg
   SvgGenImage get icAddPick =>
       const SvgGenImage('assets/icons/ic_add_pick.svg');
@@ -177,6 +180,9 @@ class $AssetsIconsGen {
   /// File path: assets/icons/ic_choice_uncorrect.svg
   SvgGenImage get icChoiceUncorrect =>
       const SvgGenImage('assets/icons/ic_choice_uncorrect.svg');
+
+  /// File path: assets/icons/ic_close.svg
+  SvgGenImage get icClose => const SvgGenImage('assets/icons/ic_close.svg');
 
   /// File path: assets/icons/ic_deep_time_go_to_quiz.svg
   SvgGenImage get icDeepTimeGoToQuiz =>
@@ -407,6 +413,7 @@ class $AssetsIconsGen {
     aladin,
     apple,
     google,
+    icAbandon,
     icAddPick,
     icApps,
     icArrowDown,
@@ -432,6 +439,7 @@ class $AssetsIconsGen {
     icCheck,
     icChoiceCorrect,
     icChoiceUncorrect,
+    icClose,
     icDeepTimeGoToQuiz,
     icDeepTimeLockClose,
     icDeepTimeLockOpen,

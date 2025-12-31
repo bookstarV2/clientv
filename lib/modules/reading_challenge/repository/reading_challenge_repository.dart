@@ -73,6 +73,11 @@ abstract class ReadingChallengeRepository {
     @Body() PostProgressRequest request,
   );
 
+  @POST('/api/v3/challenges/{challengeId}/abandon')
+  Future<ResponseForm<dynamic>> abandonChallenge(
+    @Path('challengeId') int challengeId,
+  );
+
   @POST('/api/v2/reading-challenges')
   Future<ResponseForm<ChallengeCreationResponse>> createChallenge(
     @Body() ReadingChallengeRequest request,
@@ -105,11 +110,6 @@ abstract class ReadingChallengeRepository {
 
   @POST('/api/v2/reading-challenges/{challengeId}/restart')
   Future<ResponseForm<ChallengeResponse>> restartChallenge(
-    @Path('challengeId') int challengeId,
-  );
-
-  @POST('/api/v2/reading-challenges/{challengeId}/abandon')
-  Future<ResponseForm<dynamic>> abandonChallenge(
     @Path('challengeId') int challengeId,
   );
 
