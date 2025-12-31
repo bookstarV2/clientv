@@ -1,5 +1,6 @@
 import 'package:bookstar/common/components/base_screen.dart';
 import 'package:bookstar/common/components/button/menu_button.dart';
+import 'package:bookstar/common/service/analytics_service.dart';
 import 'package:bookstar/common/theme/style/app_texts.dart';
 import 'package:bookstar/gen/assets.gen.dart';
 import 'package:bookstar/modules/auth/view_model/auth_state.dart';
@@ -70,6 +71,10 @@ class _BookLogThumbnailScreenState
     required String profileImageUrl,
     required String introduction,
   }) {
+  AnalyticsService.logEvent('click_speech_bubble', parameters: {
+      'screen_name': 'book_log_thumbnail',
+      'member_id': widget.memberId
+    });
     showDialog(
       context: context,
       barrierColor: ColorName.b1.withAlpha(204),
@@ -148,6 +153,10 @@ class _BookLogThumbnailScreenState
               ],
               icon: Assets.icons.icMenuMore.svg(color: ColorName.g3),
               onSelected: (value) async {
+                AnalyticsService.logEvent('click_report_user', parameters: {
+                  'screen_name': 'book_log_thumbnail',
+                  'member_id': widget.memberId
+                });
                 switch (value) {
                   case "report":
                     final result = await showModalBottomSheet(
@@ -185,7 +194,12 @@ class _BookLogThumbnailScreenState
           if (isMyProfile)
             IconButton(
               icon: const Icon(Icons.menu),
-              onPressed: () => context.push('/my-feed/my-page'),
+              onPressed: () {
+                AnalyticsService.logEvent('click_my_page_menu', parameters: {
+                  'screen_name': 'book_log_thumbnail',
+                });
+                context.push('/my-feed/my-page');
+              },
             )
         ]);
   }
@@ -216,8 +230,23 @@ class _BookLogThumbnailScreenState
                       profile: bookLog.profile,
                       isMyProfile: isMyProfile,
                       isFollowing: isFollowing,
-                      onEdit: () => context.push('/my-feed/profile'),
+                      onEdit: () {
+                        AnalyticsService.logEvent('click_edit_profile',
+                            parameters: {
+                              'screen_name': 'book_log_thumbnail',
+                              'member_id': widget.memberId
+                            });
+                        context.push('/my-feed/profile');
+                      },
                       onFollow: () async {
+                        AnalyticsService.logEvent(
+                            isFollowing
+                                ? 'click_unfollow_user'
+                                : 'click_follow_user',
+                            parameters: {
+                              'screen_name': 'book_log_thumbnail',
+                              'member_id': widget.memberId
+                            });
                         if (isFollowing) {
                           await followInfoNotifier.unfollow(widget.memberId);
                         } else {
@@ -232,6 +261,13 @@ class _BookLogThumbnailScreenState
                         thumbnails: bookLog.thumbnails,
                         scrollController: scrollController,
                         onClickThumbnail: (int targetIndex) {
+                          AnalyticsService.logEvent('click_thumbnail_to_feed',
+                              parameters: {
+                                'screen_name': 'book_log_thumbnail',
+                                'member_id': widget.memberId,
+                                'diary_id':
+                                    bookLog.thumbnails[targetIndex].diaryId
+                              });
                           context.push('/book-log/feed/${widget.memberId}',
                               extra: {
                                 'index': targetIndex,

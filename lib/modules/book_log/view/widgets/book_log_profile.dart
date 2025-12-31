@@ -1,8 +1,10 @@
+import 'package:bookstar/common/service/analytics_service.dart';
 import 'package:bookstar/modules/book_log/view/widgets/follow_button.dart';
 import 'package:bookstar/modules/profile/model/profile_with_counts.dart';
 import 'package:flutter/material.dart';
 import 'package:bookstar/gen/colors.gen.dart';
 import 'package:bookstar/common/theme/style/app_texts.dart';
+import 'package:go_router/go_router.dart';
 import 'profile_stat.dart';
 import 'stat_divider.dart';
 import 'profile_edit_button.dart';
@@ -81,10 +83,32 @@ class BookLogProfile extends StatelessWidget {
           ),
           if (isMyProfile) ...[
             const SizedBox(height: 16),
-            ProfileEditButton(onPressed: onEdit),
+            ProfileEditButton(onPressed: () {
+              AnalyticsService.logEvent('click_edit_profile', parameters: {
+                'screen_name': 'book_log_profile',
+                'profile_id': profile.memberId
+              });
+              if (onEdit != null) {
+                onEdit!();
+              } else {
+                context.push('/my-feed/profile');
+              }
+            }),
           ] else ...[
             const SizedBox(height: 16),
-            FollowButton(isFollowing: isFollowing, onPressed: onFollow),
+            FollowButton(
+                isFollowing: isFollowing,
+                onPressed: () {
+                  AnalyticsService.logEvent(
+                      isFollowing ? 'click_unfollow' : 'click_follow',
+                      parameters: {
+                        'screen_name': 'book_log_profile',
+                        'profile_id': profile.memberId
+                      });
+                  if (onFollow != null) {
+                    onFollow!();
+                  }
+                }),
           ],
         ],
       ),

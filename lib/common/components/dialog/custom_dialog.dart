@@ -17,6 +17,10 @@ class CustomDialog extends StatelessWidget {
     this.icon,
     this.titleStyle,
     this.contentStyle,
+    this.confirmAnalyticsEventName,
+    this.confirmAnalyticsEventParams,
+    this.cancelAnalyticsEventName,
+    this.cancelAnalyticsEventParams,
   });
 
   final String title;
@@ -28,6 +32,10 @@ class CustomDialog extends StatelessWidget {
   final Widget? icon;
   final TextStyle? titleStyle;
   final TextStyle? contentStyle;
+  final String? confirmAnalyticsEventName;
+  final Map<String, dynamic>? confirmAnalyticsEventParams;
+  final String? cancelAnalyticsEventName;
+  final Map<String, dynamic>? cancelAnalyticsEventParams;
 
   @override
   Widget build(BuildContext context) {
@@ -65,6 +73,8 @@ class CustomDialog extends StatelessWidget {
                       onPressed: onCancel,
                       height: 41,
                       borderRadius: 7,
+                      analyticsEventName: cancelAnalyticsEventName,
+                      analyticsEventParams: cancelAnalyticsEventParams,
                     ),
                   ),
                 if (cancelButtonText.isNotEmpty) const SizedBox(width: 6),
@@ -74,6 +84,8 @@ class CustomDialog extends StatelessWidget {
                     onPressed: onConfirm,
                     height: 41,
                     borderRadius: 7,
+                    analyticsEventName: confirmAnalyticsEventName,
+                    analyticsEventParams: confirmAnalyticsEventParams,
                   ),
                 ),
               ],

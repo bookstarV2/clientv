@@ -1,7 +1,8 @@
-import 'package:bookstar/common/theme/style/app_paddings.dart';
-import 'package:bookstar/common/theme/style/app_texts.dart';
 import 'package:bookstar/common/components/form/user_with_checkbox.dart';
 import 'package:bookstar/common/components/button/cta_button_l1.dart';
+import 'package:bookstar/common/service/analytics_service.dart';
+import 'package:bookstar/common/theme/style/app_paddings.dart';
+import 'package:bookstar/common/theme/style/app_texts.dart';
 import 'package:bookstar/gen/assets.gen.dart';
 import 'package:bookstar/gen/colors.gen.dart';
 import 'package:bookstar/modules/book_log/view/screens/book_log_thumbnail_screen.dart';
@@ -87,6 +88,12 @@ class _FollowerManagementScreenState extends State<FollowerManagementScreen> {
                         });
                       },
                       onViewProfile: () {
+                        AnalyticsService.logEvent(
+                            'click_view_profile_from_follower_management',
+                            parameters: {
+                              'screen_name': 'follower_management',
+                              'tapped_member_id': follower.id
+                            });
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) => BookLogThumbnailScreen(
@@ -110,6 +117,12 @@ class _FollowerManagementScreenState extends State<FollowerManagementScreen> {
               child: CtaButtonL1(
                 text: '차단 해제하기',
                 enabled: checkedList.contains(true),
+                analyticsEventName: 'click_unblock_user',
+                analyticsEventParams: {
+                  'screen_name': 'follower_management',
+                  'unblocked_user_count':
+                      checkedList.where((e) => e).length,
+                },
                 onPressed: checkedList.contains(true)
                     ? () {
                         // TODO: 차단 해제 처리 로직 추가

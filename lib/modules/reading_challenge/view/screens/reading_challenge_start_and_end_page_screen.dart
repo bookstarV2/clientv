@@ -91,11 +91,21 @@ class _ReadingChallengeStartAndEndPageScreenState
           content: '챌린지 생성이 안됩니다. 괜찮으신가요?',
           confirmButtonText: '확인',
           cancelButtonText: '취소',
+          confirmAnalyticsEventName: 'click_skip_challenge_creation_confirm',
+          confirmAnalyticsEventParams: {
+            'screen_name': 'reading_challenge_start_and_end_page',
+            'bookId': widget.book.bookId,
+          },
+          cancelAnalyticsEventName: 'click_skip_challenge_creation_cancel',
+          cancelAnalyticsEventParams: {
+            'screen_name': 'reading_challenge_start_and_end_page',
+            'bookId': widget.book.bookId,
+          },
           onConfirm: () {
             Navigator.of(context).pop();
             context.go('/reading-challenge');
           },
-          onCancel: () => Navigator.of(context).pop(),
+          onCancel: () => Navigator.of(context).pop(), 
         );
       },
     );
@@ -257,6 +267,12 @@ class _ReadingChallengeStartAndEndPageScreenState
           CtaButtonL1(
             text: '다음으로',
             enabled: viewModel.isButtonEnabled,
+            analyticsEventName: 'click_next_from_start_end_page',
+            analyticsEventParams: {
+              'screen_name': 'reading_challenge_start_and_end_page',
+              'bookId': book.bookId,
+              'totalPages': totalPages,
+            },
             onPressed: () async {
               try {
                 if (!context.mounted) return;

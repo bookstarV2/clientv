@@ -1,4 +1,5 @@
 import 'package:bookstar/common/components/custom_grid_view.dart';
+import 'package:bookstar/common/service/analytics_service.dart';
 import 'package:bookstar/modules/book_pick/view_model/book_pick_search_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -70,6 +71,10 @@ class _BookPickMyLikesScreenState extends ConsumerState<BookPickMyLikesScreen> {
   }
 
   Future<void> _onRefresh() async {
+    AnalyticsService.logEvent('click_search_my_likes', parameters: {
+      'screen_name': 'book_pick_my_likes',
+      'query': _textController.text
+    });
     await ref
         .read(bookPickSearchViewModelProvider.notifier)
         .initLikeBooks(title: _textController.text);
@@ -140,6 +145,11 @@ class _BookPickMyLikesScreenState extends ConsumerState<BookPickMyLikesScreen> {
                                 publisher: book.publisher,
                               ),
                               onTap: () {
+                                AnalyticsService.logEvent('click_my_like_book',
+                                    parameters: {
+                                      'screen_name': 'book_pick_my_likes',
+                                      'book_id': book.bookId
+                                    });
                                 context
                                     .push('/book-pick/overview/${book.bookId}');
                               });
