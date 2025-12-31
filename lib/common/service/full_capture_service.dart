@@ -11,7 +11,7 @@ import 'package:gal/gal.dart';
 class FullCaptureService {
   /// RepaintBoundary Key를 받아 전체 화면을 이미지로 변환
   static Future<Uint8List?> captureWidget(GlobalKey boundaryKey,
-      {double pixelRatio = 2.0}) async {
+      {double pixelRatio = 1.0}) async {
     try {
       final boundary = boundaryKey.currentContext?.findRenderObject()
           as RenderRepaintBoundary?;
@@ -58,8 +58,18 @@ class FullCaptureService {
             )
           ],
         ),
-        body: SingleChildScrollView(
-          child: Image.memory(bytes),
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: SizedBox(
+                width: constraints.maxWidth,
+                child: Image.memory(
+                  bytes,
+                  fit: BoxFit.fitWidth,
+                ),
+              ),
+            );
+          },
         ),
       ),
     );

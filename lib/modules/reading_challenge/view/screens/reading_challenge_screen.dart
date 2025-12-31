@@ -63,7 +63,6 @@ class _ReadingChallengeScreenState
           }
 
           final hasQuiz = state.value!.challenges[targetIndex].hasQuiz;
-          print("hasQuiz: $hasQuiz");
           if (mounted && !hasQuiz) {
             await notifier.pollingUntilHasQuiz(widget.challengeId);
           }
@@ -90,49 +89,50 @@ class _ReadingChallengeScreenState
             items.where((element) => element.completed).length;
         return SingleChildScrollView(
           controller: scrollController,
-          child: RepaintBoundary(
-            key: _screenKey,
-            child: Container(
-              constraints: BoxConstraints(
-                minHeight: MediaQuery.of(context).size.height,
-              ),
-              padding: AppPaddings.SCREEN_BODY_PADDING,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Header
-                  _buildHeaderSection(
-                    totalCount: totalCount,
-                    completedCount: completedCount,
-                    onScreenShot: () async {
-                      final result = await FullCaptureService.captureAndShow(
-                          context, _screenKey);
-                      bool? isSaved = result?['isSaved'];
-                      if (isSaved == true && context.mounted) {
-                        await showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            barrierColor: ColorName.b1.withValues(alpha: 0.5),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                  top: Radius.circular(20)),
-                            ),
-                            builder: (context) => SaveSuccessImageDialog());
-                      }
-                    },
-                    onCalender: () {
-                      /** 캘린더 */
-                      // TODO: 포인트 내역
-                    },
-                    onNew: () {
-                      /** 새로운책 읽기*/
-                      context.go('/reading-challenge/search-new');
-                    },
-                  ),
-                  SizedBox(height: 35),
-                  // 리스트
-                  _buildListSection(
+          child: Container(
+            constraints: BoxConstraints(
+              minWidth: MediaQuery.of(context).size.width,
+              minHeight: MediaQuery.of(context).size.height,
+            ),
+            padding: AppPaddings.SCREEN_BODY_PADDING,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                _buildHeaderSection(
+                  totalCount: totalCount,
+                  completedCount: completedCount,
+                  onScreenShot: () async {
+                    final result = await FullCaptureService.captureAndShow(
+                        context, _screenKey);
+                    bool? isSaved = result?['isSaved'];
+                    if (isSaved == true && context.mounted) {
+                      await showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          barrierColor: ColorName.b1.withValues(alpha: 0.5),
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.vertical(top: Radius.circular(20)),
+                          ),
+                          builder: (context) => SaveSuccessImageDialog());
+                    }
+                  },
+                  onCalender: () {
+                    /** 캘린더 */
+                    // TODO: 포인트 내역
+                  },
+                  onNew: () {
+                    /** 새로운책 읽기*/
+                    context.go('/reading-challenge/search-new');
+                  },
+                ),
+                SizedBox(height: 35),
+                // 리스트
+                RepaintBoundary(
+                  key: _screenKey,
+                  child: _buildListSection(
                     items: items,
                     onTapItem: (item, index) {
                       setState(() {
@@ -142,12 +142,12 @@ class _ReadingChallengeScreenState
                     targetIndex: _targetIndex,
                     newIndex: _newIndex,
                   ),
-                  if (_targetIndex != null)
-                    SizedBox(
-                      height: 80,
-                    )
-                ],
-              ),
+                ),
+                if (_targetIndex != null)
+                  SizedBox(
+                    height: 80,
+                  )
+              ],
             ),
           ),
         );
@@ -442,8 +442,7 @@ class _ReadingChallengeScreenState
                           ),
                           Text(
                             "책이 더 궁금해지는 퀴즈를 준비하고 있어요",
-                            style:
-                                AppTexts.b8.copyWith(color: ColorName.w1),
+                            style: AppTexts.b8.copyWith(color: ColorName.w1),
                           ),
                         ],
                       ),
