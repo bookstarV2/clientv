@@ -105,7 +105,7 @@ class _ReadingChallengeStartAndEndPageScreenState
             Navigator.of(context).pop();
             context.go('/reading-challenge');
           },
-          onCancel: () => Navigator.of(context).pop(), analyticsEventParams: {},
+          onCancel: () => Navigator.of(context).pop(), 
         );
       },
     );

@@ -402,57 +402,67 @@ class _ReadingChallengeScreenState
   Widget? buildFloatingActionButton(BuildContext context) {
     final deviceWidth = MediaQuery.of(context).size.width;
     final state = ref.watch(ongoingChallengeViewModelProvider);
-    final hasQuiz = state.value?.challenges[_targetIndex ?? 0].hasQuiz ?? false;
-    return _targetIndex != null
-        ? SizedBox(
-            width: deviceWidth * 0.9,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
+
+    if (_targetIndex == null || (state.value?.challenges.isEmpty ?? true)) {
+      return null;
+    }
+
+    if (_targetIndex! >= state.value!.challenges.length) {
+      // This can happen if the list of challenges changes after an index has been selected.
+      // Returning null is a safe fallback.
+      return null;
+    }
+
+    final hasQuiz = state.value!.challenges[_targetIndex!].hasQuiz;
+
+    return SizedBox(
+      width: deviceWidth * 0.9,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          if (!hasQuiz)
+            Column(
               children: [
-                if (!hasQuiz)
-                  Column(
-                    children: [
-                      Container(
-                          decoration: BoxDecoration(
-                            color: ColorName.dim3,
-                            borderRadius: BorderRadius.circular(16),
+                Container(
+                    decoration: BoxDecoration(
+                      color: ColorName.dim3,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 10),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Assets.icons.icStar4Filled.svg(),
+                          SizedBox(
+                            width: 8,
                           ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 10),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Assets.icons.icStar4Filled.svg(),
-                                SizedBox(
-                                  width: 8,
-                                ),
-                                Text(
-                                  "책이 더 궁금해지는 퀴즈를 준비하고 있어요",
-                                  style:
-                                      AppTexts.b8.copyWith(color: ColorName.w1),
-                                ),
-                              ],
-                            ),
-                          )),
-                      SizedBox(
-                        height: 16,
+                          Text(
+                            "책이 더 궁금해지는 퀴즈를 준비하고 있어요",
+                            style:
+                                AppTexts.b8.copyWith(color: ColorName.w1),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                CtaButtonL1(
-                  text: '리딩 챌린지 시작하기',
-                  enabled: hasQuiz,
-                  onPressed: () {
-                    goToStartScreen();
-                  },
+                    )),
+                SizedBox(
+                  height: 16,
                 ),
               ],
             ),
-          )
-        : null;
+          CtaButtonL1(
+            text: '리딩 챌린지 시작하기',
+            enabled: hasQuiz,
+            onPressed: () {
+              goToStartScreen();
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   void goToStartScreen() {

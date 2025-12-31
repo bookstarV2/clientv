@@ -70,7 +70,6 @@ class _SelectImageDialogState extends BaseScreenState<SelectImageDialog> {
 
       if (response["result"]) {
         // 퍼미션이 거부된 경우의 처리
-        // 端末のアプリ権限を開く
         await PhotoManager.openSetting();
       } else {
         Navigator.pop(context);

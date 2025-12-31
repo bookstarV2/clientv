@@ -97,10 +97,13 @@ class LoginInfoScreen extends ConsumerWidget {
                           cancelButtonText: '취소',
                           confirmButtonText: '로그아웃',
                           confirmAnalyticsEventName: 'click_logout_confirm',
-                          analyticsEventParams: const {
+                          confirmAnalyticsEventParams: const {
                             'screen_name': 'login_info',
                           },
                           cancelAnalyticsEventName: 'click_logout_cancel',
+                          cancelAnalyticsEventParams: const {
+                            'screen_name': 'login_info',
+                          },
                           onCancel: () => Navigator.of(context).pop(),
                           onConfirm: () async {
                             await ref

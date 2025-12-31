@@ -12,10 +12,16 @@ class AnalyticsService {
     debugPrint('GA Event: $name');
     debugPrint('Parameters: $parameters');
 
-    await _analytics.logEvent(
-      name: name,
-      parameters: parameters?.map((key, value) => MapEntry(key, value as Object)),
-    );
+    Map<String, Object>? finalParameters;
+    if (parameters != null) {
+      finalParameters = {};
+      for (var item in parameters.entries) {
+        if (item.value != null) {
+          finalParameters[item.key] = item.value as Object;
+        }
+      }
+    }
+    await _analytics.logEvent(name: name, parameters: finalParameters);
   }
 
   static Future<void> logClick({

@@ -83,7 +83,7 @@ class _ReadingChallengeQuizDeepTimeScreenState
               Navigator.of(context).pop(true);
             },
             confirmButtonText: '퀴즈 풀러가기',
-            cancelButtonText: '취소', analyticsEventParams: {},
+            cancelButtonText: '취소',
           );
         });
     if (result != null && result) {

@@ -351,7 +351,7 @@ class _ReadingChallengeDetailScreenState
             'screen_name': 'reading_challenge_detail',
             'bookId': widget.bookId,
             'challengeId': widget.challengeId,
-          }, analyticsEventParams: {},
+          }, 
         );
       },
     );
@@ -374,7 +374,7 @@ class _ReadingChallengeDetailScreenState
             'screen_name': 'reading_challenge_detail',
             'bookId': widget.bookId,
             'challengeId': widget.challengeId,
-          }, analyticsEventParams: {},
+          }, 
         );
       },
     );

@@ -157,7 +157,7 @@ class ReadingChallengeDiaryEncourageScreen extends ConsumerWidget {
                 icon: Assets.icons.icReadingChallengeChar3.svg(
                   width: 80,
                   height: 80,
-                ), analyticsEventParams: {},
+                ), 
               ),
             );
           },

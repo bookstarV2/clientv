@@ -20,7 +20,7 @@ class CustomDialog extends StatelessWidget {
     this.confirmAnalyticsEventName,
     this.confirmAnalyticsEventParams,
     this.cancelAnalyticsEventName,
-    this.cancelAnalyticsEventParams, required Map<String, String> analyticsEventParams,
+    this.cancelAnalyticsEventParams,
   });
 
   final String title;

@@ -75,7 +75,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "&#x2013;FIRDebugEnabled"
+            argument = "-FIRDebugEnabled"            
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
