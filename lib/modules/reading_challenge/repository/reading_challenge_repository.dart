@@ -3,7 +3,6 @@ import 'package:bookstar/infra/network/dio_client.dart';
 import 'package:bookstar/modules/reading_challenge/model/challenge_creation_response.dart';
 import 'package:bookstar/modules/reading_challenge/model/post_progress_request.dart';
 import 'package:bookstar/modules/reading_challenge/model/post_reading_timer_request.dart';
-import 'package:bookstar/modules/reading_challenge/model/submit_quiz_request.dart';
 import 'package:bookstar/modules/reading_challenge/model/challenge_detail_chapter_detail_response.dart';
 import 'package:bookstar/modules/reading_challenge/model/challenge_progress_request.dart';
 import 'package:bookstar/modules/reading_challenge/model/challenge_progress_response.dart';
@@ -56,10 +55,11 @@ abstract class ReadingChallengeRepository {
     @Body() List<int> chapterIds,
   );
 
-  @POST('/api/v3/quizzes/{quizId}/submit')
+  @POST('/api/v3/quizzes/challenge-submit')
   Future<ResponseForm<SubmitQuizResponse>> submitQuiz(
-    @Path('quizId') int quizId,
-    @Body() SubmitQuizRequest request,
+    @Query('quizId') int quizId,
+    @Query('choiceId') int choiceId,
+    @Query('challengeId') int challengeId,
   );
 
   @POST('/api/v1/reading-timers')

@@ -7,7 +7,7 @@ part of 'challenge_quiz_view_model.dart';
 // **************************************************************************
 
 String _$challengeQuizViewModelHash() =>
-    r'0ce8c97ab5997a982dfa8078146b2e6922e42051';
+    r'6ad5f2b6786344388e2cb1eb1cd4ffda6dbb6f0e';
 
 /// Copied from Dart SDK
 class _SystemHash {

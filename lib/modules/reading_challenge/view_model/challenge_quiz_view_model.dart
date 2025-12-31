@@ -2,7 +2,6 @@ import 'package:bookstar/modules/reading_challenge/model/challenge_detail_chapte
 import 'package:bookstar/modules/reading_challenge/model/choice_result.dart';
 import 'package:bookstar/modules/reading_challenge/model/post_progress_request.dart';
 import 'package:bookstar/modules/reading_challenge/model/post_reading_timer_request.dart';
-import 'package:bookstar/modules/reading_challenge/model/submit_quiz_request.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -51,9 +50,10 @@ class ChallengeQuizViewModel extends _$ChallengeQuizViewModel {
         challengeId, PostProgressRequest(chapterId: chapterId));
   }
 
-  Future<void> submitQuiz({required int choiceId}) async {
+  Future<void> submitQuiz(
+      {required int choiceId, required int challengeId}) async {
     final response = await _readingChallengeRepository.submitQuiz(
-        state.value!.chapter.quizId, SubmitQuizRequest(choiceId: choiceId));
+        state.value!.chapter.quizId, choiceId, challengeId);
     final prev = state.value ?? ChallengeQuizState();
     state = AsyncValue.data(
         prev.copyWith(choiceResults: [...response.data.choiceResults]));

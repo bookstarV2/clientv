@@ -335,6 +335,7 @@ class _ReadingChallengeQuizScreenState
         ref.read(challengeQuizViewModelProvider(widget.chapterId).notifier);
     await notifier.submitQuiz(
       choiceId: _selectedChoiceId!,
+      challengeId: widget.challengeId,
     );
     final state = ref.watch(challengeQuizViewModelProvider(widget.chapterId));
     final length = state.value?.chapter.choices.length ?? 0;
