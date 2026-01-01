@@ -80,6 +80,8 @@ class _ReadingDataDetailScreenState
                         rankText = "🥈";
                       } else if (item.rank == 3) {
                         rankText = "🥉";
+                      } else if (item.rank == -1) {
+                        rankText = "-";
                       }
 
                       return GestureDetector(
