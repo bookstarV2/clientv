@@ -135,8 +135,7 @@ class _ReadingDiaryEditFormState extends BaseScreenState<ReadingDiaryEditForm> {
   @override
   Widget buildBody(BuildContext context) {
     final isNotEmptyText = widget.textController.text.isNotEmpty;
-    final isOver10lines =
-        "\n".allMatches(widget.textController.text).length + 1 >= 10;
+    final isOver10Texts = widget.textController.text.length >= 10;
     final state = ref.watch(bookLogBookOverviewProvider(widget.selectedBookId));
 
     return GestureDetector(
@@ -160,7 +159,7 @@ class _ReadingDiaryEditFormState extends BaseScreenState<ReadingDiaryEditForm> {
                   SliverToBoxAdapter(
                     child: _buildDescriptionSection(
                       isNotEmptyText: isNotEmptyText,
-                      isOver10lines: isOver10lines,
+                      isOver10Texts: isOver10Texts,
                     ),
                   ),
                   SliverToBoxAdapter(
@@ -199,7 +198,7 @@ class _ReadingDiaryEditFormState extends BaseScreenState<ReadingDiaryEditForm> {
             _buildSubmitButton(
                 disabled: widget.disabledSave ||
                     !isNotEmptyText ||
-                    !isOver10lines ||
+                    !isOver10Texts ||
                     widget.selectedBookId == null,
                 onSave: () async {
                   widget.onUpdateDisabledSave(true);
@@ -341,17 +340,17 @@ class _ReadingDiaryEditFormState extends BaseScreenState<ReadingDiaryEditForm> {
 
   Widget _buildDescriptionSection({
     required bool isNotEmptyText,
-    required bool isOver10lines,
+    required bool isOver10Texts,
   }) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: isNotEmptyText && !isOver10lines
+        children: isNotEmptyText && !isOver10Texts
             ? [
                 Row(
                   children: [
-                    Text("최소 10줄 이상",
+                    Text("최소 10글자 이상",
                         style: AppTexts.b1.copyWith(color: ColorName.e0)),
                     Text("의", style: AppTexts.b1.copyWith(color: ColorName.w1)),
                   ],
