@@ -92,58 +92,58 @@ class _ReadingChallengeScreenState
             items.where((element) => element.completed).length;
         return SingleChildScrollView(
           controller: scrollController,
-          child: Container(
-            constraints: BoxConstraints(
-              minWidth: MediaQuery.of(context).size.width,
-              minHeight: MediaQuery.of(context).size.height,
-            ),
-            padding: AppPaddings.SCREEN_BODY_PADDING,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header
-                _buildHeaderSection(
-                  totalCount: totalCount,
-                  completedCount: completedCount,
-                  isAbandon: _isAbandon,
-                  onScreenShot: () async {
-                    final result = await FullCaptureService.captureAndShow(
-                        context, _screenKey);
-                    bool? isSaved = result?['isSaved'];
-                    if (isSaved == true && context.mounted) {
-                      await showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          barrierColor: ColorName.b1.withValues(alpha: 0.5),
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.vertical(top: Radius.circular(20)),
-                          ),
-                          builder: (context) => SaveSuccessImageDialog());
-                    }
-                  },
-                  onNew: () {
-                    /** 새로운책 읽기*/
-                    context.go('/reading-challenge/search-new');
-                  },
-                  onAbandon: () {
-                    /** 중단 */
-                    setState(() {
-                      _isAbandon = !_isAbandon;
-                      if (!_isAbandon) {
-                        _selectedAbandonChallenges.clear();
-                      } else {
-                        _targetIndex = null;
+          child: RepaintBoundary(
+            key: _screenKey,
+            child: Container(
+              constraints: BoxConstraints(
+                minWidth: MediaQuery.of(context).size.width,
+                minHeight: MediaQuery.of(context).size.height,
+              ),
+              padding: AppPaddings.SCREEN_BODY_PADDING,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Header
+                  _buildHeaderSection(
+                    totalCount: totalCount,
+                    completedCount: completedCount,
+                    isAbandon: _isAbandon,
+                    onScreenShot: () async {
+                      final result = await FullCaptureService.captureAndShow(
+                          context, _screenKey);
+                      bool? isSaved = result?['isSaved'];
+                      if (isSaved == true && context.mounted) {
+                        await showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            barrierColor: ColorName.b1.withValues(alpha: 0.5),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(20)),
+                            ),
+                            builder: (context) => SaveSuccessImageDialog());
                       }
-                    });
-                  },
-                ),
-                SizedBox(height: 35),
-                // 리스트
-                RepaintBoundary(
-                  key: _screenKey,
-                  child: _buildListSection(
+                    },
+                    onNew: () {
+                      /** 새로운책 읽기*/
+                      context.go('/reading-challenge/search-new');
+                    },
+                    onAbandon: () {
+                      /** 중단 */
+                      setState(() {
+                        _isAbandon = !_isAbandon;
+                        if (!_isAbandon) {
+                          _selectedAbandonChallenges.clear();
+                        } else {
+                          _targetIndex = null;
+                        }
+                      });
+                    },
+                  ),
+                  SizedBox(height: 35),
+                  // 리스트
+                  _buildListSection(
                     items: items,
                     selectedAbandonChallenges: _selectedAbandonChallenges,
                     onTapItem: (item, index) {
@@ -163,12 +163,12 @@ class _ReadingChallengeScreenState
                     targetIndex: _targetIndex,
                     newIndex: _newIndex,
                   ),
-                ),
-                if (_targetIndex != null)
-                  SizedBox(
-                    height: 80,
-                  )
-              ],
+                  if (_targetIndex != null)
+                    SizedBox(
+                      height: 80,
+                    )
+                ],
+              ),
             ),
           ),
         );

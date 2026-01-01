@@ -49,7 +49,9 @@ class _ReadingDataScreenState extends BaseScreenState<ReadingDataScreen> {
             child: Padding(
               padding: EdgeInsets.all(16),
               child: Container(
-                width: double.infinity,
+                constraints: BoxConstraints(
+                  minWidth: MediaQuery.of(context).size.width,
+                ),
                 decoration: BoxDecoration(
                   color: ColorName.b1,
                   borderRadius: BorderRadius.circular(30),
@@ -113,8 +115,10 @@ class _ReadingDataScreenState extends BaseScreenState<ReadingDataScreen> {
                       SizedBox(
                         height: 36,
                       ),
-                      SizedBox(
-                        height: podium1Height,
+                      Container(
+                        constraints: BoxConstraints(
+                          minHeight: podium1Height,
+                        ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           spacing: 8,
