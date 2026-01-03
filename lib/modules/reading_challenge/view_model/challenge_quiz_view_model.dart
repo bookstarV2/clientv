@@ -13,6 +13,7 @@ part 'challenge_quiz_view_model.g.dart';
 @freezed
 abstract class ChallengeQuizState with _$ChallengeQuizState {
   const factory ChallengeQuizState({
+    @Default(-1) int quizId,
     @Default(ChallengeDetailChapterDetail())
     ChallengeDetailChapterDetail chapter,
     List<ChoiceResult>? choiceResults,
@@ -34,7 +35,8 @@ class ChallengeQuizViewModel extends _$ChallengeQuizViewModel {
     final prev = state.value ?? ChallengeQuizState();
     final response = await _readingChallengeRepository.getQuizzes([chapterId]);
     final chapter = response.data.chapters.first;
-    state = AsyncValue.data(prev.copyWith(chapter: chapter));
+    state = AsyncValue.data(
+        prev.copyWith(chapter: chapter, quizId: chapter.quizId));
     return state.value ?? ChallengeQuizState();
   }
 
