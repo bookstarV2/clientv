@@ -5,6 +5,8 @@ import 'package:bookstar/gen/assets.gen.dart';
 import 'package:bookstar/gen/colors.gen.dart';
 import 'package:bookstar/modules/reading_challenge/model/choice_result.dart';
 import 'package:bookstar/modules/reading_challenge/model/quiz_choice.dart';
+import 'package:bookstar/modules/reading_challenge/view/widgets/report_quiz_error_dialog.dart';
+import 'package:bookstar/modules/reading_challenge/view/widgets/report_quiz_error_success_dialog.dart';
 import 'package:bookstar/modules/reading_challenge/view_model/challenge_quiz_view_model.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
@@ -40,6 +42,26 @@ class _ReadingChallengeQuizScreenState
     super.dispose();
   }
 
+  Future<void> _onTapQuizError() async {
+    final quizId = ref
+        .read(challengeQuizViewModelProvider(widget.chapterId))
+        .value
+        ?.quizId;
+    final result = await showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        builder: (_) => ReportQuizErrorDialog(
+              quizId: quizId!,
+            ));
+
+    if (result && mounted) {
+      await showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          builder: (context) => ReportQuizErrorSuccessDialog());
+    }
+  }
+
   @override
   PreferredSizeWidget? buildAppBar(BuildContext context) {
     return AppBar(
@@ -67,6 +89,7 @@ class _ReadingChallengeQuizScreenState
                   });
                 },
                 selectedChoiceId: _selectedChoiceId,
+                onTapQuizError: () => _onTapQuizError(),
               )
             : _buildQuizResultPage(
                 scrollController: scrollController,
@@ -100,6 +123,7 @@ class _ReadingChallengeQuizScreenState
     required List<QuizChoice> choices,
     required Function(int) changeChoiceId,
     required int? selectedChoiceId,
+    required Function onTapQuizError,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
@@ -110,6 +134,19 @@ class _ReadingChallengeQuizScreenState
               child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  GestureDetector(
+                    onTap: () => onTapQuizError(),
+                    child: Text("퀴즈에 오류가 있나요?",
+                        style: AppTexts.b8.copyWith(color: ColorName.g3)),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 12,
+              ),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

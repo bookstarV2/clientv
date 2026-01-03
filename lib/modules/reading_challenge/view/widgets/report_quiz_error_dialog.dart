@@ -118,7 +118,7 @@ class _ReportQuizErrorDialogState extends ConsumerState<ReportQuizErrorDialog>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("퀴즈에 어떤 요류가 있었나요?"),
+                  Text("퀴즈에 어떤 오류가 있었나요?"),
                   IconButton(
                       onPressed: () => Navigator.pop(context),
                       icon: const Icon(Icons.close))

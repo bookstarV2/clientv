@@ -1,3 +1,4 @@
+import 'package:bookstar/common/components/button/cta_button_l1.dart';
 import 'package:bookstar/common/theme/style/app_texts.dart';
 import 'package:bookstar/gen/assets.gen.dart';
 import 'package:bookstar/gen/colors.gen.dart';
@@ -33,12 +34,9 @@ class ReportQuizErrorSuccessDialog extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 40),
               child: Center(child: Assets.icons.icPointShopChar2.svg()),
             ),
-            _buildActionButton(
-              context,
-              '닫기',
-              ColorName.p1,
-              AppTexts.b7.copyWith(color: ColorName.w1),
-              () {
+            CtaButtonL1(
+              text: '닫기',
+              onPressed: () {
                 context.pop();
               },
             ),
@@ -49,30 +47,5 @@ class ReportQuizErrorSuccessDialog extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  Widget _buildActionButton(
-    BuildContext context,
-    String text,
-    Color backgroundColor,
-    TextStyle textStyle,
-    VoidCallback onPressed,
-  ) {
-    return GestureDetector(
-        onTap: onPressed,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 18),
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: backgroundColor,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Center(
-            child: Text(
-              text,
-              style: textStyle,
-            ),
-          ),
-        ));
   }
 }
