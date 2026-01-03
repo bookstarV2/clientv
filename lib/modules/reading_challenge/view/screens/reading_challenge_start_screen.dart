@@ -271,7 +271,7 @@ class _ReadingChallengeStartScreenState
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        chapter.title,
+                                        "${chapter.title}, ${chapter.chapterId}",
                                         style: AppTexts.b5
                                             .copyWith(color: ColorName.w3),
                                       ),
