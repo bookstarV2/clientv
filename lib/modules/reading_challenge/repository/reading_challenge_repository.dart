@@ -7,6 +7,7 @@ import 'package:bookstar/modules/reading_challenge/model/challenge_detail_chapte
 import 'package:bookstar/modules/reading_challenge/model/challenge_progress_request.dart';
 import 'package:bookstar/modules/reading_challenge/model/challenge_progress_response.dart';
 import 'package:bookstar/modules/reading_challenge/model/reading_challenge_request.dart';
+import 'package:bookstar/modules/reading_challenge/model/report_quiz_error_request.dart';
 import 'package:bookstar/modules/reading_challenge/model/submit_quiz_response.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -76,6 +77,12 @@ abstract class ReadingChallengeRepository {
   @POST('/api/v3/challenges/{challengeId}/abandon')
   Future<ResponseForm<dynamic>> abandonChallenge(
     @Path('challengeId') int challengeId,
+  );
+
+  @POST('/api/v3/quizzes/{quizId}/error-report')
+  Future<ResponseForm<dynamic>> reportQuizError(
+    @Path('quizId') int quizId,
+    @Body() ReportQuizErrorRequest request,
   );
 
   @POST('/api/v2/reading-challenges')

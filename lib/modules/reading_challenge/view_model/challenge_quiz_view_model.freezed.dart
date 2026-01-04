@@ -14,6 +14,7 @@ T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$ChallengeQuizState {
+  int get quizId;
   ChallengeDetailChapterDetail get chapter;
   List<ChoiceResult>? get choiceResults;
 
@@ -30,18 +31,19 @@ mixin _$ChallengeQuizState {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is ChallengeQuizState &&
+            (identical(other.quizId, quizId) || other.quizId == quizId) &&
             (identical(other.chapter, chapter) || other.chapter == chapter) &&
             const DeepCollectionEquality()
                 .equals(other.choiceResults, choiceResults));
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType, chapter, const DeepCollectionEquality().hash(choiceResults));
+  int get hashCode => Object.hash(runtimeType, quizId, chapter,
+      const DeepCollectionEquality().hash(choiceResults));
 
   @override
   String toString() {
-    return 'ChallengeQuizState(chapter: $chapter, choiceResults: $choiceResults)';
+    return 'ChallengeQuizState(quizId: $quizId, chapter: $chapter, choiceResults: $choiceResults)';
   }
 }
 
@@ -52,7 +54,8 @@ abstract mixin class $ChallengeQuizStateCopyWith<$Res> {
       _$ChallengeQuizStateCopyWithImpl;
   @useResult
   $Res call(
-      {ChallengeDetailChapterDetail chapter,
+      {int quizId,
+      ChallengeDetailChapterDetail chapter,
       List<ChoiceResult>? choiceResults});
 
   $ChallengeDetailChapterDetailCopyWith<$Res> get chapter;
@@ -71,10 +74,15 @@ class _$ChallengeQuizStateCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? quizId = null,
     Object? chapter = null,
     Object? choiceResults = freezed,
   }) {
     return _then(_self.copyWith(
+      quizId: null == quizId
+          ? _self.quizId
+          : quizId // ignore: cast_nullable_to_non_nullable
+              as int,
       chapter: null == chapter
           ? _self.chapter
           : chapter // ignore: cast_nullable_to_non_nullable
@@ -190,7 +198,7 @@ extension ChallengeQuizStatePatterns on ChallengeQuizState {
 
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
-    TResult Function(ChallengeDetailChapterDetail chapter,
+    TResult Function(int quizId, ChallengeDetailChapterDetail chapter,
             List<ChoiceResult>? choiceResults)?
         $default, {
     required TResult orElse(),
@@ -198,7 +206,7 @@ extension ChallengeQuizStatePatterns on ChallengeQuizState {
     final _that = this;
     switch (_that) {
       case _ChallengeQuizState() when $default != null:
-        return $default(_that.chapter, _that.choiceResults);
+        return $default(_that.quizId, _that.chapter, _that.choiceResults);
       case _:
         return orElse();
     }
@@ -219,14 +227,14 @@ extension ChallengeQuizStatePatterns on ChallengeQuizState {
 
   @optionalTypeArgs
   TResult when<TResult extends Object?>(
-    TResult Function(ChallengeDetailChapterDetail chapter,
+    TResult Function(int quizId, ChallengeDetailChapterDetail chapter,
             List<ChoiceResult>? choiceResults)
         $default,
   ) {
     final _that = this;
     switch (_that) {
       case _ChallengeQuizState():
-        return $default(_that.chapter, _that.choiceResults);
+        return $default(_that.quizId, _that.chapter, _that.choiceResults);
       case _:
         throw StateError('Unexpected subclass');
     }
@@ -246,14 +254,14 @@ extension ChallengeQuizStatePatterns on ChallengeQuizState {
 
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>(
-    TResult? Function(ChallengeDetailChapterDetail chapter,
+    TResult? Function(int quizId, ChallengeDetailChapterDetail chapter,
             List<ChoiceResult>? choiceResults)?
         $default,
   ) {
     final _that = this;
     switch (_that) {
       case _ChallengeQuizState() when $default != null:
-        return $default(_that.chapter, _that.choiceResults);
+        return $default(_that.quizId, _that.chapter, _that.choiceResults);
       case _:
         return null;
     }
@@ -264,10 +272,14 @@ extension ChallengeQuizStatePatterns on ChallengeQuizState {
 
 class _ChallengeQuizState implements ChallengeQuizState {
   const _ChallengeQuizState(
-      {this.chapter = const ChallengeDetailChapterDetail(),
+      {this.quizId = -1,
+      this.chapter = const ChallengeDetailChapterDetail(),
       final List<ChoiceResult>? choiceResults})
       : _choiceResults = choiceResults;
 
+  @override
+  @JsonKey()
+  final int quizId;
   @override
   @JsonKey()
   final ChallengeDetailChapterDetail chapter;
@@ -294,18 +306,19 @@ class _ChallengeQuizState implements ChallengeQuizState {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _ChallengeQuizState &&
+            (identical(other.quizId, quizId) || other.quizId == quizId) &&
             (identical(other.chapter, chapter) || other.chapter == chapter) &&
             const DeepCollectionEquality()
                 .equals(other._choiceResults, _choiceResults));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, chapter,
+  int get hashCode => Object.hash(runtimeType, quizId, chapter,
       const DeepCollectionEquality().hash(_choiceResults));
 
   @override
   String toString() {
-    return 'ChallengeQuizState(chapter: $chapter, choiceResults: $choiceResults)';
+    return 'ChallengeQuizState(quizId: $quizId, chapter: $chapter, choiceResults: $choiceResults)';
   }
 }
 
@@ -318,7 +331,8 @@ abstract mixin class _$ChallengeQuizStateCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {ChallengeDetailChapterDetail chapter,
+      {int quizId,
+      ChallengeDetailChapterDetail chapter,
       List<ChoiceResult>? choiceResults});
 
   @override
@@ -338,10 +352,15 @@ class __$ChallengeQuizStateCopyWithImpl<$Res>
   @override
   @pragma('vm:prefer-inline')
   $Res call({
+    Object? quizId = null,
     Object? chapter = null,
     Object? choiceResults = freezed,
   }) {
     return _then(_ChallengeQuizState(
+      quizId: null == quizId
+          ? _self.quizId
+          : quizId // ignore: cast_nullable_to_non_nullable
+              as int,
       chapter: null == chapter
           ? _self.chapter
           : chapter // ignore: cast_nullable_to_non_nullable
