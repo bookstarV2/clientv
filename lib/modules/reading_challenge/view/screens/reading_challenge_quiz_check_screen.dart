@@ -43,7 +43,7 @@ class _ReadingChallengeQuizCheckScreenState
               quizId: quizId!,
             ));
 
-    if (result && mounted) {
+    if (result != null && result && mounted) {
       await showModalBottomSheet(
           context: context,
           isScrollControlled: true,
