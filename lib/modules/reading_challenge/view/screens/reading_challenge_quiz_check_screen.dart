@@ -1,5 +1,6 @@
 import 'package:bookstar/common/components/base_screen.dart';
 import 'package:bookstar/common/components/button/cta_button_l1.dart';
+import 'package:bookstar/common/service/analytics_service.dart';
 import 'package:bookstar/common/theme/style/app_texts.dart';
 import 'package:bookstar/gen/colors.gen.dart';
 import 'package:bookstar/modules/reading_challenge/model/quiz_choice.dart';
@@ -31,6 +32,10 @@ class _ReadingChallengeQuizCheckScreenState
         .read(challengeQuizViewModelProvider(widget.chapterId))
         .value
         ?.quizId;
+    AnalyticsService.logEvent('click_open_report_quiz_error', parameters: {
+      'screen_name': "reading_challenge_quiz_check",
+      "quiz_id": quizId
+    });
     final result = await showModalBottomSheet(
         context: context,
         isScrollControlled: true,

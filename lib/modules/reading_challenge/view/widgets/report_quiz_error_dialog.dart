@@ -1,4 +1,5 @@
 import 'package:bookstar/common/components/button/cta_button_l1.dart';
+import 'package:bookstar/common/service/analytics_service.dart';
 import 'package:bookstar/common/theme/style/app_texts.dart';
 import 'package:bookstar/gen/colors.gen.dart';
 import 'package:bookstar/modules/book_log/view/widgets/report_text_field.dart';
@@ -87,6 +88,12 @@ class _ReportQuizErrorDialogState extends ConsumerState<ReportQuizErrorDialog>
   }
 
   void _onSubmit() async {
+    AnalyticsService.logEvent('click_report_quiz_error', parameters: {
+      'screen_name': "report_quiz_error",
+      "quiz_id": widget.quizId,
+      "error_type": _selectedValue!,
+    });
+
     await ref.read(readingChallengeRepositoryProvider).reportQuizError(
           widget.quizId,
           ReportQuizErrorRequest(
