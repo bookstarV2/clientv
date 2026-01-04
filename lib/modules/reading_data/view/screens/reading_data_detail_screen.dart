@@ -30,7 +30,7 @@ class _ReadingDataDetailScreenState
   }
 
   void onItemTap(int memberId) {
-    context.push('/book-log/thumbnail/${memberId}');
+    context.push('/book-log/thumbnail/$memberId');
   }
 
   @override
@@ -50,171 +50,175 @@ class _ReadingDataDetailScreenState
 
     return state.when(
         data: (data) {
-          return Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("챌린지 참여 랭킹",
-                    style: AppTexts.b1.copyWith(color: ColorName.w1)),
-                SizedBox(
-                  height: 6,
-                ),
-                Text("총 ${data.list.length}명 참여",
-                    style: AppTexts.b8.copyWith(color: ColorName.g3)),
-                SizedBox(
-                  height: 36,
-                ),
-                CustomListView(
-                    emptyIcon: Assets.icons.icBookpickSearchCharacter.svg(),
-                    emptyText: '참여자 정보가 없습니다.',
-                    isEmpty: data.list.isEmpty,
-                    itemCount: data.list.length,
-                    itemBuilder: (context, index) {
-                      final item = data.list[index];
+          return SingleChildScrollView(
+            physics: AlwaysScrollableScrollPhysics(),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("챌린지 참여 랭킹",
+                      style: AppTexts.b1.copyWith(color: ColorName.w1)),
+                  SizedBox(
+                    height: 6,
+                  ),
+                  Text("총 ${data.list.length}명 참여",
+                      style: AppTexts.b8.copyWith(color: ColorName.g3)),
+                  SizedBox(
+                    height: 36,
+                  ),
+                  CustomListView(
+                      disableScroll: true,
+                      emptyIcon: Assets.icons.icBookpickSearchCharacter.svg(),
+                      emptyText: '참여자 정보가 없습니다.',
+                      isEmpty: data.list.isEmpty,
+                      itemCount: data.list.length,
+                      itemBuilder: (context, index) {
+                        final item = data.list[index];
 
-                      String rankText = "${item.rank}";
-                      if (item.rank == 1) {
-                        rankText = "🥇";
-                      } else if (item.rank == 2) {
-                        rankText = "🥈";
-                      } else if (item.rank == 3) {
-                        rankText = "🥉";
-                      } else if (item.rank == -1) {
-                        rankText = "-";
-                      }
+                        String rankText = "${item.rank}";
+                        if (item.rank == 1) {
+                          rankText = "🥇";
+                        } else if (item.rank == 2) {
+                          rankText = "🥈";
+                        } else if (item.rank == 3) {
+                          rankText = "🥉";
+                        } else if (item.rank == -1) {
+                          rankText = "-";
+                        }
 
-                      return GestureDetector(
-                        onTap: () => onItemTap(item.memberId),
-                        child: Row(
-                          children: [
-                            Text(rankText,
-                                style:
-                                    AppTexts.b1.copyWith(color: ColorName.w1)),
-                            SizedBox(
-                              width: 24,
-                            ),
-                            CircleAvatar(
-                              backgroundColor: ColorName.g7,
-                              backgroundImage: item.profileImage.isNotEmpty
-                                  ? CachedNetworkImageProvider(
-                                      item.profileImage,
-                                    )
-                                  : null,
-                              child: null,
-                            ),
-                            SizedBox(
-                              width: 12,
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  item.nickname,
-                                  style:
-                                      AppTexts.b5.copyWith(color: ColorName.w1),
-                                  textAlign: TextAlign.center,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                SizedBox(
-                                  height: 4,
-                                ),
-                                Row(
-                                  spacing: 10,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        SizedBox(
-                                          width: 18,
-                                          height: 18,
-                                          child: Assets.icons
-                                              .icReadingDataParticipationDays
-                                              .svg(
-                                            colorFilter: ColorFilter.mode(
-                                              ColorName.w1,
-                                              BlendMode.srcIn,
+                        return GestureDetector(
+                          onTap: () => onItemTap(item.memberId),
+                          child: Row(
+                            children: [
+                              Text(rankText,
+                                  style: AppTexts.b1
+                                      .copyWith(color: ColorName.w1)),
+                              SizedBox(
+                                width: 24,
+                              ),
+                              CircleAvatar(
+                                backgroundColor: ColorName.g7,
+                                backgroundImage: item.profileImage.isNotEmpty
+                                    ? CachedNetworkImageProvider(
+                                        item.profileImage,
+                                      )
+                                    : null,
+                                child: null,
+                              ),
+                              SizedBox(
+                                width: 12,
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item.nickname,
+                                    style: AppTexts.b5
+                                        .copyWith(color: ColorName.w1),
+                                    textAlign: TextAlign.center,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  SizedBox(
+                                    height: 4,
+                                  ),
+                                  Row(
+                                    spacing: 10,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          SizedBox(
+                                            width: 18,
+                                            height: 18,
+                                            child: Assets.icons
+                                                .icReadingDataParticipationDays
+                                                .svg(
+                                              colorFilter: ColorFilter.mode(
+                                                ColorName.w1,
+                                                BlendMode.srcIn,
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                        SizedBox(
-                                          width: 4,
-                                        ),
-                                        Text(
-                                          "${item.participationDays}일 참여",
-                                          style: AppTexts.b10
-                                              .copyWith(color: ColorName.w1),
-                                        ),
-                                      ],
-                                    ),
-                                    Row(
-                                      children: [
-                                        SizedBox(
-                                          width: 18,
-                                          height: 18,
-                                          child: Assets
-                                              .icons.icReadingDataSolvedCount
-                                              .svg(
-                                            colorFilter: ColorFilter.mode(
-                                              ColorName.w1,
-                                              BlendMode.srcIn,
+                                          SizedBox(
+                                            width: 4,
+                                          ),
+                                          Text(
+                                            "${item.participationDays}일 참여",
+                                            style: AppTexts.b10
+                                                .copyWith(color: ColorName.w1),
+                                          ),
+                                        ],
+                                      ),
+                                      Row(
+                                        children: [
+                                          SizedBox(
+                                            width: 18,
+                                            height: 18,
+                                            child: Assets
+                                                .icons.icReadingDataSolvedCount
+                                                .svg(
+                                              colorFilter: ColorFilter.mode(
+                                                ColorName.w1,
+                                                BlendMode.srcIn,
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                        SizedBox(
-                                          width: 4,
-                                        ),
-                                        Text(
-                                          "${item.solvedCount} 문제",
-                                          style: AppTexts.b10
-                                              .copyWith(color: ColorName.w1),
-                                        ),
-                                      ],
-                                    ),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        SizedBox(
-                                          width: 18,
-                                          height: 18,
-                                          child: Assets
-                                              .icons.icReadingDataCorrectCount
-                                              .svg(
-                                            colorFilter: ColorFilter.mode(
-                                              ColorName.w1,
-                                              BlendMode.srcIn,
+                                          SizedBox(
+                                            width: 4,
+                                          ),
+                                          Text(
+                                            "${item.solvedCount} 문제",
+                                            style: AppTexts.b10
+                                                .copyWith(color: ColorName.w1),
+                                          ),
+                                        ],
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          SizedBox(
+                                            width: 18,
+                                            height: 18,
+                                            child: Assets
+                                                .icons.icReadingDataCorrectCount
+                                                .svg(
+                                              colorFilter: ColorFilter.mode(
+                                                ColorName.w1,
+                                                BlendMode.srcIn,
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                        SizedBox(
-                                          width: 4,
-                                        ),
-                                        Text(
-                                          "${item.correctCount} 정답",
-                                          style: AppTexts.b10
-                                              .copyWith(color: ColorName.w1),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                )
-                              ],
-                            )
-                          ],
-                        ),
-                      );
-                    },
-                    separatorBuilder: (context, index) {
-                      return SizedBox(
-                        height: 24,
-                      );
-                    }),
-                SizedBox(
-                  height: 60,
-                ),
-              ],
+                                          SizedBox(
+                                            width: 4,
+                                          ),
+                                          Text(
+                                            "${item.correctCount} 정답",
+                                            style: AppTexts.b10
+                                                .copyWith(color: ColorName.w1),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  )
+                                ],
+                              )
+                            ],
+                          ),
+                        );
+                      },
+                      separatorBuilder: (context, index) {
+                        return SizedBox(
+                          height: 24,
+                        );
+                      }),
+                  SizedBox(
+                    height: 60,
+                  ),
+                ],
+              ),
             ),
           );
         },
@@ -238,6 +242,8 @@ class _ReadingDataDetailScreenState
             rankText = "🥈";
           } else if (item.rank == 3) {
             rankText = "🥉";
+          } else if (item.rank == -1) {
+            rankText = "-";
           }
           return GestureDetector(
             onTap: () => onItemTap(item.memberId),
