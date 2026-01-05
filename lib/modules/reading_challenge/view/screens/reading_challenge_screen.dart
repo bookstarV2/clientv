@@ -429,7 +429,7 @@ class _ReadingChallengeScreenState
                                                 width: 4,
                                               ),
                                               Text(
-                                                "${item.progressPercentage}%",
+                                                "${item.progressRate}%",
                                                 style: AppTexts.b7.copyWith(
                                                     color: ColorName.p2),
                                               ),

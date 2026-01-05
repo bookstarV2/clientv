@@ -20,8 +20,7 @@ _ChallengeResponse _$ChallengeResponseFromJson(Map<String, dynamic> json) =>
       completedAt: json['completedAt'] as String? ?? '',
       createdAt: json['createdAt'] as String? ?? '',
       hasQuiz: json['hasQuiz'] as bool? ?? false,
-      progressPercentage:
-          (json['progressPercentage'] as num?)?.toDouble() ?? 0.0,
+      progressRate: (json['progressRate'] as num?)?.toDouble() ?? 0.0,
     );
 
 Map<String, dynamic> _$ChallengeResponseToJson(_ChallengeResponse instance) =>
@@ -38,5 +37,5 @@ Map<String, dynamic> _$ChallengeResponseToJson(_ChallengeResponse instance) =>
       'completedAt': instance.completedAt,
       'createdAt': instance.createdAt,
       'hasQuiz': instance.hasQuiz,
-      'progressPercentage': instance.progressPercentage,
+      'progressRate': instance.progressRate,
     };

@@ -29,6 +29,7 @@ class OngoingChallengeViewModel extends _$OngoingChallengeViewModel {
   Future<OngoingChallengeScreenState> initState() async {
     final prev = state.value ?? OngoingChallengeScreenState();
     final response = await _readingChallengeRepository.getOngoingChallenges();
+    print(response.data);
     state = AsyncValue.data(prev.copyWith(challenges: response.data));
     return state.value ?? OngoingChallengeScreenState();
   }

@@ -18,7 +18,7 @@ abstract class ChallengeResponse with _$ChallengeResponse {
     @Default('') String completedAt,
     @Default('') String createdAt,
     @Default(false) bool hasQuiz,
-    @Default(0.0) double progressPercentage,
+    @Default(0.0) double progressRate,
   }) = _ChallengeResponse;
 
   factory ChallengeResponse.fromJson(Map<String, dynamic> json) =>

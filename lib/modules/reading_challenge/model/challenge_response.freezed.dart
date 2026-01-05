@@ -26,7 +26,7 @@ mixin _$ChallengeResponse {
   String get completedAt;
   String get createdAt;
   bool get hasQuiz;
-  double get progressPercentage;
+  double get progressRate;
 
   /// Create a copy of ChallengeResponse
   /// with the given fields replaced by the non-null parameter values.
@@ -66,8 +66,8 @@ mixin _$ChallengeResponse {
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.hasQuiz, hasQuiz) || other.hasQuiz == hasQuiz) &&
-            (identical(other.progressPercentage, progressPercentage) ||
-                other.progressPercentage == progressPercentage));
+            (identical(other.progressRate, progressRate) ||
+                other.progressRate == progressRate));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -86,11 +86,11 @@ mixin _$ChallengeResponse {
       completedAt,
       createdAt,
       hasQuiz,
-      progressPercentage);
+      progressRate);
 
   @override
   String toString() {
-    return 'ChallengeResponse(challengeId: $challengeId, bookId: $bookId, bookTitle: $bookTitle, bookAuthor: $bookAuthor, bookImageUrl: $bookImageUrl, totalPages: $totalPages, totalChapters: $totalChapters, completed: $completed, abandoned: $abandoned, completedAt: $completedAt, createdAt: $createdAt, hasQuiz: $hasQuiz, progressPercentage: $progressPercentage)';
+    return 'ChallengeResponse(challengeId: $challengeId, bookId: $bookId, bookTitle: $bookTitle, bookAuthor: $bookAuthor, bookImageUrl: $bookImageUrl, totalPages: $totalPages, totalChapters: $totalChapters, completed: $completed, abandoned: $abandoned, completedAt: $completedAt, createdAt: $createdAt, hasQuiz: $hasQuiz, progressRate: $progressRate)';
   }
 }
 
@@ -113,7 +113,7 @@ abstract mixin class $ChallengeResponseCopyWith<$Res> {
       String completedAt,
       String createdAt,
       bool hasQuiz,
-      double progressPercentage});
+      double progressRate});
 }
 
 /// @nodoc
@@ -141,7 +141,7 @@ class _$ChallengeResponseCopyWithImpl<$Res>
     Object? completedAt = null,
     Object? createdAt = null,
     Object? hasQuiz = null,
-    Object? progressPercentage = null,
+    Object? progressRate = null,
   }) {
     return _then(_self.copyWith(
       challengeId: null == challengeId
@@ -192,9 +192,9 @@ class _$ChallengeResponseCopyWithImpl<$Res>
           ? _self.hasQuiz
           : hasQuiz // ignore: cast_nullable_to_non_nullable
               as bool,
-      progressPercentage: null == progressPercentage
-          ? _self.progressPercentage
-          : progressPercentage // ignore: cast_nullable_to_non_nullable
+      progressRate: null == progressRate
+          ? _self.progressRate
+          : progressRate // ignore: cast_nullable_to_non_nullable
               as double,
     ));
   }
@@ -306,7 +306,7 @@ extension ChallengeResponsePatterns on ChallengeResponse {
             String completedAt,
             String createdAt,
             bool hasQuiz,
-            double progressPercentage)?
+            double progressRate)?
         $default, {
     required TResult orElse(),
   }) {
@@ -326,7 +326,7 @@ extension ChallengeResponsePatterns on ChallengeResponse {
             _that.completedAt,
             _that.createdAt,
             _that.hasQuiz,
-            _that.progressPercentage);
+            _that.progressRate);
       case _:
         return orElse();
     }
@@ -360,7 +360,7 @@ extension ChallengeResponsePatterns on ChallengeResponse {
             String completedAt,
             String createdAt,
             bool hasQuiz,
-            double progressPercentage)
+            double progressRate)
         $default,
   ) {
     final _that = this;
@@ -379,7 +379,7 @@ extension ChallengeResponsePatterns on ChallengeResponse {
             _that.completedAt,
             _that.createdAt,
             _that.hasQuiz,
-            _that.progressPercentage);
+            _that.progressRate);
       case _:
         throw StateError('Unexpected subclass');
     }
@@ -412,7 +412,7 @@ extension ChallengeResponsePatterns on ChallengeResponse {
             String completedAt,
             String createdAt,
             bool hasQuiz,
-            double progressPercentage)?
+            double progressRate)?
         $default,
   ) {
     final _that = this;
@@ -431,7 +431,7 @@ extension ChallengeResponsePatterns on ChallengeResponse {
             _that.completedAt,
             _that.createdAt,
             _that.hasQuiz,
-            _that.progressPercentage);
+            _that.progressRate);
       case _:
         return null;
     }
@@ -454,7 +454,7 @@ class _ChallengeResponse implements ChallengeResponse {
       this.completedAt = '',
       this.createdAt = '',
       this.hasQuiz = false,
-      this.progressPercentage = 0.0});
+      this.progressRate = 0.0});
   factory _ChallengeResponse.fromJson(Map<String, dynamic> json) =>
       _$ChallengeResponseFromJson(json);
 
@@ -496,7 +496,7 @@ class _ChallengeResponse implements ChallengeResponse {
   final bool hasQuiz;
   @override
   @JsonKey()
-  final double progressPercentage;
+  final double progressRate;
 
   /// Create a copy of ChallengeResponse
   /// with the given fields replaced by the non-null parameter values.
@@ -540,8 +540,8 @@ class _ChallengeResponse implements ChallengeResponse {
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.hasQuiz, hasQuiz) || other.hasQuiz == hasQuiz) &&
-            (identical(other.progressPercentage, progressPercentage) ||
-                other.progressPercentage == progressPercentage));
+            (identical(other.progressRate, progressRate) ||
+                other.progressRate == progressRate));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -560,11 +560,11 @@ class _ChallengeResponse implements ChallengeResponse {
       completedAt,
       createdAt,
       hasQuiz,
-      progressPercentage);
+      progressRate);
 
   @override
   String toString() {
-    return 'ChallengeResponse(challengeId: $challengeId, bookId: $bookId, bookTitle: $bookTitle, bookAuthor: $bookAuthor, bookImageUrl: $bookImageUrl, totalPages: $totalPages, totalChapters: $totalChapters, completed: $completed, abandoned: $abandoned, completedAt: $completedAt, createdAt: $createdAt, hasQuiz: $hasQuiz, progressPercentage: $progressPercentage)';
+    return 'ChallengeResponse(challengeId: $challengeId, bookId: $bookId, bookTitle: $bookTitle, bookAuthor: $bookAuthor, bookImageUrl: $bookImageUrl, totalPages: $totalPages, totalChapters: $totalChapters, completed: $completed, abandoned: $abandoned, completedAt: $completedAt, createdAt: $createdAt, hasQuiz: $hasQuiz, progressRate: $progressRate)';
   }
 }
 
@@ -589,7 +589,7 @@ abstract mixin class _$ChallengeResponseCopyWith<$Res>
       String completedAt,
       String createdAt,
       bool hasQuiz,
-      double progressPercentage});
+      double progressRate});
 }
 
 /// @nodoc
@@ -617,7 +617,7 @@ class __$ChallengeResponseCopyWithImpl<$Res>
     Object? completedAt = null,
     Object? createdAt = null,
     Object? hasQuiz = null,
-    Object? progressPercentage = null,
+    Object? progressRate = null,
   }) {
     return _then(_ChallengeResponse(
       challengeId: null == challengeId
@@ -668,9 +668,9 @@ class __$ChallengeResponseCopyWithImpl<$Res>
           ? _self.hasQuiz
           : hasQuiz // ignore: cast_nullable_to_non_nullable
               as bool,
-      progressPercentage: null == progressPercentage
-          ? _self.progressPercentage
-          : progressPercentage // ignore: cast_nullable_to_non_nullable
+      progressRate: null == progressRate
+          ? _self.progressRate
+          : progressRate // ignore: cast_nullable_to_non_nullable
               as double,
     ));
   }
