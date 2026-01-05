@@ -9,6 +9,8 @@ import 'package:bookstar/modules/reading_challenge/model/quiz_choice.dart';
 import 'package:bookstar/modules/reading_challenge/view/widgets/report_quiz_error_dialog.dart';
 import 'package:bookstar/modules/reading_challenge/view/widgets/report_quiz_error_success_dialog.dart';
 import 'package:bookstar/modules/reading_challenge/view_model/challenge_quiz_view_model.dart';
+import 'package:bookstar/modules/reading_challenge/view_model/challenge_start_view_model.dart';
+import 'package:bookstar/modules/reading_data/view_model/reading_data_view_model.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -413,8 +415,16 @@ class _ReadingChallengeQuizScreenState
   }
 
   quitChallenge() async {
-    context.go('/reading-challenge/start/${widget.challengeId}/', extra: {
-      "requiredRefresh": true,
-    });
+    // 리딩챌린지 목차 상세화면 refresh
+    await ref
+        .read(challengeStartViewModelProvider(widget.challengeId).notifier)
+        .initState(widget.challengeId);
+    // 리딩데이터 refresh
+    await ref.read(readingDataViewModelProvider.notifier).initState();
+    if (mounted) {
+      context.go('/reading-challenge/start/${widget.challengeId}/', extra: {
+        "requiredRefresh": true,
+      });
+    }
   }
 }
