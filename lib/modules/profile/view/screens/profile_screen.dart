@@ -165,6 +165,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('프로필이 저장되었습니다.')),
         );
+
+        if (myMemberId != null) {
+          ref.read(bookLogViewModelProvider(myMemberId).notifier).initState(myMemberId);
+        }
         context.pop();
       }
     } catch (e) {
