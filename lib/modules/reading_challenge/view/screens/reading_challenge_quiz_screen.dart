@@ -256,62 +256,62 @@ class _ReadingChallengeQuizScreenState
                   if (choiceResult == null) {
                     return Container();
                   }
-                  return Column(
-                    children: [
-                      Container(
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            gradient: choiceResult.isCorrect && isSelected
-                                ? LinearGradient(
-                                    colors: [
-                                      Color(0xFF775DFF),
-                                      Color(0xFF56C5C7),
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  )
-                                : null,
-                            color: !choiceResult.isCorrect && isSelected
-                                ? ColorName.r
-                                : null,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 16.0, horizontal: 20),
-                            child: Row(
-                              children: [
-                                choiceResult.isCorrect
-                                    ? Assets.icons.icChoiceCorrect.svg()
-                                    : Assets.icons.icChoiceUncorrect.svg(
-                                        colorFilter: ColorFilter.mode(
-                                            choiceResult.isCorrect ||
-                                                    !choiceResult.isCorrect &&
-                                                        isSelected
-                                                ? ColorName.w1
-                                                : ColorName.g3,
-                                            BlendMode.srcIn),
-                                      ),
-                                SizedBox(
-                                  width: 8,
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    choice.choiceText,
-                                    style: AppTexts.b8.copyWith(
-                                        color: choiceResult.isCorrect ||
-                                                !choiceResult.isCorrect &&
-                                                    isSelected
-                                            ? ColorName.w1
-                                            : ColorName.g3),
+                  return GestureDetector(
+                    onTap: () => onArrowTap(index),
+                    child: Column(
+                      children: [
+                        Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              gradient: choiceResult.isCorrect && isSelected
+                                  ? LinearGradient(
+                                      colors: [
+                                        Color(0xFF775DFF),
+                                        Color(0xFF56C5C7),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    )
+                                  : null,
+                              color: !choiceResult.isCorrect && isSelected
+                                  ? ColorName.r
+                                  : null,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 16.0, horizontal: 20),
+                              child: Row(
+                                children: [
+                                  choiceResult.isCorrect
+                                      ? Assets.icons.icChoiceCorrect.svg()
+                                      : Assets.icons.icChoiceUncorrect.svg(
+                                          colorFilter: ColorFilter.mode(
+                                              choiceResult.isCorrect ||
+                                                      !choiceResult.isCorrect &&
+                                                          isSelected
+                                                  ? ColorName.w1
+                                                  : ColorName.g3,
+                                              BlendMode.srcIn),
+                                        ),
+                                  SizedBox(
+                                    width: 8,
                                   ),
-                                ),
-                                SizedBox(
-                                  width: 8,
-                                ),
-                                GestureDetector(
-                                  onTap: () => onArrowTap(index),
-                                  child: RotationTransition(
+                                  Expanded(
+                                    child: Text(
+                                      choice.choiceText,
+                                      style: AppTexts.b8.copyWith(
+                                          color: choiceResult.isCorrect ||
+                                                  !choiceResult.isCorrect &&
+                                                      isSelected
+                                              ? ColorName.w1
+                                              : ColorName.g3),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: 8,
+                                  ),
+                                  RotationTransition(
                                     turns: iconTurnList[index],
                                     child: Assets.icons.icArrowDown.svg(
                                       colorFilter: ColorFilter.mode(
@@ -323,28 +323,28 @@ class _ReadingChallengeQuizScreenState
                                           BlendMode.srcIn),
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          )),
-                      SizeTransition(
-                        sizeFactor: animationList[index],
-                        child: Column(
-                          children: [
-                            SizedBox(
-                              height: 8,
-                            ),
-                            SizedBox(
-                              width: double.infinity,
-                              child: Text(choiceResult.explanation,
-                                  style: AppTexts.b8.copyWith(
-                                    color: ColorName.g3,
-                                  )),
-                            ),
-                          ],
-                        ),
-                      )
-                    ],
+                                ],
+                              ),
+                            )),
+                        SizeTransition(
+                          sizeFactor: animationList[index],
+                          child: Column(
+                            children: [
+                              SizedBox(
+                                height: 8,
+                              ),
+                              SizedBox(
+                                width: double.infinity,
+                                child: Text(choiceResult.explanation,
+                                    style: AppTexts.b8.copyWith(
+                                      color: ColorName.g3,
+                                    )),
+                              ),
+                            ],
+                          ),
+                        )
+                      ],
+                    ),
                   );
                 }).toList(),
               ),
