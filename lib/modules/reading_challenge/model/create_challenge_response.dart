@@ -17,6 +17,7 @@ abstract class CreateChallengeResponse with _$CreateChallengeResponse {
     QuizGenerationStatus quizGenerationStatus,
     @Default(false) bool alreadyExists,
     @Default(false) bool hasChapter,
+    @Default(false) bool hasQuiz,
   }) = _CreateChallengeResponse;
 
   factory CreateChallengeResponse.fromJson(Map<String, dynamic> json) =>

@@ -65,7 +65,7 @@ class SearchBookViewModel extends _$SearchBookViewModel {
     }
   }
 
-  Future<(int, bool, bool)> createChallenges(int bookId) async {
+  Future<(int, bool, bool, bool)> createChallenges(int bookId) async {
     // 책의 모든 챕터 퀴즈 일괄 생성(비동기)
     // await searchBookRepository.generateAllQuizzes(bookId);
     // 목차 기반 챌린지 생성
@@ -73,7 +73,8 @@ class SearchBookViewModel extends _$SearchBookViewModel {
     return (
       response.data.challengeId,
       response.data.alreadyExists,
-      response.data.hasChapter
+      response.data.hasChapter,
+      response.data.hasQuiz,
     );
   }
 }

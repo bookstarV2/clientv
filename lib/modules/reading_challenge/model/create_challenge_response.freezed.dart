@@ -18,6 +18,7 @@ mixin _$CreateChallengeResponse {
   QuizGenerationStatus get quizGenerationStatus;
   bool get alreadyExists;
   bool get hasChapter;
+  bool get hasQuiz;
 
   /// Create a copy of CreateChallengeResponse
   /// with the given fields replaced by the non-null parameter values.
@@ -42,17 +43,18 @@ mixin _$CreateChallengeResponse {
             (identical(other.alreadyExists, alreadyExists) ||
                 other.alreadyExists == alreadyExists) &&
             (identical(other.hasChapter, hasChapter) ||
-                other.hasChapter == hasChapter));
+                other.hasChapter == hasChapter) &&
+            (identical(other.hasQuiz, hasQuiz) || other.hasQuiz == hasQuiz));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, challengeId,
-      quizGenerationStatus, alreadyExists, hasChapter);
+      quizGenerationStatus, alreadyExists, hasChapter, hasQuiz);
 
   @override
   String toString() {
-    return 'CreateChallengeResponse(challengeId: $challengeId, quizGenerationStatus: $quizGenerationStatus, alreadyExists: $alreadyExists, hasChapter: $hasChapter)';
+    return 'CreateChallengeResponse(challengeId: $challengeId, quizGenerationStatus: $quizGenerationStatus, alreadyExists: $alreadyExists, hasChapter: $hasChapter, hasQuiz: $hasQuiz)';
   }
 }
 
@@ -66,7 +68,8 @@ abstract mixin class $CreateChallengeResponseCopyWith<$Res> {
       {int challengeId,
       QuizGenerationStatus quizGenerationStatus,
       bool alreadyExists,
-      bool hasChapter});
+      bool hasChapter,
+      bool hasQuiz});
 }
 
 /// @nodoc
@@ -86,6 +89,7 @@ class _$CreateChallengeResponseCopyWithImpl<$Res>
     Object? quizGenerationStatus = null,
     Object? alreadyExists = null,
     Object? hasChapter = null,
+    Object? hasQuiz = null,
   }) {
     return _then(_self.copyWith(
       challengeId: null == challengeId
@@ -103,6 +107,10 @@ class _$CreateChallengeResponseCopyWithImpl<$Res>
       hasChapter: null == hasChapter
           ? _self.hasChapter
           : hasChapter // ignore: cast_nullable_to_non_nullable
+              as bool,
+      hasQuiz: null == hasQuiz
+          ? _self.hasQuiz
+          : hasQuiz // ignore: cast_nullable_to_non_nullable
               as bool,
     ));
   }
@@ -202,7 +210,7 @@ extension CreateChallengeResponsePatterns on CreateChallengeResponse {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
     TResult Function(int challengeId, QuizGenerationStatus quizGenerationStatus,
-            bool alreadyExists, bool hasChapter)?
+            bool alreadyExists, bool hasChapter, bool hasQuiz)?
         $default, {
     required TResult orElse(),
   }) {
@@ -210,7 +218,7 @@ extension CreateChallengeResponsePatterns on CreateChallengeResponse {
     switch (_that) {
       case _CreateChallengeResponse() when $default != null:
         return $default(_that.challengeId, _that.quizGenerationStatus,
-            _that.alreadyExists, _that.hasChapter);
+            _that.alreadyExists, _that.hasChapter, _that.hasQuiz);
       case _:
         return orElse();
     }
@@ -232,14 +240,14 @@ extension CreateChallengeResponsePatterns on CreateChallengeResponse {
   @optionalTypeArgs
   TResult when<TResult extends Object?>(
     TResult Function(int challengeId, QuizGenerationStatus quizGenerationStatus,
-            bool alreadyExists, bool hasChapter)
+            bool alreadyExists, bool hasChapter, bool hasQuiz)
         $default,
   ) {
     final _that = this;
     switch (_that) {
       case _CreateChallengeResponse():
         return $default(_that.challengeId, _that.quizGenerationStatus,
-            _that.alreadyExists, _that.hasChapter);
+            _that.alreadyExists, _that.hasChapter, _that.hasQuiz);
       case _:
         throw StateError('Unexpected subclass');
     }
@@ -263,14 +271,15 @@ extension CreateChallengeResponsePatterns on CreateChallengeResponse {
             int challengeId,
             QuizGenerationStatus quizGenerationStatus,
             bool alreadyExists,
-            bool hasChapter)?
+            bool hasChapter,
+            bool hasQuiz)?
         $default,
   ) {
     final _that = this;
     switch (_that) {
       case _CreateChallengeResponse() when $default != null:
         return $default(_that.challengeId, _that.quizGenerationStatus,
-            _that.alreadyExists, _that.hasChapter);
+            _that.alreadyExists, _that.hasChapter, _that.hasQuiz);
       case _:
         return null;
     }
@@ -284,7 +293,8 @@ class _CreateChallengeResponse implements CreateChallengeResponse {
       {this.challengeId = -1,
       this.quizGenerationStatus = QuizGenerationStatus.PENDING,
       this.alreadyExists = false,
-      this.hasChapter = false});
+      this.hasChapter = false,
+      this.hasQuiz = false});
   factory _CreateChallengeResponse.fromJson(Map<String, dynamic> json) =>
       _$CreateChallengeResponseFromJson(json);
 
@@ -300,6 +310,9 @@ class _CreateChallengeResponse implements CreateChallengeResponse {
   @override
   @JsonKey()
   final bool hasChapter;
+  @override
+  @JsonKey()
+  final bool hasQuiz;
 
   /// Create a copy of CreateChallengeResponse
   /// with the given fields replaced by the non-null parameter values.
@@ -329,17 +342,18 @@ class _CreateChallengeResponse implements CreateChallengeResponse {
             (identical(other.alreadyExists, alreadyExists) ||
                 other.alreadyExists == alreadyExists) &&
             (identical(other.hasChapter, hasChapter) ||
-                other.hasChapter == hasChapter));
+                other.hasChapter == hasChapter) &&
+            (identical(other.hasQuiz, hasQuiz) || other.hasQuiz == hasQuiz));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, challengeId,
-      quizGenerationStatus, alreadyExists, hasChapter);
+      quizGenerationStatus, alreadyExists, hasChapter, hasQuiz);
 
   @override
   String toString() {
-    return 'CreateChallengeResponse(challengeId: $challengeId, quizGenerationStatus: $quizGenerationStatus, alreadyExists: $alreadyExists, hasChapter: $hasChapter)';
+    return 'CreateChallengeResponse(challengeId: $challengeId, quizGenerationStatus: $quizGenerationStatus, alreadyExists: $alreadyExists, hasChapter: $hasChapter, hasQuiz: $hasQuiz)';
   }
 }
 
@@ -355,7 +369,8 @@ abstract mixin class _$CreateChallengeResponseCopyWith<$Res>
       {int challengeId,
       QuizGenerationStatus quizGenerationStatus,
       bool alreadyExists,
-      bool hasChapter});
+      bool hasChapter,
+      bool hasQuiz});
 }
 
 /// @nodoc
@@ -375,6 +390,7 @@ class __$CreateChallengeResponseCopyWithImpl<$Res>
     Object? quizGenerationStatus = null,
     Object? alreadyExists = null,
     Object? hasChapter = null,
+    Object? hasQuiz = null,
   }) {
     return _then(_CreateChallengeResponse(
       challengeId: null == challengeId
@@ -392,6 +408,10 @@ class __$CreateChallengeResponseCopyWithImpl<$Res>
       hasChapter: null == hasChapter
           ? _self.hasChapter
           : hasChapter // ignore: cast_nullable_to_non_nullable
+              as bool,
+      hasQuiz: null == hasQuiz
+          ? _self.hasQuiz
+          : hasQuiz // ignore: cast_nullable_to_non_nullable
               as bool,
     ));
   }
