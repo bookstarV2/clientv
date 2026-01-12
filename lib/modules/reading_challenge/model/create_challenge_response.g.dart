@@ -15,6 +15,7 @@ _CreateChallengeResponse _$CreateChallengeResponseFromJson(
           QuizGenerationStatus.PENDING,
       alreadyExists: json['alreadyExists'] as bool? ?? false,
       hasChapter: json['hasChapter'] as bool? ?? false,
+      hasQuiz: json['hasQuiz'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$CreateChallengeResponseToJson(
@@ -25,6 +26,7 @@ Map<String, dynamic> _$CreateChallengeResponseToJson(
           _$QuizGenerationStatusEnumMap[instance.quizGenerationStatus]!,
       'alreadyExists': instance.alreadyExists,
       'hasChapter': instance.hasChapter,
+      'hasQuiz': instance.hasQuiz,
     };
 
 const _$QuizGenerationStatusEnumMap = {

@@ -357,6 +357,10 @@ class $AssetsIconsGen {
   SvgGenImage get icReadingChallengeCompleted =>
       const SvgGenImage('assets/icons/ic_reading_challenge_completed.svg');
 
+  /// File path: assets/icons/ic_reading_challenge_has_quiz.svg
+  SvgGenImage get icReadingChallengeHasQuiz =>
+      const SvgGenImage('assets/icons/ic_reading_challenge_has_quiz.svg');
+
   /// File path: assets/icons/ic_reading_challenge_not_completed.svg
   SvgGenImage get icReadingChallengeNotCompleted =>
       const SvgGenImage('assets/icons/ic_reading_challenge_not_completed.svg');
@@ -485,6 +489,7 @@ class $AssetsIconsGen {
     icReadingChallengeChar2,
     icReadingChallengeChar3,
     icReadingChallengeCompleted,
+    icReadingChallengeHasQuiz,
     icReadingChallengeNotCompleted,
     icReadingChallengeTimeRate,
     icReadingComplete,

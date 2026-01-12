@@ -5,6 +5,7 @@ import 'package:bookstar/modules/book_pick/model/search_book_response.dart';
 import 'package:bookstar/modules/book_pick/view/widgets/book_search_result_card.dart';
 import 'package:bookstar/modules/book_pick/view_model/book_pick_search_view_model.dart';
 import 'package:bookstar/modules/book_pick/view_model/search_book_view_model.dart';
+import 'package:bookstar/modules/reading_challenge/view/widgets/reading_challenge_has_quiz_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -106,7 +107,7 @@ class _ReadingChallengeSearchNewMyLikesScreenState
                     book: book,
                     onTap: () async {
                       // 챌린지가 존재하지 않으면 다음 화면으로 이동
-                      final (challengeId, alreadyExists, hasChapter) =
+                      final (challengeId, alreadyExists, hasChapter, hasQuiz) =
                           await notifier.createChallenges(book.bookId);
                       if (alreadyExists) {
                         OverlayUtils.showCustomToast(
@@ -114,9 +115,22 @@ class _ReadingChallengeSearchNewMyLikesScreenState
                       } else if (!hasChapter) {
                         OverlayUtils.showCustomToast(context, '이 책은 목차가 없습니다.');
                       } else {
-                        if (!context.mounted) return;
-                        context.go("/reading-challenge",
-                            extra: {"challengeId": challengeId});
+                        if (!hasQuiz) {
+                          final result = await showDialog(
+                              context: context,
+                              builder: (_) {
+                                return ReadingChallengeHasQuizDialog();
+                              });
+                          if (result != null && result) {
+                            if (!context.mounted) return;
+                            context.go("/reading-challenge",
+                                extra: {"challengeId": challengeId});
+                          }
+                        } else {
+                          if (!context.mounted) return;
+                          context.go("/reading-challenge",
+                              extra: {"challengeId": challengeId});
+                        }
                       }
                     });
               },
