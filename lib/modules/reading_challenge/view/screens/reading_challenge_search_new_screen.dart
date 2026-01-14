@@ -113,32 +113,31 @@ class _ReadingChallengeSearchNewScreenState
                       hasNext: data.hasNext,
                       scrollController: scrollController,
                       onTapItem: (book) async {
-                        // 챌린지가 존재하지 않으면 다음 화면으로 이동
-                        final (
-                          challengeId,
-                          alreadyExists,
-                          hasChapter,
-                          hasQuiz
-                        ) = await notifier.createChallenges(book.bookId);
-                        if (alreadyExists) {
+                        if (book.alreadyExists) {
                           OverlayUtils.showCustomToast(
                               context, '이미 진행중인 챌린지입니다.');
-                        } else if (!hasChapter) {
+                        } else if (!book.hasChapter) {
                           OverlayUtils.showCustomToast(
                               context, '이 책은 목차가 없습니다.');
                         } else {
-                          if (!hasQuiz) {
+                          if (!book.hasQuiz) {
                             final result = await showDialog(
                                 context: context,
                                 builder: (_) {
                                   return ReadingChallengeHasQuizDialog();
                                 });
                             if (result != null && result) {
+                              // 챌린지가 존재하지 않으면 다음 화면으로 이동
+                              final challengeId =
+                                  await notifier.createChallenges(book.bookId);
                               if (!context.mounted) return;
                               context.go("/reading-challenge",
                                   extra: {"challengeId": challengeId});
                             }
                           } else {
+                            // 챌린지가 존재하지 않으면 다음 화면으로 이동
+                            final challengeId =
+                                await notifier.createChallenges(book.bookId);
                             if (!context.mounted) return;
                             context.go("/reading-challenge",
                                 extra: {"challengeId": challengeId});

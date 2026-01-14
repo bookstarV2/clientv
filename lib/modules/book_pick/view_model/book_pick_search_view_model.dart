@@ -46,8 +46,8 @@ class BookPickSearchViewModel extends _$BookPickSearchViewModel {
   Future<BookPickSearchState> refreshLikeBooks() async {
     final prev = state.value ?? BookPickSearchState();
     if (prev.likeBook.nextCursor != -1) {
-      final responseLike =
-          await _bookPickRepository.getMyLikes(cursorId: prev.likeBook.nextCursor, title: prev.likeBook.title);
+      final responseLike = await _bookPickRepository.getMyLikes(
+          cursorId: prev.likeBook.nextCursor, title: prev.likeBook.title);
       state = AsyncValue.data(prev.copyWith(
         likeBook: prev.likeBook.copyWith(
           likeBooks: [...prev.likeBook.likeBooks, ...responseLike.data.data],

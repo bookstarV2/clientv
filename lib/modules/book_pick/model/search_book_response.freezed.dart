@@ -20,6 +20,9 @@ mixin _$SearchBookResponse {
   String get pubDate;
   String get author;
   String get publisher;
+  bool get alreadyExists;
+  bool get hasChapter;
+  bool get hasQuiz;
 
   /// Create a copy of SearchBookResponse
   /// with the given fields replaced by the non-null parameter values.
@@ -44,17 +47,22 @@ mixin _$SearchBookResponse {
             (identical(other.pubDate, pubDate) || other.pubDate == pubDate) &&
             (identical(other.author, author) || other.author == author) &&
             (identical(other.publisher, publisher) ||
-                other.publisher == publisher));
+                other.publisher == publisher) &&
+            (identical(other.alreadyExists, alreadyExists) ||
+                other.alreadyExists == alreadyExists) &&
+            (identical(other.hasChapter, hasChapter) ||
+                other.hasChapter == hasChapter) &&
+            (identical(other.hasQuiz, hasQuiz) || other.hasQuiz == hasQuiz));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
-      runtimeType, bookId, title, bookCover, pubDate, author, publisher);
+  int get hashCode => Object.hash(runtimeType, bookId, title, bookCover,
+      pubDate, author, publisher, alreadyExists, hasChapter, hasQuiz);
 
   @override
   String toString() {
-    return 'SearchBookResponse(bookId: $bookId, title: $title, bookCover: $bookCover, pubDate: $pubDate, author: $author, publisher: $publisher)';
+    return 'SearchBookResponse(bookId: $bookId, title: $title, bookCover: $bookCover, pubDate: $pubDate, author: $author, publisher: $publisher, alreadyExists: $alreadyExists, hasChapter: $hasChapter, hasQuiz: $hasQuiz)';
   }
 }
 
@@ -70,7 +78,10 @@ abstract mixin class $SearchBookResponseCopyWith<$Res> {
       String bookCover,
       String pubDate,
       String author,
-      String publisher});
+      String publisher,
+      bool alreadyExists,
+      bool hasChapter,
+      bool hasQuiz});
 }
 
 /// @nodoc
@@ -92,6 +103,9 @@ class _$SearchBookResponseCopyWithImpl<$Res>
     Object? pubDate = null,
     Object? author = null,
     Object? publisher = null,
+    Object? alreadyExists = null,
+    Object? hasChapter = null,
+    Object? hasQuiz = null,
   }) {
     return _then(_self.copyWith(
       bookId: null == bookId
@@ -118,6 +132,18 @@ class _$SearchBookResponseCopyWithImpl<$Res>
           ? _self.publisher
           : publisher // ignore: cast_nullable_to_non_nullable
               as String,
+      alreadyExists: null == alreadyExists
+          ? _self.alreadyExists
+          : alreadyExists // ignore: cast_nullable_to_non_nullable
+              as bool,
+      hasChapter: null == hasChapter
+          ? _self.hasChapter
+          : hasChapter // ignore: cast_nullable_to_non_nullable
+              as bool,
+      hasQuiz: null == hasQuiz
+          ? _self.hasQuiz
+          : hasQuiz // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -215,16 +241,32 @@ extension SearchBookResponsePatterns on SearchBookResponse {
 
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
-    TResult Function(int bookId, String title, String bookCover, String pubDate,
-            String author, String publisher)?
+    TResult Function(
+            int bookId,
+            String title,
+            String bookCover,
+            String pubDate,
+            String author,
+            String publisher,
+            bool alreadyExists,
+            bool hasChapter,
+            bool hasQuiz)?
         $default, {
     required TResult orElse(),
   }) {
     final _that = this;
     switch (_that) {
       case _SearchBookResponse() when $default != null:
-        return $default(_that.bookId, _that.title, _that.bookCover,
-            _that.pubDate, _that.author, _that.publisher);
+        return $default(
+            _that.bookId,
+            _that.title,
+            _that.bookCover,
+            _that.pubDate,
+            _that.author,
+            _that.publisher,
+            _that.alreadyExists,
+            _that.hasChapter,
+            _that.hasQuiz);
       case _:
         return orElse();
     }
@@ -245,15 +287,31 @@ extension SearchBookResponsePatterns on SearchBookResponse {
 
   @optionalTypeArgs
   TResult when<TResult extends Object?>(
-    TResult Function(int bookId, String title, String bookCover, String pubDate,
-            String author, String publisher)
+    TResult Function(
+            int bookId,
+            String title,
+            String bookCover,
+            String pubDate,
+            String author,
+            String publisher,
+            bool alreadyExists,
+            bool hasChapter,
+            bool hasQuiz)
         $default,
   ) {
     final _that = this;
     switch (_that) {
       case _SearchBookResponse():
-        return $default(_that.bookId, _that.title, _that.bookCover,
-            _that.pubDate, _that.author, _that.publisher);
+        return $default(
+            _that.bookId,
+            _that.title,
+            _that.bookCover,
+            _that.pubDate,
+            _that.author,
+            _that.publisher,
+            _that.alreadyExists,
+            _that.hasChapter,
+            _that.hasQuiz);
       case _:
         throw StateError('Unexpected subclass');
     }
@@ -273,15 +331,31 @@ extension SearchBookResponsePatterns on SearchBookResponse {
 
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>(
-    TResult? Function(int bookId, String title, String bookCover,
-            String pubDate, String author, String publisher)?
+    TResult? Function(
+            int bookId,
+            String title,
+            String bookCover,
+            String pubDate,
+            String author,
+            String publisher,
+            bool alreadyExists,
+            bool hasChapter,
+            bool hasQuiz)?
         $default,
   ) {
     final _that = this;
     switch (_that) {
       case _SearchBookResponse() when $default != null:
-        return $default(_that.bookId, _that.title, _that.bookCover,
-            _that.pubDate, _that.author, _that.publisher);
+        return $default(
+            _that.bookId,
+            _that.title,
+            _that.bookCover,
+            _that.pubDate,
+            _that.author,
+            _that.publisher,
+            _that.alreadyExists,
+            _that.hasChapter,
+            _that.hasQuiz);
       case _:
         return null;
     }
@@ -297,7 +371,10 @@ class _SearchBookResponse implements SearchBookResponse {
       this.bookCover = '',
       this.pubDate = '',
       this.author = '',
-      this.publisher = ''});
+      this.publisher = '',
+      this.alreadyExists = false,
+      this.hasChapter = false,
+      this.hasQuiz = false});
   factory _SearchBookResponse.fromJson(Map<String, dynamic> json) =>
       _$SearchBookResponseFromJson(json);
 
@@ -319,6 +396,15 @@ class _SearchBookResponse implements SearchBookResponse {
   @override
   @JsonKey()
   final String publisher;
+  @override
+  @JsonKey()
+  final bool alreadyExists;
+  @override
+  @JsonKey()
+  final bool hasChapter;
+  @override
+  @JsonKey()
+  final bool hasQuiz;
 
   /// Create a copy of SearchBookResponse
   /// with the given fields replaced by the non-null parameter values.
@@ -347,17 +433,22 @@ class _SearchBookResponse implements SearchBookResponse {
             (identical(other.pubDate, pubDate) || other.pubDate == pubDate) &&
             (identical(other.author, author) || other.author == author) &&
             (identical(other.publisher, publisher) ||
-                other.publisher == publisher));
+                other.publisher == publisher) &&
+            (identical(other.alreadyExists, alreadyExists) ||
+                other.alreadyExists == alreadyExists) &&
+            (identical(other.hasChapter, hasChapter) ||
+                other.hasChapter == hasChapter) &&
+            (identical(other.hasQuiz, hasQuiz) || other.hasQuiz == hasQuiz));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
-      runtimeType, bookId, title, bookCover, pubDate, author, publisher);
+  int get hashCode => Object.hash(runtimeType, bookId, title, bookCover,
+      pubDate, author, publisher, alreadyExists, hasChapter, hasQuiz);
 
   @override
   String toString() {
-    return 'SearchBookResponse(bookId: $bookId, title: $title, bookCover: $bookCover, pubDate: $pubDate, author: $author, publisher: $publisher)';
+    return 'SearchBookResponse(bookId: $bookId, title: $title, bookCover: $bookCover, pubDate: $pubDate, author: $author, publisher: $publisher, alreadyExists: $alreadyExists, hasChapter: $hasChapter, hasQuiz: $hasQuiz)';
   }
 }
 
@@ -375,7 +466,10 @@ abstract mixin class _$SearchBookResponseCopyWith<$Res>
       String bookCover,
       String pubDate,
       String author,
-      String publisher});
+      String publisher,
+      bool alreadyExists,
+      bool hasChapter,
+      bool hasQuiz});
 }
 
 /// @nodoc
@@ -397,6 +491,9 @@ class __$SearchBookResponseCopyWithImpl<$Res>
     Object? pubDate = null,
     Object? author = null,
     Object? publisher = null,
+    Object? alreadyExists = null,
+    Object? hasChapter = null,
+    Object? hasQuiz = null,
   }) {
     return _then(_SearchBookResponse(
       bookId: null == bookId
@@ -423,6 +520,18 @@ class __$SearchBookResponseCopyWithImpl<$Res>
           ? _self.publisher
           : publisher // ignore: cast_nullable_to_non_nullable
               as String,
+      alreadyExists: null == alreadyExists
+          ? _self.alreadyExists
+          : alreadyExists // ignore: cast_nullable_to_non_nullable
+              as bool,
+      hasChapter: null == hasChapter
+          ? _self.hasChapter
+          : hasChapter // ignore: cast_nullable_to_non_nullable
+              as bool,
+      hasQuiz: null == hasQuiz
+          ? _self.hasQuiz
+          : hasQuiz // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
