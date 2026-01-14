@@ -14,6 +14,9 @@ _LikeBookResponse _$LikeBookResponseFromJson(Map<String, dynamic> json) =>
       pubDate: json['pubDate'] as String? ?? '',
       author: json['author'] as String? ?? '',
       publisher: json['publisher'] as String? ?? '',
+      alreadyExists: json['alreadyExists'] as bool? ?? false,
+      hasChapter: json['hasChapter'] as bool? ?? false,
+      hasQuiz: json['hasQuiz'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$LikeBookResponseToJson(_LikeBookResponse instance) =>
@@ -24,4 +27,7 @@ Map<String, dynamic> _$LikeBookResponseToJson(_LikeBookResponse instance) =>
       'pubDate': instance.pubDate,
       'author': instance.author,
       'publisher': instance.publisher,
+      'alreadyExists': instance.alreadyExists,
+      'hasChapter': instance.hasChapter,
+      'hasQuiz': instance.hasQuiz,
     };
