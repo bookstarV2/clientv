@@ -144,7 +144,8 @@ class _ReadingChallengeScreenState
                   SizedBox(height: 35),
                   // 리스트
                   _buildListSection(
-                    items: items,
+                    items:
+                        items.where((element) => !element.completed).toList(),
                     selectedAbandonChallenges: _selectedAbandonChallenges,
                     onTapItem: (item, index) {
                       setState(() {
