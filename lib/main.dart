@@ -23,6 +23,7 @@ void main() async {
 
   final fontLoader = FontLoader('BookkMyungjo');
   fontLoader.addFont(rootBundle.load(Assets.fonts.bookkMyungjoBold));
+  fontLoader.addFont(rootBundle.load(Assets.fonts.akiraExpandedDemo));
   await fontLoader.load();
 
   // await FlutterSecureStorage().deleteAll();

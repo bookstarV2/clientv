@@ -115,6 +115,9 @@ flutter:
           weight: 200
         - asset: assets/fonts/Pretendard-Thin.otf
           weight: 100
+    - family: AkiraExpandedDemo
+      fonts:
+        - asset: assets/fonts/Akira Expanded Demo.otf
   assets:
     - assets/env/.env
     - assets/images/

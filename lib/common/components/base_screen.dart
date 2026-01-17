@@ -290,16 +290,24 @@ abstract class BaseScreenState<T extends BaseScreen> extends ConsumerState<T>
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onScreenTap,
-      child: Scaffold(
-        backgroundColor: getBackgroundColor(context),
-        appBar: buildAppBar(context),
-        body: _buildBodyWithRefresh(context),
-        // bottomNavigationBar: _buildBottomNavigationBar(context),
-        floatingActionButton: buildFloatingActionButton(context),
-        floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
-        drawer: buildDrawer(context),
+    return PopScope(
+      canPop: canPop(),
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          onPopInvoked();
+        }
+      },
+      child: GestureDetector(
+        onTap: onScreenTap,
+        child: Scaffold(
+          backgroundColor: getBackgroundColor(context),
+          appBar: buildAppBar(context),
+          body: _buildBodyWithRefresh(context),
+          // bottomNavigationBar: _buildBottomNavigationBar(context),
+          floatingActionButton: buildFloatingActionButton(context),
+          floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
+          drawer: buildDrawer(context),
+        ),
       ),
     );
   }
@@ -400,4 +408,8 @@ abstract class BaseScreenState<T extends BaseScreen> extends ConsumerState<T>
   void onScreenTap() {}
   void onPageChanged(int pageIndex) {}
   void onDidUpdateWidget(covariant T oldWidget) {}
+
+  // Pop 제어 메서드들
+  bool canPop() => true;
+  void onPopInvoked() {}
 }
