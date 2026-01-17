@@ -51,6 +51,11 @@ class _ReadingChallengeWrapQuizScreenState
     super.dispose();
   }
 
+  @override
+  bool canPop() {
+    return !_isLock;
+  }
+
   void _onShowQuizTab() {
     if (!_showQuizTab) {
       setState(() {
