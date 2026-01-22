@@ -29,36 +29,16 @@ class _ReadingChallengeCompleteDialogState
   }
 
   @override
+  bool extendBodyBehindAppBar() {
+    return true;
+  }
+
+  @override
   PreferredSizeWidget? buildAppBar(BuildContext context) {
-    final state =
-        ref.watch(challengeCompleteViewModelProvider(widget.challengeId));
     return AppBar(
       title: Text("리딩 챌린지"),
       automaticallyImplyLeading: false,
       backgroundColor: Colors.transparent,
-      flexibleSpace: state.maybeWhen(
-        data: (data) => Container(
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: CachedNetworkImageProvider(data.detail.bookCover),
-              fit: BoxFit.cover,
-            ),
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  ColorName.b1.withValues(alpha: 0.7),
-                  ColorName.b1.withValues(alpha: 0.9),
-                ],
-              ),
-            ),
-          ),
-        ),
-        orElse: () => null,
-      ),
     );
   }
 
@@ -66,6 +46,11 @@ class _ReadingChallengeCompleteDialogState
   Widget buildBody(BuildContext context) {
     final state =
         ref.watch(challengeCompleteViewModelProvider(widget.challengeId));
+
+    // AppBar 높이 계산 (상단 SafeArea + AppBar 높이)
+    final appBarHeight =
+        AppBar().preferredSize.height + MediaQuery.of(context).padding.top;
+
     return state.when(
         data: (data) {
           // data.detail.totalTime(int) to HH:MM:SS
@@ -78,22 +63,24 @@ class _ReadingChallengeCompleteDialogState
           // data.detail.bookCover
           return Stack(
             children: [
-              // 배경 이미지
+              // 배경 이미지 - AppBar 영역까지 확장
               Positioned.fill(
+                top: -appBarHeight,
                 child: CachedNetworkImage(
                   imageUrl: data.detail.bookCover,
                   fit: BoxFit.cover,
                 ),
               ),
-              // 어두운 오버레이
+              // 어두운 오버레이 - AppBar 영역까지 확장
               Positioned.fill(
+                top: -appBarHeight,
                 child: Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        ColorName.b1.withValues(alpha: 0.85),
+                        ColorName.b1.withValues(alpha: 0.7),
                         ColorName.b1.withValues(alpha: 0.95),
                       ],
                     ),
@@ -107,72 +94,79 @@ class _ReadingChallengeCompleteDialogState
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                Column(
-                  children: [
-                    SizedBox(
-                      height: 27,
-                    ),
-                    // Text("그저 하루치의 낙담",
-                    Text(data.detail.bookTitle,
-                        style: AppTexts.b1.copyWith(color: ColorName.w1)),
-                    Text(
-                        "${data.detail.bookAuthor}・${data.detail.bookPublisher}",
-                        style: AppTexts.b10.copyWith(color: ColorName.g2)),
-                  ],
-                ),
-                Column(
-                  children: [
-                    Row(
-                      spacing: 10,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildSection(
-                          Assets.images.icReadingChallengeChallengeTime.image(),
-                          "챌린지 시간",
-                          Text(
-                            totalTimeString,
-                            style: AppTexts.b3.copyWith(color: ColorName.w1),
-                          ),
+                        SizedBox(
+                          height: 27 + appBarHeight,
                         ),
-                        _buildSection(
-                          Assets.images.icReadingChallengeCollectQuiz.image(),
-                          "맞춘 퀴즈 수",
-                          Text(
-                            "${data.detail.totalCollect}개",
-                            style: AppTexts.b3.copyWith(color: ColorName.w1),
-                          ),
-                        ),
-                        _buildSection(
-                          Assets.images.icReadingChallengeReadingSpeed.image(),
-                          "읽는 속도",
-                          Text.rich(
-                            TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: "장당",
-                                  style: AppTexts.b10
-                                      .copyWith(color: ColorName.g3),
-                                ),
-                                TextSpan(
-                                  text: "${data.detail.readingSpeedPerMinute}초",
-                                  style:
-                                      AppTexts.b3.copyWith(color: ColorName.w1),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                        // Text("그저 하루치의 낙담",
+                        Text(data.detail.bookTitle,
+                            style: AppTexts.b1.copyWith(color: ColorName.w1)),
+                        Text(
+                            "${data.detail.bookAuthor}・${data.detail.bookPublisher}",
+                            style: AppTexts.b10.copyWith(color: ColorName.g2)),
                       ],
                     ),
-                    SizedBox(height: 36),
-                    CtaButtonL1(
-                      onPressed: () {
-                        context.pop(true);
-                      },
-                      text: "메인으로 이동하기",
-                    ),
-                    SizedBox(height: 20),
-                  ],
-                )
+                    Column(
+                      children: [
+                        Row(
+                          spacing: 10,
+                          children: [
+                            _buildSection(
+                              Assets.images.icReadingChallengeChallengeTime
+                                  .image(),
+                              "챌린지 시간",
+                              Text(
+                                totalTimeString,
+                                style:
+                                    AppTexts.b3.copyWith(color: ColorName.w1),
+                              ),
+                            ),
+                            _buildSection(
+                              Assets.images.icReadingChallengeCollectQuiz
+                                  .image(),
+                              "맞춘 퀴즈 수",
+                              Text(
+                                "${data.detail.totalCollect}개",
+                                style:
+                                    AppTexts.b3.copyWith(color: ColorName.w1),
+                              ),
+                            ),
+                            _buildSection(
+                              Assets.images.icReadingChallengeReadingSpeed
+                                  .image(),
+                              "읽는 속도",
+                              Text.rich(
+                                TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text: "장당",
+                                      style: AppTexts.b10
+                                          .copyWith(color: ColorName.g3),
+                                    ),
+                                    TextSpan(
+                                      text:
+                                          "${data.detail.readingSpeedPerMinute}초",
+                                      style: AppTexts.b3
+                                          .copyWith(color: ColorName.w1),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 36),
+                        CtaButtonL1(
+                          onPressed: () {
+                            context.pop(true);
+                          },
+                          text: "메인으로 이동하기",
+                        ),
+                        SizedBox(height: 20),
+                      ],
+                    )
                   ],
                 ),
               ),

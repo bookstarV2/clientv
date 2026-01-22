@@ -301,6 +301,7 @@ abstract class BaseScreenState<T extends BaseScreen> extends ConsumerState<T>
         onTap: onScreenTap,
         child: Scaffold(
           backgroundColor: getBackgroundColor(context),
+          extendBodyBehindAppBar: extendBodyBehindAppBar(),
           appBar: buildAppBar(context),
           body: _buildBodyWithRefresh(context),
           // bottomNavigationBar: _buildBottomNavigationBar(context),
@@ -412,4 +413,7 @@ abstract class BaseScreenState<T extends BaseScreen> extends ConsumerState<T>
   // Pop 제어 메서드들
   bool canPop() => true;
   void onPopInvoked() {}
+
+  // Scaffold 설정
+  bool extendBodyBehindAppBar() => false;
 }
