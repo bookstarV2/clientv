@@ -530,6 +530,21 @@ class $AssetsImagesGen {
   AssetGenImage get icQuizCheck =>
       const AssetGenImage('assets/images/ic_quiz_check.png');
 
+  /// File path: assets/images/ic_reading_challenge_challenge_time.png
+  AssetGenImage get icReadingChallengeChallengeTime => const AssetGenImage(
+    'assets/images/ic_reading_challenge_challenge_time.png',
+  );
+
+  /// File path: assets/images/ic_reading_challenge_collect_quiz.png
+  AssetGenImage get icReadingChallengeCollectQuiz => const AssetGenImage(
+    'assets/images/ic_reading_challenge_collect_quiz.png',
+  );
+
+  /// File path: assets/images/ic_reading_challenge_reading_speed.png
+  AssetGenImage get icReadingChallengeReadingSpeed => const AssetGenImage(
+    'assets/images/ic_reading_challenge_reading_speed.png',
+  );
+
   /// File path: assets/images/ic_search_colored@3x.png
   AssetGenImage get icSearchColored3x =>
       const AssetGenImage('assets/images/ic_search_colored@3x.png');
@@ -610,6 +625,9 @@ class $AssetsImagesGen {
     heroLookForward3x,
     heroLookUp3x,
     icQuizCheck,
+    icReadingChallengeChallengeTime,
+    icReadingChallengeCollectQuiz,
+    icReadingChallengeReadingSpeed,
     icSearchColored3x,
     icSearchUncolored3x,
     navBookLogSelected3x,

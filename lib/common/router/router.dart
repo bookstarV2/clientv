@@ -175,8 +175,12 @@ GoRouter router(Ref ref) {
                 builder: (context, state) {
                   final extra = state.extra as Map<String, dynamic>?;
                   final challengeId = extra?['challengeId'] as int? ?? -1;
+                  final requiredRefresh =
+                      extra?['requiredRefresh'] as bool? ?? false;
 
-                  return ReadingChallengeScreen(challengeId: challengeId);
+                  return ReadingChallengeScreen(
+                      challengeId: challengeId,
+                      requiredRefresh: requiredRefresh);
                 },
                 routes: [
                   GoRoute(

@@ -16,9 +16,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 class ReadingChallengeScreen extends BaseScreen {
-  const ReadingChallengeScreen({super.key, required this.challengeId});
+  const ReadingChallengeScreen({
+    super.key,
+    required this.challengeId,
+    this.requiredRefresh = false,
+  });
 
   final int challengeId;
+  final bool requiredRefresh;
 
   @override
   BaseScreenState<ReadingChallengeScreen> createState() =>
@@ -36,6 +41,17 @@ class _ReadingChallengeScreenState
   int? _newIndex;
   bool _isAbandon = false;
   List<int> _selectedAbandonChallenges = [];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.requiredRefresh) {
+        final notifier = ref.read(ongoingChallengeViewModelProvider.notifier);
+        notifier.initState();
+      }
+    });
+  }
 
   @override
   void onDidUpdateWidget(covariant ReadingChallengeScreen oldWidget) async {

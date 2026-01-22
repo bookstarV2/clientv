@@ -3,8 +3,10 @@ import 'package:bookstar/common/components/button/cta_button_l1.dart';
 import 'package:bookstar/common/theme/style/app_texts.dart';
 import 'package:bookstar/gen/assets.gen.dart';
 import 'package:bookstar/gen/colors.gen.dart';
+import 'package:bookstar/modules/reading_challenge/model/challenge_detail_chapter.dart';
 import 'package:bookstar/modules/reading_challenge/model/choice_result.dart';
 import 'package:bookstar/modules/reading_challenge/model/quiz_choice.dart';
+import 'package:bookstar/modules/reading_challenge/view/widgets/reading_challenge_complete_dialog.dart';
 import 'package:bookstar/modules/reading_challenge/view_model/challenge_quiz_view_model.dart';
 import 'package:bookstar/modules/reading_challenge/view_model/challenge_start_view_model.dart';
 import 'package:bookstar/modules/reading_challenge/view_model/ongoing_challenge_view_model.dart';
@@ -434,7 +436,28 @@ class _ReadingChallengeQuizScreenState
   }
 
   quitChallenge() async {
-    if (mounted) {
+    final state =
+        ref.watch(challengeStartViewModelProvider(widget.challengeId));
+    // 모든 chapters의 status가 COMPLETED인지 확인
+    final chapters = state.value?.detail.chapters;
+    final isAllCompleted = chapters
+            ?.every((chapter) => chapter.status == ChapterStatus.COMPLETED) ??
+        false;
+
+    if (isAllCompleted) {
+      final result = await showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          builder: (_) => ReadingChallengeCompleteDialog(
+                challengeId: widget.challengeId,
+              ));
+
+      if (result != null && result && mounted) {
+        context.go('/reading-challenge', extra: {
+          "requiredRefresh": true,
+        });
+      }
+    } else {
       context.go('/reading-challenge/start/${widget.challengeId}/', extra: {
         "requiredRefresh": true,
       });
