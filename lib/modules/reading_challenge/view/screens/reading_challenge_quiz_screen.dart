@@ -1,13 +1,12 @@
 import 'package:bookstar/common/components/base_screen.dart';
 import 'package:bookstar/common/components/button/cta_button_l1.dart';
-import 'package:bookstar/common/service/analytics_service.dart';
 import 'package:bookstar/common/theme/style/app_texts.dart';
 import 'package:bookstar/gen/assets.gen.dart';
 import 'package:bookstar/gen/colors.gen.dart';
+import 'package:bookstar/modules/reading_challenge/model/challenge_detail_chapter.dart';
 import 'package:bookstar/modules/reading_challenge/model/choice_result.dart';
 import 'package:bookstar/modules/reading_challenge/model/quiz_choice.dart';
-import 'package:bookstar/modules/reading_challenge/view/widgets/report_quiz_error_dialog.dart';
-import 'package:bookstar/modules/reading_challenge/view/widgets/report_quiz_error_success_dialog.dart';
+import 'package:bookstar/modules/reading_challenge/view/widgets/reading_challenge_complete_dialog.dart';
 import 'package:bookstar/modules/reading_challenge/view_model/challenge_quiz_view_model.dart';
 import 'package:bookstar/modules/reading_challenge/view_model/challenge_start_view_model.dart';
 import 'package:bookstar/modules/reading_challenge/view_model/ongoing_challenge_view_model.dart';
@@ -18,11 +17,16 @@ import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 class ReadingChallengeQuizScreen extends BaseScreen {
-  const ReadingChallengeQuizScreen(
-      {super.key, required this.chapterId, required this.challengeId});
+  const ReadingChallengeQuizScreen({
+    super.key,
+    required this.chapterId,
+    required this.challengeId,
+    this.showAppBar = true,
+  });
 
   final int chapterId;
   final int challengeId;
+  final bool showAppBar;
 
   @override
   BaseScreenState<ReadingChallengeQuizScreen> createState() =>
@@ -37,6 +41,7 @@ class _ReadingChallengeQuizScreenState
   List<AnimationController> _animationControllerList = [];
   List<Animation<double>> _animationList = [];
   List<Animation<double>> _iconTurnsList = [];
+  bool _isTappedQuestion = false;
 
   @override
   void dispose() {
@@ -44,42 +49,6 @@ class _ReadingChallengeQuizScreenState
       controller.dispose();
     }
     super.dispose();
-  }
-
-  Future<void> _onTapQuizError() async {
-    final quizId = ref
-        .read(challengeQuizViewModelProvider(widget.chapterId))
-        .value
-        ?.quizId;
-    AnalyticsService.logEvent('click_open_report_quiz_error', parameters: {
-      'screen_name': "reading_challenge_quiz",
-      "quiz_id": quizId
-    });
-
-    final result = await showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        builder: (_) => ReportQuizErrorDialog(
-              quizId: quizId!,
-            ));
-
-    if (result != null && result && mounted) {
-      await showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          builder: (context) => ReportQuizErrorSuccessDialog());
-    }
-  }
-
-  @override
-  PreferredSizeWidget? buildAppBar(BuildContext context) {
-    return AppBar(
-      title: const Text('리딩챌린지'),
-      leading: IconButton(
-        icon: const BackButton(),
-        onPressed: () => Navigator.of(context).pop(),
-      ),
-    );
   }
 
   @override
@@ -98,9 +67,6 @@ class _ReadingChallengeQuizScreenState
                   });
                 },
                 selectedChoiceId: _selectedChoiceId,
-                onTapQuizError: () {
-                  _onTapQuizError();
-                },
               )
             : _buildQuizResultPage(
                 scrollController: scrollController,
@@ -110,6 +76,12 @@ class _ReadingChallengeQuizScreenState
                 choiceResults: data.choiceResults!,
                 iconTurnList: _iconTurnsList,
                 animationList: _animationList,
+                isTappedQuestion: _isTappedQuestion,
+                onQuestionTap: () {
+                  setState(() {
+                    _isTappedQuestion = true;
+                  });
+                },
                 onArrowTap: (index) {
                   setState(() {
                     _isExpandedList[index] = !_isExpandedList[index];
@@ -134,7 +106,6 @@ class _ReadingChallengeQuizScreenState
     required List<QuizChoice> choices,
     required Function(int) changeChoiceId,
     required int? selectedChoiceId,
-    required Function onTapQuizError,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
@@ -145,16 +116,6 @@ class _ReadingChallengeQuizScreenState
               child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  GestureDetector(
-                    onTap: () => onTapQuizError(),
-                    child: Text("퀴즈에 오류가 있나요?",
-                        style: AppTexts.b8.copyWith(color: ColorName.g3)),
-                  ),
-                ],
-              ),
               SizedBox(
                 height: 12,
               ),
@@ -195,10 +156,8 @@ class _ReadingChallengeQuizScreenState
                                     vertical: 16.0, horizontal: 20),
                                 child: Text(
                                   choice.choiceText,
-                                  style: AppTexts.b8.copyWith(
-                                      color: selectedChoiceId == choice.choiceId
-                                          ? ColorName.w1
-                                          : ColorName.g3),
+                                  style:
+                                      AppTexts.b8.copyWith(color: ColorName.w1),
                                 ),
                               )),
                         ))
@@ -220,8 +179,15 @@ class _ReadingChallengeQuizScreenState
     required List<ChoiceResult> choiceResults,
     required List<Animation<double>> iconTurnList,
     required List<Animation<double>> animationList,
+    required bool isTappedQuestion,
     required Function(int) onArrowTap,
+    required Function() onQuestionTap,
   }) {
+    final correctChoiceId = choiceResults
+        .firstWhereOrNull((element) => element.isCorrect)
+        ?.choiceId;
+    final isCorrect = selectedChoiceId == correctChoiceId;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: CustomScrollView(
@@ -231,21 +197,67 @@ class _ReadingChallengeQuizScreenState
               child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Q", style: AppTexts.b2.copyWith(color: ColorName.p1)),
-                  SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      question,
-                      style: AppTexts.b3.copyWith(color: ColorName.w1),
-                    ),
-                  )
-                ],
-              ),
               SizedBox(
                 height: 24,
+              ),
+              isCorrect
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "정답이에요 ✨",
+                          style: AppTexts.b1.copyWith(color: ColorName.p1),
+                        ),
+                        Text(
+                          "당신의 깊은 집중력이 빛나는군요",
+                          style: AppTexts.b1.copyWith(color: ColorName.w1),
+                        )
+                      ],
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "오답이에요 😟",
+                          style: AppTexts.b1.copyWith(color: ColorName.r),
+                        ),
+                        Text(
+                          "내일은 꼭 맞힐 수 있을 거예요",
+                          style: AppTexts.b1.copyWith(color: ColorName.w1),
+                        )
+                      ],
+                    ),
+              SizedBox(
+                height: 23,
+              ),
+              GestureDetector(
+                onTap: onQuestionTap,
+                child: Container(
+                  decoration: BoxDecoration(
+                      color: ColorName.dim3,
+                      borderRadius: BorderRadius.circular(12)),
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Q",
+                            style: AppTexts.b8.copyWith(color: ColorName.p1)),
+                        SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            !isTappedQuestion ? "눌러서 다시 보기" : question,
+                            style: AppTexts.b8.copyWith(color: ColorName.g2),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(
+                height: 14,
               ),
               Column(
                 spacing: 12,
@@ -275,7 +287,7 @@ class _ReadingChallengeQuizScreenState
                                   : null,
                               color: !choiceResult.isCorrect && isSelected
                                   ? ColorName.r
-                                  : null,
+                                  : ColorName.g7,
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Padding(
@@ -337,7 +349,7 @@ class _ReadingChallengeQuizScreenState
                                 width: double.infinity,
                                 child: Text(choiceResult.explanation,
                                     style: AppTexts.b8.copyWith(
-                                      color: ColorName.g3,
+                                      color: ColorName.w3,
                                     )),
                               ),
                             ],
@@ -363,7 +375,7 @@ class _ReadingChallengeQuizScreenState
     return state.value?.choiceResults == null
         ? CtaButtonL1(
             backgroundColor: ColorName.p1,
-            text: '퀴즈 풀기',
+            text: '정답 확인하기',
             onPressed: () {
               submitQuiz();
             },
@@ -413,9 +425,6 @@ class _ReadingChallengeQuizScreenState
         _iconTurnsList.add(iconTurns);
       }
     });
-  }
-
-  quitChallenge() async {
     // 리딩챌린지 목차 상세화면 refresh
     await ref
         .read(challengeStartViewModelProvider(widget.challengeId).notifier)
@@ -424,8 +433,31 @@ class _ReadingChallengeQuizScreenState
     await ref.read(readingDataViewModelProvider.notifier).initState();
     // 리딩챌린지 메인화면 refresh
     await ref.read(ongoingChallengeViewModelProvider.notifier).initState();
+  }
 
-    if (mounted) {
+  quitChallenge() async {
+    final state =
+        ref.watch(challengeStartViewModelProvider(widget.challengeId));
+    // 모든 chapters의 status가 COMPLETED인지 확인
+    final chapters = state.value?.detail.chapters;
+    final isAllCompleted = chapters
+            ?.every((chapter) => chapter.status == ChapterStatus.COMPLETED) ??
+        false;
+
+    if (isAllCompleted) {
+      final result = await showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          builder: (_) => ReadingChallengeCompleteDialog(
+                challengeId: widget.challengeId,
+              ));
+
+      if (result != null && result && mounted) {
+        context.go('/reading-challenge', extra: {
+          "requiredRefresh": true,
+        });
+      }
+    } else {
       context.go('/reading-challenge/start/${widget.challengeId}/', extra: {
         "requiredRefresh": true,
       });

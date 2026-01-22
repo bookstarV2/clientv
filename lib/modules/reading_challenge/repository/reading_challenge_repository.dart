@@ -1,6 +1,7 @@
 import 'package:bookstar/common/models/response_form.dart';
 import 'package:bookstar/infra/network/dio_client.dart';
 import 'package:bookstar/modules/reading_challenge/model/challenge_creation_response.dart';
+import 'package:bookstar/modules/reading_challenge/model/challenge_success_detail_response.dart';
 import 'package:bookstar/modules/reading_challenge/model/post_progress_request.dart';
 import 'package:bookstar/modules/reading_challenge/model/post_reading_timer_request.dart';
 import 'package:bookstar/modules/reading_challenge/model/challenge_detail_chapter_detail_response.dart';
@@ -83,6 +84,12 @@ abstract class ReadingChallengeRepository {
   Future<ResponseForm<dynamic>> reportQuizError(
     @Path('quizId') int quizId,
     @Body() ReportQuizErrorRequest request,
+  );
+
+  @GET('/api/v3/challenges/{challengeId}/success-detail')
+  Future<ResponseForm<ChallengeSuccessDetailResponse>>
+      getChallengeSuccessDetail(
+    @Path('challengeId') int challengeId,
   );
 
   @POST('/api/v2/reading-challenges')

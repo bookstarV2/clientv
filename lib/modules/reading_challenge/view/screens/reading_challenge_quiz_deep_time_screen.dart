@@ -1,32 +1,49 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:bookstar/common/components/base_screen.dart';
+import 'package:bookstar/common/components/button/cta_button_s.dart';
 import 'package:bookstar/common/components/dialog/custom_dialog.dart';
 import 'package:bookstar/common/theme/style/app_texts.dart';
 import 'package:bookstar/gen/assets.gen.dart';
 import 'package:bookstar/gen/colors.gen.dart';
 import 'package:bookstar/modules/reading_challenge/view_model/challenge_quiz_view_model.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ReadingChallengeQuizDeepTimeScreen extends BaseScreen {
-  const ReadingChallengeQuizDeepTimeScreen(
-      {super.key, required this.chapterId, required this.challengeId});
+class ReadingChallengeQuizDeepTimeScreen extends ConsumerStatefulWidget {
+  const ReadingChallengeQuizDeepTimeScreen({
+    super.key,
+    required this.chapterId,
+    required this.challengeId,
+    required this.isLock,
+    required this.onStartTap,
+    required this.onPauseTap,
+    required this.onResumeTap,
+    required this.onStopTap,
+    required this.onLockToggle,
+    required this.controller,
+  });
 
   final int chapterId;
   final int challengeId;
+  final bool isLock;
+  final VoidCallback onStartTap;
+  final VoidCallback onPauseTap;
+  final VoidCallback onResumeTap;
+  final VoidCallback onStopTap;
+  final VoidCallback onLockToggle;
+  final CustomCountDownController controller;
 
   @override
-  BaseScreenState<ReadingChallengeQuizDeepTimeScreen> createState() =>
+  ConsumerState<ReadingChallengeQuizDeepTimeScreen> createState() =>
       _ReadingChallengeQuizDeepTimeScreenState();
 }
 
 class _ReadingChallengeQuizDeepTimeScreenState
-    extends BaseScreenState<ReadingChallengeQuizDeepTimeScreen>
-    with WidgetsBindingObserver {
-  final CustomCountDownController _controller = CustomCountDownController();
-  bool _isLock = false;
+    extends ConsumerState<ReadingChallengeQuizDeepTimeScreen>
+    with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -41,32 +58,91 @@ class _ReadingChallengeQuizDeepTimeScreenState
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    // 앱이 백그라운드에서 포그라운드로 돌아올 때 UI 갱신
-    if (state == AppLifecycleState.resumed) {
-      if (_controller.isStarted.value && !_controller.isPaused.value) {
-        // 타이머가 실행 중이었다면 UI 업데이트 트리거
-        setState(() {});
-      }
-    }
-  }
+  Widget build(BuildContext context) {
+    super.build(context);
+    final screenSize =
+        MediaQuery.of(context).size.width > MediaQuery.of(context).size.height
+            ? MediaQuery.of(context).size.height
+            : MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
 
-  @override
-  PreferredSizeWidget? buildAppBar(BuildContext context) {
-    return AppBar(
-      title: const Text('리딩챌린지'),
-      automaticallyImplyLeading: false,
-      leading: BackButton(
-        onPressed: () {
-          if (!_isLock) {
-            Navigator.of(context).pop();
-          }
-        },
+    return SingleChildScrollView(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          minHeight: screenHeight -
+              MediaQuery.of(context).padding.top -
+              kToolbarHeight,
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.bottomCenter,
+              end: Alignment.center,
+              colors: [
+                ColorName.b1,
+                ColorName.p1.withValues(alpha: 0.2),
+                Colors.transparent, // 중간에서 투명하게
+              ],
+              stops: [0.0, 0.5, 1.0],
+            ),
+          ),
+          child: Column(
+            children: [
+              SizedBox(height: 16),
+              _buildDeepTimeLock(
+                  isLock: widget.isLock,
+                  toggleIsLock: () async {
+                    widget.onLockToggle();
+                  }),
+              SizedBox(height: 16),
+              _buildTimer(
+                screenSize: screenSize,
+                controller: widget.controller,
+              ),
+              SizedBox(height: 38),
+              _buildButtons(
+                controller: widget.controller,
+                onStart: () {
+                  widget.onStartTap();
+                },
+                onPause: () {
+                  widget.onPauseTap();
+                },
+                onResume: () {
+                  widget.onResumeTap();
+                },
+                onStop: () {
+                  // widget.onStopTap();
+                  showGoToQuizScreen();
+                },
+              ),
+              SizedBox(height: 23),
+              // 시간 표시
+              ValueListenableBuilder<String>(
+                valueListenable: widget.controller.currentTime,
+                builder: (context, timeString, child) {
+                  final parts = timeString.split(':');
+                  final displayTime = '${parts[1]}:${parts[2]}'; // MM:SS 형식
+                  return Text(
+                    displayTime,
+                    style: TextStyle(
+                        fontSize: 50,
+                        color: ColorName.p1,
+                        fontWeight: FontWeight.w900,
+                        fontFamily: 'AkiraExpandedDemo'),
+                  );
+                },
+              ),
+              SizedBox(height: 60),
+            ],
+          ),
+        ),
       ),
     );
   }
 
   showGoToQuizScreen() async {
+    // 독립 화면으로 사용될 때의 기존 로직
     final result = await showDialog(
         context: context,
         builder: (context) {
@@ -89,7 +165,7 @@ class _ReadingChallengeQuizDeepTimeScreenState
     if (result != null && result) {
       final notifier =
           ref.read(challengeQuizViewModelProvider(widget.chapterId).notifier);
-      final parts = _controller.currentTime.value.split(':');
+      final parts = widget.controller.currentTime.value.split(':');
       final minutes = int.parse(parts[1]);
       final seconds = int.parse(parts[2]);
       final totalSeconds = minutes * 60 + seconds;
@@ -103,71 +179,9 @@ class _ReadingChallengeQuizDeepTimeScreenState
       );
 
       if (mounted) {
-        context.push(
-            '/reading-challenge/${widget.challengeId}/quiz/${widget.chapterId}');
+        widget.onStopTap();
       }
     }
-  }
-
-  @override
-  Widget buildBody(BuildContext context) {
-    final screenSize =
-        MediaQuery.of(context).size.width > MediaQuery.of(context).size.height
-            ? MediaQuery.of(context).size.height
-            : MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-
-    return SingleChildScrollView(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          minHeight: screenHeight -
-              MediaQuery.of(context).padding.top -
-              kToolbarHeight,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            SizedBox(height: 16),
-            _buildDeepTimeLock(
-                isLock: _isLock,
-                toggleIsLock: () async {
-                  setState(() {
-                    _isLock = !_isLock;
-                  });
-                }),
-            SizedBox(height: 16),
-            _buildTimer(
-              screenSize: screenSize,
-              controller: _controller,
-            ),
-            SizedBox(height: 16),
-            _buildButtons(
-              controller: _controller,
-              onStop: () {
-                showGoToQuizScreen();
-              },
-            ),
-            SizedBox(height: 16),
-            // 시간 표시
-            ValueListenableBuilder<String>(
-              valueListenable: _controller.currentTime,
-              builder: (context, timeString, child) {
-                final parts = timeString.split(':');
-                final displayTime = '${parts[1]}:${parts[2]}'; // MM:SS 형식
-                return Text(
-                  displayTime,
-                  style: TextStyle(
-                      fontSize: 50,
-                      color: ColorName.p1,
-                      fontWeight: FontWeight.w900),
-                );
-              },
-            ),
-            SizedBox(height: 60),
-          ],
-        ),
-      ),
-    );
   }
 
   Widget _buildDeepTimeLock({
@@ -204,85 +218,90 @@ class _ReadingChallengeQuizDeepTimeScreenState
 
   Widget _buildButtons({
     required CustomCountDownController controller,
+    required Function() onStart,
+    required Function() onPause,
+    required Function() onResume,
     required Function() onStop,
   }) {
     return ValueListenableBuilder<bool>(
-      valueListenable: _controller.isStarted,
+      valueListenable: controller.isStarted,
       builder: (context, isStarted, child) {
         return ValueListenableBuilder<bool>(
-          valueListenable: _controller.isPaused,
+          valueListenable: controller.isPaused,
           builder: (context, isPaused, child) {
-            return Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // 최초 또는 일시정지 상태: Start 버튼
-                if (!isStarted || isPaused)
-                  _controlButton(
-                    icon: Icons.play_arrow,
-                    color: ColorName.p1,
+            if (!isStarted) {
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CtaButtonS(
+                    width: 135,
+                    height: 41,
+                    text: "🚀독서 시작하기",
+                    textStyle: AppTexts.b7,
+                    borderRadius: 10,
+                    defaultBackgroundColor: ColorName.p1,
+                    defaultTextColor: ColorName.w1,
                     onPressed: () {
-                      if (isPaused) {
-                        _controller.resume();
-                      } else {
-                        _controller.start();
-                      }
-                      setState(() {});
+                      onStart();
                     },
-                    size: 64,
-                  ),
-
-                // 일시정지 상태: Start와 정지 사이 간격
-                if (isPaused && isStarted) SizedBox(width: 16),
-
-                // 실행 중: 일시정지 버튼
-                if (isStarted && !isPaused)
-                  _controlButton(
-                    icon: Icons.pause,
-                    color: ColorName.p1,
+                  )
+                ],
+              );
+            } else if (isStarted && !isPaused) {
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CtaButtonS(
+                    width: 135,
+                    height: 41,
+                    text: "️⏸️독서 일시정지",
+                    textStyle: AppTexts.b7,
+                    borderRadius: 10,
+                    defaultBackgroundColor: ColorName.g7,
+                    defaultTextColor: ColorName.w1,
                     onPressed: () {
-                      _controller.pause();
-                      setState(() {});
+                      onPause();
                     },
-                    size: 64,
+                  )
+                ],
+              );
+            } else if (isStarted && isPaused) {
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CtaButtonS(
+                    width: 135,
+                    height: 41,
+                    text: "🚀독서 계속하기",
+                    textStyle: AppTexts.b7,
+                    borderRadius: 10,
+                    defaultBackgroundColor: ColorName.g7,
+                    defaultTextColor: ColorName.w1,
+                    onPressed: () {
+                      onResume();
+                    },
                   ),
-
-                // 일시정지 상태: 정지 버튼
-                if (isPaused && isStarted)
-                  _controlButton(
-                    icon: Icons.stop,
-                    color: ColorName.p1,
+                  SizedBox(width: 8),
+                  CtaButtonS(
+                    width: 135,
+                    height: 41,
+                    text: "🧩퀴즈 풀러가기",
+                    textStyle: AppTexts.b7,
+                    borderRadius: 10,
+                    defaultBackgroundColor: ColorName.p1,
+                    defaultTextColor: ColorName.w1,
                     onPressed: () {
                       onStop();
                     },
-                    size: 64,
-                  ),
-              ],
-            );
+                  )
+                ],
+              );
+            } else {
+              return Container();
+            }
           },
         );
       },
-    );
-  }
-
-  Widget _controlButton({
-    required IconData icon,
-    required Color color,
-    required VoidCallback onPressed,
-    double size = 64,
-  }) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-      ),
-      child: IconButton(
-        icon: Icon(icon, size: size * 0.4),
-        color: ColorName.w1,
-        onPressed: onPressed,
-        padding: EdgeInsets.zero,
-      ),
     );
   }
 }

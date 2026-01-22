@@ -350,6 +350,42 @@ class _ReadingChallengeRepository implements ReadingChallengeRepository {
   }
 
   @override
+  Future<ResponseForm<ChallengeSuccessDetailResponse>>
+      getChallengeSuccessDetail(int challengeId) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options =
+        _setStreamType<ResponseForm<ChallengeSuccessDetailResponse>>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/api/v3/challenges/${challengeId}/success-detail',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(
+            baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl),
+          ),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late ResponseForm<ChallengeSuccessDetailResponse> _value;
+    try {
+      _value = ResponseForm<ChallengeSuccessDetailResponse>.fromJson(
+        _result.data!,
+        (json) => ChallengeSuccessDetailResponse.fromJson(
+          json as Map<String, dynamic>,
+        ),
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
   Future<ResponseForm<ChallengeCreationResponse>> createChallenge(
     ReadingChallengeRequest request,
   ) async {

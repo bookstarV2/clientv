@@ -7,6 +7,7 @@ import 'package:bookstar/modules/reading_challenge/model/challenge_detail_book_o
 import 'package:bookstar/modules/reading_challenge/model/challenge_detail_chapter.dart';
 import 'package:bookstar/modules/reading_challenge/view_model/challenge_start_view_model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -345,7 +346,18 @@ class _ReadingChallengeStartScreenState
 
   @override
   Widget? buildFloatingActionButton(BuildContext context) {
-    return _selectedChapterId != null
+    final isSelected = _selectedChapterId != null;
+    final currentChapters = ref
+        .read(challengeStartViewModelProvider(widget.challengeId))
+        .value
+        ?.detail
+        .chapters;
+    final isCompleted = currentChapters
+            ?.firstWhereOrNull(
+                (element) => element.chapterId == _selectedChapterId)
+            ?.status ==
+        ChapterStatus.COMPLETED;
+    return isSelected && !isCompleted
         ? CtaButtonL1(
             text: '퀴즈 확인하기',
             onPressed: () {
@@ -357,6 +369,6 @@ class _ReadingChallengeStartScreenState
 
   goToQuizScreen() {
     context.push(
-        '/reading-challenge/${widget.challengeId}/quiz/${_selectedChapterId!}/check');
+        '/reading-challenge/${widget.challengeId}/quiz/${_selectedChapterId!}/wrap');
   }
 }

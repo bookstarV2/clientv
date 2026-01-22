@@ -25,6 +25,9 @@ class $AssetsEnvGen {
 class $AssetsFontsGen {
   const $AssetsFontsGen();
 
+  /// File path: assets/fonts/Akira Expanded Demo.otf
+  String get akiraExpandedDemo => 'assets/fonts/Akira Expanded Demo.otf';
+
   /// File path: assets/fonts/BookkMyungjo_Bold.ttf
   String get bookkMyungjoBold => 'assets/fonts/BookkMyungjo_Bold.ttf';
 
@@ -57,6 +60,7 @@ class $AssetsFontsGen {
 
   /// List of all assets
   List<String> get values => [
+    akiraExpandedDemo,
     bookkMyungjoBold,
     pretendardBlack,
     pretendardBold,
@@ -522,6 +526,25 @@ class $AssetsImagesGen {
   AssetGenImage get heroLookUp3x =>
       const AssetGenImage('assets/images/hero_look_up@3x.png');
 
+  /// File path: assets/images/ic_quiz_check.png
+  AssetGenImage get icQuizCheck =>
+      const AssetGenImage('assets/images/ic_quiz_check.png');
+
+  /// File path: assets/images/ic_reading_challenge_challenge_time.png
+  AssetGenImage get icReadingChallengeChallengeTime => const AssetGenImage(
+    'assets/images/ic_reading_challenge_challenge_time.png',
+  );
+
+  /// File path: assets/images/ic_reading_challenge_collect_quiz.png
+  AssetGenImage get icReadingChallengeCollectQuiz => const AssetGenImage(
+    'assets/images/ic_reading_challenge_collect_quiz.png',
+  );
+
+  /// File path: assets/images/ic_reading_challenge_reading_speed.png
+  AssetGenImage get icReadingChallengeReadingSpeed => const AssetGenImage(
+    'assets/images/ic_reading_challenge_reading_speed.png',
+  );
+
   /// File path: assets/images/ic_search_colored@3x.png
   AssetGenImage get icSearchColored3x =>
       const AssetGenImage('assets/images/ic_search_colored@3x.png');
@@ -601,6 +624,10 @@ class $AssetsImagesGen {
     heroBookPick3x,
     heroLookForward3x,
     heroLookUp3x,
+    icQuizCheck,
+    icReadingChallengeChallengeTime,
+    icReadingChallengeCollectQuiz,
+    icReadingChallengeReadingSpeed,
     icSearchColored3x,
     icSearchUncolored3x,
     navBookLogSelected3x,

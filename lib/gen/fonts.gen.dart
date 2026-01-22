@@ -10,6 +10,9 @@
 class FontFamily {
   FontFamily._();
 
+  /// Font family: AkiraExpandedDemo
+  static const String akiraExpandedDemo = 'AkiraExpandedDemo';
+
   /// Font family: Pretendard
   static const String pretendard = 'Pretendard';
 }
