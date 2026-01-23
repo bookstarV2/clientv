@@ -100,12 +100,13 @@ class _ReadingChallengeCompleteDialogState
                         SizedBox(
                           height: 27 + appBarHeight,
                         ),
-                        // Text("그저 하루치의 낙담",
                         Text(data.detail.bookTitle,
+                            style: AppTexts.b8.copyWith(color: ColorName.g2)),
+                        SizedBox(height: 6),
+                        Text("모든 목차 완독!",
                             style: AppTexts.b1.copyWith(color: ColorName.w1)),
-                        Text(
-                            "${data.detail.bookAuthor}・${data.detail.bookPublisher}",
-                            style: AppTexts.b10.copyWith(color: ColorName.g2)),
+                        Text("챌린지 성공을 축하드려요",
+                            style: AppTexts.b1.copyWith(color: ColorName.w1)),
                       ],
                     ),
                     Column(
