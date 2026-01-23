@@ -18,12 +18,12 @@ class _ReadingChallengeRepository implements ReadingChallengeRepository {
   final ParseErrorLogger? errorLogger;
 
   @override
-  Future<ResponseForm<List<ChallengeResponse>>> getOngoingChallenges() async {
+  Future<ResponseForm<OngoingDetailResponse>> getOngoingChallenges() async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<ResponseForm<List<ChallengeResponse>>>(
+    final _options = _setStreamType<ResponseForm<OngoingDetailResponse>>(
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
@@ -34,17 +34,11 @@ class _ReadingChallengeRepository implements ReadingChallengeRepository {
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late ResponseForm<List<ChallengeResponse>> _value;
+    late ResponseForm<OngoingDetailResponse> _value;
     try {
-      _value = ResponseForm<List<ChallengeResponse>>.fromJson(
+      _value = ResponseForm<OngoingDetailResponse>.fromJson(
         _result.data!,
-        (json) => json is List<dynamic>
-            ? json
-                .map<ChallengeResponse>(
-                  (i) => ChallengeResponse.fromJson(i as Map<String, dynamic>),
-                )
-                .toList()
-            : List.empty(),
+        (json) => OngoingDetailResponse.fromJson(json as Map<String, dynamic>),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
@@ -81,6 +75,37 @@ class _ReadingChallengeRepository implements ReadingChallengeRepository {
                 )
                 .toList()
             : List.empty(),
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<ResponseForm<CompletedDetailResponse>> getCompletedChallenges() async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<ResponseForm<CompletedDetailResponse>>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/api/v3/challenges/completed',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late ResponseForm<CompletedDetailResponse> _value;
+    try {
+      _value = ResponseForm<CompletedDetailResponse>.fromJson(
+        _result.data!,
+        (json) =>
+            CompletedDetailResponse.fromJson(json as Map<String, dynamic>),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
@@ -444,42 +469,6 @@ class _ReadingChallengeRepository implements ReadingChallengeRepository {
         _result.data!,
         (json) =>
             ChallengeProgressResponse.fromJson(json as Map<String, dynamic>),
-      );
-    } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
-      rethrow;
-    }
-    return _value;
-  }
-
-  @override
-  Future<ResponseForm<List<ChallengeResponse>>> getCompletedChallenges() async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<ResponseForm<List<ChallengeResponse>>>(
-      Options(method: 'GET', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/api/v2/reading-challenges/completed',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late ResponseForm<List<ChallengeResponse>> _value;
-    try {
-      _value = ResponseForm<List<ChallengeResponse>>.fromJson(
-        _result.data!,
-        (json) => json is List<dynamic>
-            ? json
-                .map<ChallengeResponse>(
-                  (i) => ChallengeResponse.fromJson(i as Map<String, dynamic>),
-                )
-                .toList()
-            : List.empty(),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);

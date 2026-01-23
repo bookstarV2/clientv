@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
-part of 'ongoing_challenge_view_model.dart';
+part of 'completed_challenge_view_model.dart';
 
 // **************************************************************************
 // FreezedGenerator
@@ -13,31 +13,28 @@ part of 'ongoing_challenge_view_model.dart';
 T _$identity<T>(T value) => value;
 
 /// @nodoc
-mixin _$OngoingChallengeScreenState {
+mixin _$CompletedChallengeScreenState {
   List<ChallengeResponse> get challenges;
-  int get ongoingCount;
   int get completedCount;
   bool get isSelectionMode;
   Set<int> get selectedChallengeIds;
 
-  /// Create a copy of OngoingChallengeScreenState
+  /// Create a copy of CompletedChallengeScreenState
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   @pragma('vm:prefer-inline')
-  $OngoingChallengeScreenStateCopyWith<OngoingChallengeScreenState>
-      get copyWith => _$OngoingChallengeScreenStateCopyWithImpl<
-              OngoingChallengeScreenState>(
-          this as OngoingChallengeScreenState, _$identity);
+  $CompletedChallengeScreenStateCopyWith<CompletedChallengeScreenState>
+      get copyWith => _$CompletedChallengeScreenStateCopyWithImpl<
+              CompletedChallengeScreenState>(
+          this as CompletedChallengeScreenState, _$identity);
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is OngoingChallengeScreenState &&
+            other is CompletedChallengeScreenState &&
             const DeepCollectionEquality()
                 .equals(other.challenges, challenges) &&
-            (identical(other.ongoingCount, ongoingCount) ||
-                other.ongoingCount == ongoingCount) &&
             (identical(other.completedCount, completedCount) ||
                 other.completedCount == completedCount) &&
             (identical(other.isSelectionMode, isSelectionMode) ||
@@ -50,47 +47,44 @@ mixin _$OngoingChallengeScreenState {
   int get hashCode => Object.hash(
       runtimeType,
       const DeepCollectionEquality().hash(challenges),
-      ongoingCount,
       completedCount,
       isSelectionMode,
       const DeepCollectionEquality().hash(selectedChallengeIds));
 
   @override
   String toString() {
-    return 'OngoingChallengeScreenState(challenges: $challenges, ongoingCount: $ongoingCount, completedCount: $completedCount, isSelectionMode: $isSelectionMode, selectedChallengeIds: $selectedChallengeIds)';
+    return 'CompletedChallengeScreenState(challenges: $challenges, completedCount: $completedCount, isSelectionMode: $isSelectionMode, selectedChallengeIds: $selectedChallengeIds)';
   }
 }
 
 /// @nodoc
-abstract mixin class $OngoingChallengeScreenStateCopyWith<$Res> {
-  factory $OngoingChallengeScreenStateCopyWith(
-          OngoingChallengeScreenState value,
-          $Res Function(OngoingChallengeScreenState) _then) =
-      _$OngoingChallengeScreenStateCopyWithImpl;
+abstract mixin class $CompletedChallengeScreenStateCopyWith<$Res> {
+  factory $CompletedChallengeScreenStateCopyWith(
+          CompletedChallengeScreenState value,
+          $Res Function(CompletedChallengeScreenState) _then) =
+      _$CompletedChallengeScreenStateCopyWithImpl;
   @useResult
   $Res call(
       {List<ChallengeResponse> challenges,
-      int ongoingCount,
       int completedCount,
       bool isSelectionMode,
       Set<int> selectedChallengeIds});
 }
 
 /// @nodoc
-class _$OngoingChallengeScreenStateCopyWithImpl<$Res>
-    implements $OngoingChallengeScreenStateCopyWith<$Res> {
-  _$OngoingChallengeScreenStateCopyWithImpl(this._self, this._then);
+class _$CompletedChallengeScreenStateCopyWithImpl<$Res>
+    implements $CompletedChallengeScreenStateCopyWith<$Res> {
+  _$CompletedChallengeScreenStateCopyWithImpl(this._self, this._then);
 
-  final OngoingChallengeScreenState _self;
-  final $Res Function(OngoingChallengeScreenState) _then;
+  final CompletedChallengeScreenState _self;
+  final $Res Function(CompletedChallengeScreenState) _then;
 
-  /// Create a copy of OngoingChallengeScreenState
+  /// Create a copy of CompletedChallengeScreenState
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
     Object? challenges = null,
-    Object? ongoingCount = null,
     Object? completedCount = null,
     Object? isSelectionMode = null,
     Object? selectedChallengeIds = null,
@@ -100,10 +94,6 @@ class _$OngoingChallengeScreenStateCopyWithImpl<$Res>
           ? _self.challenges
           : challenges // ignore: cast_nullable_to_non_nullable
               as List<ChallengeResponse>,
-      ongoingCount: null == ongoingCount
-          ? _self.ongoingCount
-          : ongoingCount // ignore: cast_nullable_to_non_nullable
-              as int,
       completedCount: null == completedCount
           ? _self.completedCount
           : completedCount // ignore: cast_nullable_to_non_nullable
@@ -120,8 +110,9 @@ class _$OngoingChallengeScreenStateCopyWithImpl<$Res>
   }
 }
 
-/// Adds pattern-matching-related methods to [OngoingChallengeScreenState].
-extension OngoingChallengeScreenStatePatterns on OngoingChallengeScreenState {
+/// Adds pattern-matching-related methods to [CompletedChallengeScreenState].
+extension CompletedChallengeScreenStatePatterns
+    on CompletedChallengeScreenState {
   /// A variant of `map` that fallback to returning `orElse`.
   ///
   /// It is equivalent to doing:
@@ -136,12 +127,12 @@ extension OngoingChallengeScreenStatePatterns on OngoingChallengeScreenState {
 
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>(
-    TResult Function(_OngoingChallengeScreenState value)? $default, {
+    TResult Function(_CompletedChallengeScreenState value)? $default, {
     required TResult orElse(),
   }) {
     final _that = this;
     switch (_that) {
-      case _OngoingChallengeScreenState() when $default != null:
+      case _CompletedChallengeScreenState() when $default != null:
         return $default(_that);
       case _:
         return orElse();
@@ -163,11 +154,11 @@ extension OngoingChallengeScreenStatePatterns on OngoingChallengeScreenState {
 
   @optionalTypeArgs
   TResult map<TResult extends Object?>(
-    TResult Function(_OngoingChallengeScreenState value) $default,
+    TResult Function(_CompletedChallengeScreenState value) $default,
   ) {
     final _that = this;
     switch (_that) {
-      case _OngoingChallengeScreenState():
+      case _CompletedChallengeScreenState():
         return $default(_that);
       case _:
         throw StateError('Unexpected subclass');
@@ -188,11 +179,11 @@ extension OngoingChallengeScreenStatePatterns on OngoingChallengeScreenState {
 
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>(
-    TResult? Function(_OngoingChallengeScreenState value)? $default,
+    TResult? Function(_CompletedChallengeScreenState value)? $default,
   ) {
     final _that = this;
     switch (_that) {
-      case _OngoingChallengeScreenState() when $default != null:
+      case _CompletedChallengeScreenState() when $default != null:
         return $default(_that);
       case _:
         return null;
@@ -213,24 +204,16 @@ extension OngoingChallengeScreenStatePatterns on OngoingChallengeScreenState {
 
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
-    TResult Function(
-            List<ChallengeResponse> challenges,
-            int ongoingCount,
-            int completedCount,
-            bool isSelectionMode,
-            Set<int> selectedChallengeIds)?
+    TResult Function(List<ChallengeResponse> challenges, int completedCount,
+            bool isSelectionMode, Set<int> selectedChallengeIds)?
         $default, {
     required TResult orElse(),
   }) {
     final _that = this;
     switch (_that) {
-      case _OngoingChallengeScreenState() when $default != null:
-        return $default(
-            _that.challenges,
-            _that.ongoingCount,
-            _that.completedCount,
-            _that.isSelectionMode,
-            _that.selectedChallengeIds);
+      case _CompletedChallengeScreenState() when $default != null:
+        return $default(_that.challenges, _that.completedCount,
+            _that.isSelectionMode, _that.selectedChallengeIds);
       case _:
         return orElse();
     }
@@ -251,23 +234,15 @@ extension OngoingChallengeScreenStatePatterns on OngoingChallengeScreenState {
 
   @optionalTypeArgs
   TResult when<TResult extends Object?>(
-    TResult Function(
-            List<ChallengeResponse> challenges,
-            int ongoingCount,
-            int completedCount,
-            bool isSelectionMode,
-            Set<int> selectedChallengeIds)
+    TResult Function(List<ChallengeResponse> challenges, int completedCount,
+            bool isSelectionMode, Set<int> selectedChallengeIds)
         $default,
   ) {
     final _that = this;
     switch (_that) {
-      case _OngoingChallengeScreenState():
-        return $default(
-            _that.challenges,
-            _that.ongoingCount,
-            _that.completedCount,
-            _that.isSelectionMode,
-            _that.selectedChallengeIds);
+      case _CompletedChallengeScreenState():
+        return $default(_that.challenges, _that.completedCount,
+            _that.isSelectionMode, _that.selectedChallengeIds);
       case _:
         throw StateError('Unexpected subclass');
     }
@@ -287,23 +262,15 @@ extension OngoingChallengeScreenStatePatterns on OngoingChallengeScreenState {
 
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>(
-    TResult? Function(
-            List<ChallengeResponse> challenges,
-            int ongoingCount,
-            int completedCount,
-            bool isSelectionMode,
-            Set<int> selectedChallengeIds)?
+    TResult? Function(List<ChallengeResponse> challenges, int completedCount,
+            bool isSelectionMode, Set<int> selectedChallengeIds)?
         $default,
   ) {
     final _that = this;
     switch (_that) {
-      case _OngoingChallengeScreenState() when $default != null:
-        return $default(
-            _that.challenges,
-            _that.ongoingCount,
-            _that.completedCount,
-            _that.isSelectionMode,
-            _that.selectedChallengeIds);
+      case _CompletedChallengeScreenState() when $default != null:
+        return $default(_that.challenges, _that.completedCount,
+            _that.isSelectionMode, _that.selectedChallengeIds);
       case _:
         return null;
     }
@@ -312,10 +279,9 @@ extension OngoingChallengeScreenStatePatterns on OngoingChallengeScreenState {
 
 /// @nodoc
 
-class _OngoingChallengeScreenState implements OngoingChallengeScreenState {
-  const _OngoingChallengeScreenState(
+class _CompletedChallengeScreenState implements CompletedChallengeScreenState {
+  const _CompletedChallengeScreenState(
       {final List<ChallengeResponse> challenges = const [],
-      this.ongoingCount = -1,
       this.completedCount = -1,
       this.isSelectionMode = false,
       final Set<int> selectedChallengeIds = const {}})
@@ -333,9 +299,6 @@ class _OngoingChallengeScreenState implements OngoingChallengeScreenState {
 
   @override
   @JsonKey()
-  final int ongoingCount;
-  @override
-  @JsonKey()
   final int completedCount;
   @override
   @JsonKey()
@@ -350,24 +313,22 @@ class _OngoingChallengeScreenState implements OngoingChallengeScreenState {
     return EqualUnmodifiableSetView(_selectedChallengeIds);
   }
 
-  /// Create a copy of OngoingChallengeScreenState
+  /// Create a copy of CompletedChallengeScreenState
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   @pragma('vm:prefer-inline')
-  _$OngoingChallengeScreenStateCopyWith<_OngoingChallengeScreenState>
-      get copyWith => __$OngoingChallengeScreenStateCopyWithImpl<
-          _OngoingChallengeScreenState>(this, _$identity);
+  _$CompletedChallengeScreenStateCopyWith<_CompletedChallengeScreenState>
+      get copyWith => __$CompletedChallengeScreenStateCopyWithImpl<
+          _CompletedChallengeScreenState>(this, _$identity);
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _OngoingChallengeScreenState &&
+            other is _CompletedChallengeScreenState &&
             const DeepCollectionEquality()
                 .equals(other._challenges, _challenges) &&
-            (identical(other.ongoingCount, ongoingCount) ||
-                other.ongoingCount == ongoingCount) &&
             (identical(other.completedCount, completedCount) ||
                 other.completedCount == completedCount) &&
             (identical(other.isSelectionMode, isSelectionMode) ||
@@ -380,62 +341,55 @@ class _OngoingChallengeScreenState implements OngoingChallengeScreenState {
   int get hashCode => Object.hash(
       runtimeType,
       const DeepCollectionEquality().hash(_challenges),
-      ongoingCount,
       completedCount,
       isSelectionMode,
       const DeepCollectionEquality().hash(_selectedChallengeIds));
 
   @override
   String toString() {
-    return 'OngoingChallengeScreenState(challenges: $challenges, ongoingCount: $ongoingCount, completedCount: $completedCount, isSelectionMode: $isSelectionMode, selectedChallengeIds: $selectedChallengeIds)';
+    return 'CompletedChallengeScreenState(challenges: $challenges, completedCount: $completedCount, isSelectionMode: $isSelectionMode, selectedChallengeIds: $selectedChallengeIds)';
   }
 }
 
 /// @nodoc
-abstract mixin class _$OngoingChallengeScreenStateCopyWith<$Res>
-    implements $OngoingChallengeScreenStateCopyWith<$Res> {
-  factory _$OngoingChallengeScreenStateCopyWith(
-          _OngoingChallengeScreenState value,
-          $Res Function(_OngoingChallengeScreenState) _then) =
-      __$OngoingChallengeScreenStateCopyWithImpl;
+abstract mixin class _$CompletedChallengeScreenStateCopyWith<$Res>
+    implements $CompletedChallengeScreenStateCopyWith<$Res> {
+  factory _$CompletedChallengeScreenStateCopyWith(
+          _CompletedChallengeScreenState value,
+          $Res Function(_CompletedChallengeScreenState) _then) =
+      __$CompletedChallengeScreenStateCopyWithImpl;
   @override
   @useResult
   $Res call(
       {List<ChallengeResponse> challenges,
-      int ongoingCount,
       int completedCount,
       bool isSelectionMode,
       Set<int> selectedChallengeIds});
 }
 
 /// @nodoc
-class __$OngoingChallengeScreenStateCopyWithImpl<$Res>
-    implements _$OngoingChallengeScreenStateCopyWith<$Res> {
-  __$OngoingChallengeScreenStateCopyWithImpl(this._self, this._then);
+class __$CompletedChallengeScreenStateCopyWithImpl<$Res>
+    implements _$CompletedChallengeScreenStateCopyWith<$Res> {
+  __$CompletedChallengeScreenStateCopyWithImpl(this._self, this._then);
 
-  final _OngoingChallengeScreenState _self;
-  final $Res Function(_OngoingChallengeScreenState) _then;
+  final _CompletedChallengeScreenState _self;
+  final $Res Function(_CompletedChallengeScreenState) _then;
 
-  /// Create a copy of OngoingChallengeScreenState
+  /// Create a copy of CompletedChallengeScreenState
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
   $Res call({
     Object? challenges = null,
-    Object? ongoingCount = null,
     Object? completedCount = null,
     Object? isSelectionMode = null,
     Object? selectedChallengeIds = null,
   }) {
-    return _then(_OngoingChallengeScreenState(
+    return _then(_CompletedChallengeScreenState(
       challenges: null == challenges
           ? _self._challenges
           : challenges // ignore: cast_nullable_to_non_nullable
               as List<ChallengeResponse>,
-      ongoingCount: null == ongoingCount
-          ? _self.ongoingCount
-          : ongoingCount // ignore: cast_nullable_to_non_nullable
-              as int,
       completedCount: null == completedCount
           ? _self.completedCount
           : completedCount // ignore: cast_nullable_to_non_nullable
