@@ -220,13 +220,13 @@ class _ReadingChallengeScreenState
                 Text.rich(
                   TextSpan(
                     text: "지금까지 ",
-                    style: AppTexts.b5.copyWith(color: ColorName.g2),
+                    style: AppTexts.b5.copyWith(color: ColorName.g1),
                     children: [
                       TextSpan(
                         text: "$totalCount",
                         style: AppTexts.h4.copyWith(color: ColorName.w1),
                       ),
-                      TextSpan(text: "권 읽고"),
+                      TextSpan(text: "권의 책을 읽고"),
                     ],
                   ),
                 ),
@@ -237,7 +237,7 @@ class _ReadingChallengeScreenState
                     children: [
                       TextSpan(
                         text: "권 완독했어요!",
-                        style: AppTexts.b5.copyWith(color: ColorName.g2),
+                        style: AppTexts.b5.copyWith(color: ColorName.g1),
                       ),
                     ],
                   ),

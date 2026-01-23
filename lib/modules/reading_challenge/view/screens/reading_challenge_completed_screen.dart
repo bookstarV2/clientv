@@ -122,7 +122,7 @@ class _ReadingChallengeCompletedScreenState
                 Text.rich(
                   TextSpan(
                     text: "지금까지 총 ",
-                    style: AppTexts.b5.copyWith(color: ColorName.g2),
+                    style: AppTexts.b5.copyWith(color: ColorName.g1),
                     children: [
                       TextSpan(
                         text: "$completedCount",
@@ -134,7 +134,7 @@ class _ReadingChallengeCompletedScreenState
                 ),
                 Text(
                   "챌린지에 성공했어요",
-                  style: AppTexts.b5.copyWith(color: ColorName.g2),
+                  style: AppTexts.b5.copyWith(color: ColorName.g1),
                 )
               ],
             ),
