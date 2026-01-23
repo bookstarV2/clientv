@@ -5,6 +5,7 @@ import 'package:bookstar/modules/book_log/view/screens/book_related_feed_screen.
 import 'package:bookstar/modules/book_pick/view/screens/book_pick_my_likes_screen.dart';
 import 'package:bookstar/modules/my_feed/view/screens/my_feed_feed_screen.dart';
 import 'package:bookstar/modules/my_feed/view/screens/my_feed_screen.dart';
+import 'package:bookstar/modules/reading_challenge/view/screens/reading_challenge_completed_screen.dart';
 import 'package:bookstar/modules/reading_challenge/view/screens/reading_challenge_quiz_wrap_screen.dart';
 import 'package:bookstar/modules/reading_challenge/view/screens/reading_challenge_search_new_my_likes_screen.dart';
 import 'package:bookstar/modules/reading_challenge/view/screens/reading_challenge_search_new_screen.dart';
@@ -183,6 +184,13 @@ GoRouter router(Ref ref) {
                       requiredRefresh: requiredRefresh);
                 },
                 routes: [
+                  GoRoute(
+                    path: 'completed',
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) {
+                      return ReadingChallengeCompletedScreen();
+                    },
+                  ),
                   GoRoute(
                     path: 'start/:challengeId',
                     parentNavigatorKey: rootNavigatorKey,

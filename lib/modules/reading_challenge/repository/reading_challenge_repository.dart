@@ -2,6 +2,8 @@ import 'package:bookstar/common/models/response_form.dart';
 import 'package:bookstar/infra/network/dio_client.dart';
 import 'package:bookstar/modules/reading_challenge/model/challenge_creation_response.dart';
 import 'package:bookstar/modules/reading_challenge/model/challenge_success_detail_response.dart';
+import 'package:bookstar/modules/reading_challenge/model/completed_detail_response.dart';
+import 'package:bookstar/modules/reading_challenge/model/ongoing_detail_response.dart';
 import 'package:bookstar/modules/reading_challenge/model/post_progress_request.dart';
 import 'package:bookstar/modules/reading_challenge/model/post_reading_timer_request.dart';
 import 'package:bookstar/modules/reading_challenge/model/challenge_detail_chapter_detail_response.dart';
@@ -37,10 +39,13 @@ abstract class ReadingChallengeRepository {
       _ReadingChallengeRepository;
 
   @GET('/api/v3/challenges/ongoing')
-  Future<ResponseForm<List<ChallengeResponse>>> getOngoingChallenges();
+  Future<ResponseForm<OngoingDetailResponse>> getOngoingChallenges();
 
   @GET('/api/v3/challenges/abandoned')
   Future<ResponseForm<List<ChallengeResponse>>> getAbandonedChallenges();
+
+  @GET('/api/v3/challenges/completed')
+  Future<ResponseForm<CompletedDetailResponse>> getCompletedChallenges();
 
   @DELETE('/api/v3/challenges/{challengeId}')
   Future<ResponseForm<dynamic>> deleteChallenge(
@@ -102,9 +107,6 @@ abstract class ReadingChallengeRepository {
     @Path('challengeId') int challengeId,
     @Body() ChallengeProgressRequest request,
   );
-
-  @GET('/api/v2/reading-challenges/completed')
-  Future<ResponseForm<List<ChallengeResponse>>> getCompletedChallenges();
 
   @GET('/api/v2/reading-challenges/members/{memberId}')
   Future<ResponseForm<List<ChallengeResponse>>> getChallengesByMember(

@@ -1,5 +1,6 @@
 import 'package:bookstar/common/models/response_form.dart';
 import 'package:bookstar/modules/reading_challenge/model/challenge_response.dart';
+import 'package:bookstar/modules/reading_challenge/model/ongoing_detail_response.dart';
 import 'package:bookstar/modules/reading_challenge/repository/reading_challenge_repository.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -11,6 +12,8 @@ part 'ongoing_challenge_view_model.g.dart';
 abstract class OngoingChallengeScreenState with _$OngoingChallengeScreenState {
   const factory OngoingChallengeScreenState({
     @Default([]) List<ChallengeResponse> challenges,
+    @Default(-1) int ongoingCount,
+    @Default(-1) int completedCount,
     @Default(false) bool isSelectionMode,
     @Default({}) Set<int> selectedChallengeIds,
   }) = _OngoingChallengeScreenState;
@@ -29,7 +32,10 @@ class OngoingChallengeViewModel extends _$OngoingChallengeViewModel {
   Future<OngoingChallengeScreenState> initState() async {
     final prev = state.value ?? OngoingChallengeScreenState();
     final response = await _readingChallengeRepository.getOngoingChallenges();
-    state = AsyncValue.data(prev.copyWith(challenges: response.data));
+    state = AsyncValue.data(prev.copyWith(
+        challenges: response.data.challenges,
+        ongoingCount: response.data.ongoingCount,
+        completedCount: response.data.completedCount));
     return state.value ?? OngoingChallengeScreenState();
   }
 
@@ -75,13 +81,16 @@ class OngoingChallengeViewModel extends _$OngoingChallengeViewModel {
   }
 
   Future<void> pollingUntilHasQuiz(int challengeId) async {
-    pollStream<ResponseForm<List<ChallengeResponse>>>(
+    pollStream<ResponseForm<OngoingDetailResponse>>(
       fetcher: () => _readingChallengeRepository.getOngoingChallenges(),
-      until: (response) => response.data.any((challenge) =>
+      until: (response) => response.data.challenges.any((challenge) =>
           challenge.challengeId == challengeId && challenge.hasQuiz),
       onBreak: (response) {
         final prev = state.value ?? OngoingChallengeScreenState();
-        state = AsyncValue.data(prev.copyWith(challenges: response.data));
+        state = AsyncValue.data(prev.copyWith(
+            challenges: response.data.challenges,
+            ongoingCount: response.data.ongoingCount,
+            completedCount: response.data.completedCount));
       },
     ).listen((_) {});
   }

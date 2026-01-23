@@ -103,9 +103,8 @@ class _ReadingChallengeScreenState
     return state.when(
       data: (data) {
         final items = data.challenges;
-        final totalCount = items.length;
-        final completedCount =
-            items.where((element) => element.completed).length;
+        final totalCount = data.ongoingCount;
+        final completedCount = data.completedCount;
         return SingleChildScrollView(
           controller: scrollController,
           child: RepaintBoundary(
@@ -156,12 +155,14 @@ class _ReadingChallengeScreenState
                         }
                       });
                     },
+                    onGoToCompleted: () {
+                      context.go('/reading-challenge/completed');
+                    },
                   ),
                   SizedBox(height: 35),
                   // 리스트
                   _buildListSection(
-                    items:
-                        items.where((element) => !element.completed).toList(),
+                    items: items,
                     selectedAbandonChallenges: _selectedAbandonChallenges,
                     onTapItem: (item, index) {
                       setState(() {
@@ -203,64 +204,90 @@ class _ReadingChallengeScreenState
     required Function onScreenShot,
     required Function onAbandon,
     required Function onNew,
+    required Function onGoToCompleted,
   }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: 12,
       children: [
-        Column(
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text.rich(
-              TextSpan(
-                text: "지금까지 ",
-                style: AppTexts.b5.copyWith(color: ColorName.g2),
-                children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text.rich(
                   TextSpan(
-                    text: "$totalCount",
-                    style: AppTexts.h4.copyWith(color: ColorName.w1),
-                  ),
-                  TextSpan(text: "권 읽고"),
-                ],
-              ),
-            ),
-            Text.rich(
-              TextSpan(
-                text: "$completedCount",
-                style: AppTexts.h4.copyWith(color: ColorName.w1),
-                children: [
-                  TextSpan(
-                    text: "권 완독했어요!",
+                    text: "지금까지 ",
                     style: AppTexts.b5.copyWith(color: ColorName.g2),
+                    children: [
+                      TextSpan(
+                        text: "$totalCount",
+                        style: AppTexts.h4.copyWith(color: ColorName.w1),
+                      ),
+                      TextSpan(text: "권 읽고"),
+                    ],
                   ),
-                ],
+                ),
+                Text.rich(
+                  TextSpan(
+                    text: "$completedCount",
+                    style: AppTexts.h4.copyWith(color: ColorName.w1),
+                    children: [
+                      TextSpan(
+                        text: "권 완독했어요!",
+                        style: AppTexts.b5.copyWith(color: ColorName.g2),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                /** 캡처 */
+                GestureDetector(
+                  onTap: () => onScreenShot(),
+                  child: Icon(Icons.crop_free, color: ColorName.w1),
+                ),
+                SizedBox(width: 8),
+                /** 새로운 책 읽기 */
+                GestureDetector(
+                  onTap: () => onNew(),
+                  child: Assets.icons.icPlus.svg(),
+                ),
+                SizedBox(width: 8),
+                /** 중단 */
+                GestureDetector(
+                  onTap: () => onAbandon(),
+                  child: isAbandon
+                      ? Assets.icons.icClose.svg()
+                      : Assets.icons.icAbandon.svg(),
+                ),
+              ],
+            ),
+          ],
+        ),
+        GestureDetector(
+          onTap: () => onGoToCompleted(),
+          child: Row(
+            children: [
+              Text(
+                "완독한 책 확인하기",
+                style: AppTexts.b8.copyWith(color: ColorName.g3),
               ),
-            ),
-          ],
-        ),
-        Row(
-          children: [
-            /** 캡처 */
-            GestureDetector(
-              onTap: () => onScreenShot(),
-              child: Icon(Icons.crop_free, color: ColorName.w1),
-            ),
-            SizedBox(width: 8),
-            /** 새로운 책 읽기 */
-            GestureDetector(
-              onTap: () => onNew(),
-              child: Assets.icons.icPlus.svg(),
-            ),
-            SizedBox(width: 8),
-            /** 중단 */
-            GestureDetector(
-              onTap: () => onAbandon(),
-              child: isAbandon
-                  ? Assets.icons.icClose.svg()
-                  : Assets.icons.icAbandon.svg(),
-            ),
-          ],
-        ),
+              SizedBox(
+                width: 4,
+              ),
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 12,
+                color: ColorName.g3,
+              ),
+            ],
+          ),
+        )
       ],
     );
   }
