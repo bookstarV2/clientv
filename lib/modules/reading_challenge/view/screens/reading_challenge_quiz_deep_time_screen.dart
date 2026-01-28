@@ -9,6 +9,7 @@ import 'package:bookstar/gen/colors.gen.dart';
 import 'package:bookstar/modules/reading_challenge/view_model/challenge_quiz_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bookstar/core/native_block_controller.dart';
 
 class ReadingChallengeQuizDeepTimeScreen extends ConsumerStatefulWidget {
   const ReadingChallengeQuizDeepTimeScreen({
@@ -45,16 +46,62 @@ class _ReadingChallengeQuizDeepTimeScreenState
   @override
   bool get wantKeepAlive => true;
 
+  final NativeBlockController _blockController = NativeBlockController(); // Instantiate NativeBlockController
+  bool _isPermissionGranted = false; // State for accessibility permission
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _checkPermissionStatus(); // Check permission on init
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkPermissionStatus(); // Re-check permission when app resumes
+    }
+  }
+
+  // Method to check accessibility permission status
+  Future<void> _checkPermissionStatus() async {
+    final bool granted = await _blockController.checkPermission();
+    if (mounted) {
+      setState(() {
+        _isPermissionGranted = granted;
+      });
+    }
+  }
+
+  Future<bool> _showPermissionGuideDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return CustomDialog(
+          title: '집중 모드 권한 설정 안내',
+          content: '다른 앱의 실행을 차단하고 독서에 집중하기 위해\n접근성 권한이 필요합니다.\n\n설정 화면에서 \'BookStar\'를 찾아\n권한을 허용해주세요.',
+          titleStyle: AppTexts.b7.copyWith(color: ColorName.w1),
+          contentStyle: AppTexts.b11.copyWith(color: ColorName.g2),
+          // Using a lock icon or similar as a visual cue
+          icon: Assets.icons.icDeepTimeLockClose.svg(width: 80, height: 80), 
+          onCancel: () {
+            Navigator.of(context).pop(false);
+          },
+          onConfirm: () {
+            Navigator.of(context).pop(true);
+          },
+          confirmButtonText: '설정하러 가기',
+          cancelButtonText: '취소',
+        );
+      },
+    );
+    return result ?? false;
   }
 
   @override
@@ -193,8 +240,29 @@ class _ReadingChallengeQuizDeepTimeScreenState
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: GestureDetector(
-          onTap: () {
-            toggleIsLock();
+          onTap: () async {
+            if (!_isPermissionGranted) {
+              // Show dialog to guide user before requesting permission
+              final bool shouldGoToSettings = await _showPermissionGuideDialog();
+              
+              if (shouldGoToSettings) {
+                final bool settingsOpened = await _blockController.requestPermission();
+                if (settingsOpened) {
+                  // Wait for user to possibly enable it and come back
+                  // Note: We can't know exactly when they come back, but lifecycle listener handles re-check
+                }
+              }
+              // Don't proceed to toggle lock if permission wasn't granted yet
+              return;
+            }
+
+            // If permission is granted, proceed with blocking/unblocking logic
+            if (!widget.isLock) { // If currently unlocked (false), tapping means locking (true)
+              await _blockController.startBlocking();
+            } else { // If currently locked (true), tapping means unlocking (false)
+              await _blockController.stopBlocking();
+            }
+            widget.onLockToggle(); // Call original toggle callback to update widget.isLock
           },
           child: !isLock
               ? Assets.icons.icDeepTimeLockOpen.svg()
