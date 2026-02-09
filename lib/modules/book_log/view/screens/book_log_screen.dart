@@ -86,31 +86,34 @@ class _BookLogScreenState extends BaseScreenState<BookLogScreen> {
 
   @override
   Widget? buildFloatingActionButton(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        AnalyticsService.logEvent('click_create_diary',
-            parameters: {'screen_name': 'book_log'});
-        context.push('/book-log/create');
-      },
-      child: Container(
-        width: 80,
-        height: 80,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF3A3A43),
-              Color(0xFF4F4F7F),
-            ],
-            stops: [0.3, 0.7],
+    return Align(
+      alignment: Alignment.bottomRight,
+      child: GestureDetector(
+        onTap: () {
+          AnalyticsService.logEvent('click_create_diary',
+              parameters: {'screen_name': 'book_log'});
+          context.push('/book-log/create');
+        },
+        child: Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF3A3A43),
+                Color(0xFF4F4F7F),
+              ],
+              stops: [0.3, 0.7],
+            ),
           ),
-        ),
-        child: Center(
-          child: Assets.icons.icPencil.svg(
-              width: 30,
-              colorFilter: ColorFilter.mode(ColorName.p2, BlendMode.srcIn)),
+          child: Center(
+            child: Assets.icons.icPencil.svg(
+                width: 30,
+                colorFilter: ColorFilter.mode(ColorName.p2, BlendMode.srcIn)),
+          ),
         ),
       ),
     );
