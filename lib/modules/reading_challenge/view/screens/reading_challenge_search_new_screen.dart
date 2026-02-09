@@ -113,7 +113,7 @@ class _ReadingChallengeSearchNewScreenState
                       hasNext: data.hasNext,
                       scrollController: scrollController,
                       onTapItem: (book) async {
-                        if (book.alreadyExists) {
+                        if (book.hasChallenge) {
                           OverlayUtils.showCustomToast(
                               context, '이미 진행중인 챌린지입니다.');
                         } else if (!book.hasChapter) {

@@ -20,7 +20,7 @@ mixin _$SearchBookResponse {
   String get pubDate;
   String get author;
   String get publisher;
-  bool get alreadyExists;
+  bool get hasChallenge;
   bool get hasChapter;
   bool get hasQuiz;
 
@@ -48,8 +48,8 @@ mixin _$SearchBookResponse {
             (identical(other.author, author) || other.author == author) &&
             (identical(other.publisher, publisher) ||
                 other.publisher == publisher) &&
-            (identical(other.alreadyExists, alreadyExists) ||
-                other.alreadyExists == alreadyExists) &&
+            (identical(other.hasChallenge, hasChallenge) ||
+                other.hasChallenge == hasChallenge) &&
             (identical(other.hasChapter, hasChapter) ||
                 other.hasChapter == hasChapter) &&
             (identical(other.hasQuiz, hasQuiz) || other.hasQuiz == hasQuiz));
@@ -58,11 +58,11 @@ mixin _$SearchBookResponse {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, bookId, title, bookCover,
-      pubDate, author, publisher, alreadyExists, hasChapter, hasQuiz);
+      pubDate, author, publisher, hasChallenge, hasChapter, hasQuiz);
 
   @override
   String toString() {
-    return 'SearchBookResponse(bookId: $bookId, title: $title, bookCover: $bookCover, pubDate: $pubDate, author: $author, publisher: $publisher, alreadyExists: $alreadyExists, hasChapter: $hasChapter, hasQuiz: $hasQuiz)';
+    return 'SearchBookResponse(bookId: $bookId, title: $title, bookCover: $bookCover, pubDate: $pubDate, author: $author, publisher: $publisher, hasChallenge: $hasChallenge, hasChapter: $hasChapter, hasQuiz: $hasQuiz)';
   }
 }
 
@@ -79,7 +79,7 @@ abstract mixin class $SearchBookResponseCopyWith<$Res> {
       String pubDate,
       String author,
       String publisher,
-      bool alreadyExists,
+      bool hasChallenge,
       bool hasChapter,
       bool hasQuiz});
 }
@@ -103,7 +103,7 @@ class _$SearchBookResponseCopyWithImpl<$Res>
     Object? pubDate = null,
     Object? author = null,
     Object? publisher = null,
-    Object? alreadyExists = null,
+    Object? hasChallenge = null,
     Object? hasChapter = null,
     Object? hasQuiz = null,
   }) {
@@ -132,9 +132,9 @@ class _$SearchBookResponseCopyWithImpl<$Res>
           ? _self.publisher
           : publisher // ignore: cast_nullable_to_non_nullable
               as String,
-      alreadyExists: null == alreadyExists
-          ? _self.alreadyExists
-          : alreadyExists // ignore: cast_nullable_to_non_nullable
+      hasChallenge: null == hasChallenge
+          ? _self.hasChallenge
+          : hasChallenge // ignore: cast_nullable_to_non_nullable
               as bool,
       hasChapter: null == hasChapter
           ? _self.hasChapter
@@ -248,7 +248,7 @@ extension SearchBookResponsePatterns on SearchBookResponse {
             String pubDate,
             String author,
             String publisher,
-            bool alreadyExists,
+            bool hasChallenge,
             bool hasChapter,
             bool hasQuiz)?
         $default, {
@@ -264,7 +264,7 @@ extension SearchBookResponsePatterns on SearchBookResponse {
             _that.pubDate,
             _that.author,
             _that.publisher,
-            _that.alreadyExists,
+            _that.hasChallenge,
             _that.hasChapter,
             _that.hasQuiz);
       case _:
@@ -294,7 +294,7 @@ extension SearchBookResponsePatterns on SearchBookResponse {
             String pubDate,
             String author,
             String publisher,
-            bool alreadyExists,
+            bool hasChallenge,
             bool hasChapter,
             bool hasQuiz)
         $default,
@@ -309,7 +309,7 @@ extension SearchBookResponsePatterns on SearchBookResponse {
             _that.pubDate,
             _that.author,
             _that.publisher,
-            _that.alreadyExists,
+            _that.hasChallenge,
             _that.hasChapter,
             _that.hasQuiz);
       case _:
@@ -338,7 +338,7 @@ extension SearchBookResponsePatterns on SearchBookResponse {
             String pubDate,
             String author,
             String publisher,
-            bool alreadyExists,
+            bool hasChallenge,
             bool hasChapter,
             bool hasQuiz)?
         $default,
@@ -353,7 +353,7 @@ extension SearchBookResponsePatterns on SearchBookResponse {
             _that.pubDate,
             _that.author,
             _that.publisher,
-            _that.alreadyExists,
+            _that.hasChallenge,
             _that.hasChapter,
             _that.hasQuiz);
       case _:
@@ -372,7 +372,7 @@ class _SearchBookResponse implements SearchBookResponse {
       this.pubDate = '',
       this.author = '',
       this.publisher = '',
-      this.alreadyExists = false,
+      this.hasChallenge = false,
       this.hasChapter = false,
       this.hasQuiz = false});
   factory _SearchBookResponse.fromJson(Map<String, dynamic> json) =>
@@ -398,7 +398,7 @@ class _SearchBookResponse implements SearchBookResponse {
   final String publisher;
   @override
   @JsonKey()
-  final bool alreadyExists;
+  final bool hasChallenge;
   @override
   @JsonKey()
   final bool hasChapter;
@@ -434,8 +434,8 @@ class _SearchBookResponse implements SearchBookResponse {
             (identical(other.author, author) || other.author == author) &&
             (identical(other.publisher, publisher) ||
                 other.publisher == publisher) &&
-            (identical(other.alreadyExists, alreadyExists) ||
-                other.alreadyExists == alreadyExists) &&
+            (identical(other.hasChallenge, hasChallenge) ||
+                other.hasChallenge == hasChallenge) &&
             (identical(other.hasChapter, hasChapter) ||
                 other.hasChapter == hasChapter) &&
             (identical(other.hasQuiz, hasQuiz) || other.hasQuiz == hasQuiz));
@@ -444,11 +444,11 @@ class _SearchBookResponse implements SearchBookResponse {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, bookId, title, bookCover,
-      pubDate, author, publisher, alreadyExists, hasChapter, hasQuiz);
+      pubDate, author, publisher, hasChallenge, hasChapter, hasQuiz);
 
   @override
   String toString() {
-    return 'SearchBookResponse(bookId: $bookId, title: $title, bookCover: $bookCover, pubDate: $pubDate, author: $author, publisher: $publisher, alreadyExists: $alreadyExists, hasChapter: $hasChapter, hasQuiz: $hasQuiz)';
+    return 'SearchBookResponse(bookId: $bookId, title: $title, bookCover: $bookCover, pubDate: $pubDate, author: $author, publisher: $publisher, hasChallenge: $hasChallenge, hasChapter: $hasChapter, hasQuiz: $hasQuiz)';
   }
 }
 
@@ -467,7 +467,7 @@ abstract mixin class _$SearchBookResponseCopyWith<$Res>
       String pubDate,
       String author,
       String publisher,
-      bool alreadyExists,
+      bool hasChallenge,
       bool hasChapter,
       bool hasQuiz});
 }
@@ -491,7 +491,7 @@ class __$SearchBookResponseCopyWithImpl<$Res>
     Object? pubDate = null,
     Object? author = null,
     Object? publisher = null,
-    Object? alreadyExists = null,
+    Object? hasChallenge = null,
     Object? hasChapter = null,
     Object? hasQuiz = null,
   }) {
@@ -520,9 +520,9 @@ class __$SearchBookResponseCopyWithImpl<$Res>
           ? _self.publisher
           : publisher // ignore: cast_nullable_to_non_nullable
               as String,
-      alreadyExists: null == alreadyExists
-          ? _self.alreadyExists
-          : alreadyExists // ignore: cast_nullable_to_non_nullable
+      hasChallenge: null == hasChallenge
+          ? _self.hasChallenge
+          : hasChallenge // ignore: cast_nullable_to_non_nullable
               as bool,
       hasChapter: null == hasChapter
           ? _self.hasChapter

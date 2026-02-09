@@ -102,14 +102,14 @@ class _ReadingChallengeSearchNewMyLikesScreenState
                   pubDate: likeBook.pubDate,
                   author: likeBook.author,
                   publisher: likeBook.publisher,
-                  alreadyExists: likeBook.alreadyExists,
+                  hasChallenge: likeBook.hasChallenge,
                   hasChapter: likeBook.hasChapter,
                   hasQuiz: likeBook.hasQuiz,
                 );
                 return BookSearchResultCard(
                     book: book,
                     onTap: () async {
-                      if (book.alreadyExists) {
+                      if (book.hasChallenge) {
                         OverlayUtils.showCustomToast(
                             context, '이미 진행중인 챌린지입니다.');
                       } else if (!book.hasChapter) {

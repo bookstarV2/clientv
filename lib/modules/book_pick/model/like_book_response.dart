@@ -12,7 +12,7 @@ abstract class LikeBookResponse with _$LikeBookResponse {
     @Default('') String pubDate,
     @Default('') String author,
     @Default('') String publisher,
-    @Default(false) bool alreadyExists,
+    @Default(false) bool hasChallenge,
     @Default(false) bool hasChapter,
     @Default(false) bool hasQuiz,
   }) = _LikeBookResponse;
