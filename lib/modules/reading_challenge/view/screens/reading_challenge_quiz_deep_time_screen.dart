@@ -65,6 +65,7 @@ class _ReadingChallengeQuizDeepTimeScreenState
     final screenHeight = MediaQuery.of(context).size.height;
 
     return SingleChildScrollView(
+      physics: const NeverScrollableScrollPhysics(),
       child: ConstrainedBox(
         constraints: BoxConstraints(
           minHeight: screenHeight -
@@ -84,66 +85,64 @@ class _ReadingChallengeQuizDeepTimeScreenState
               stops: [0.0, 0.5, 1.0],
             ),
           ),
-          child: Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(height: 16),
-                _buildDeepTimeLock(
-                    isLock: widget.isLock,
-                    toggleIsLock: () async {
-                      widget.onLockToggle();
-                    }),
-                SizedBox(height: 16),
-                Align(
-                  alignment: Alignment.center,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildTimer(
-                        screenSize: screenSize,
-                        controller: widget.controller,
-                      ),
-                      SizedBox(height: 38),
-                      _buildButtons(
-                        controller: widget.controller,
-                        onStart: () {
-                          widget.onStartTap();
-                        },
-                        onPause: () {
-                          widget.onPauseTap();
-                        },
-                        onResume: () {
-                          widget.onResumeTap();
-                        },
-                        onStop: () {
-                          widget.onStopTap();
-                        },
-                      ),
-                      SizedBox(height: 23),
-                      // 시간 표시
-                      ValueListenableBuilder<String>(
-                        valueListenable: widget.controller.currentTime,
-                        builder: (context, timeString, child) {
-                          final parts = timeString.split(':');
-                          final displayTime =
-                              '${parts[1]}:${parts[2]}'; // MM:SS 형식
-                          return Text(
-                            displayTime,
-                            style: TextStyle(
-                                fontSize: 50,
-                                color: ColorName.p1,
-                                fontWeight: FontWeight.w900,
-                                fontFamily: 'AkiraExpandedDemo'),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(height: 16),
+              _buildDeepTimeLock(
+                  isLock: widget.isLock,
+                  toggleIsLock: () async {
+                    widget.onLockToggle();
+                  }),
+              SizedBox(height: 16),
+              Align(
+                alignment: Alignment.center,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildTimer(
+                      screenSize: screenSize,
+                      controller: widget.controller,
+                    ),
+                    SizedBox(height: 38),
+                    _buildButtons(
+                      controller: widget.controller,
+                      onStart: () {
+                        widget.onStartTap();
+                      },
+                      onPause: () {
+                        widget.onPauseTap();
+                      },
+                      onResume: () {
+                        widget.onResumeTap();
+                      },
+                      onStop: () {
+                        widget.onStopTap();
+                      },
+                    ),
+                    SizedBox(height: 23),
+                    // 시간 표시
+                    ValueListenableBuilder<String>(
+                      valueListenable: widget.controller.currentTime,
+                      builder: (context, timeString, child) {
+                        final parts = timeString.split(':');
+                        final displayTime =
+                            '${parts[1]}:${parts[2]}'; // MM:SS 형식
+                        return Text(
+                          displayTime,
+                          style: TextStyle(
+                              fontSize: 50,
+                              color: ColorName.p1,
+                              fontWeight: FontWeight.w900,
+                              fontFamily: 'AkiraExpandedDemo'),
+                        );
+                      },
+                    ),
+                  ],
                 ),
-                SizedBox(height: 60),
-              ],
-            ),
+              ),
+              SizedBox(height: 60),
+            ],
           ),
         ),
       ),
