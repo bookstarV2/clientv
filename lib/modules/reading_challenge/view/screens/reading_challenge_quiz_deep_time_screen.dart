@@ -2,11 +2,9 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:bookstar/common/components/button/cta_button_s.dart';
-import 'package:bookstar/common/components/dialog/custom_dialog.dart';
 import 'package:bookstar/common/theme/style/app_texts.dart';
 import 'package:bookstar/gen/assets.gen.dart';
 import 'package:bookstar/gen/colors.gen.dart';
-import 'package:bookstar/modules/reading_challenge/view_model/challenge_quiz_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -86,102 +84,70 @@ class _ReadingChallengeQuizDeepTimeScreenState
               stops: [0.0, 0.5, 1.0],
             ),
           ),
-          child: Column(
-            children: [
-              SizedBox(height: 16),
-              _buildDeepTimeLock(
-                  isLock: widget.isLock,
-                  toggleIsLock: () async {
-                    widget.onLockToggle();
-                  }),
-              SizedBox(height: 16),
-              _buildTimer(
-                screenSize: screenSize,
-                controller: widget.controller,
-              ),
-              SizedBox(height: 38),
-              _buildButtons(
-                controller: widget.controller,
-                onStart: () {
-                  widget.onStartTap();
-                },
-                onPause: () {
-                  widget.onPauseTap();
-                },
-                onResume: () {
-                  widget.onResumeTap();
-                },
-                onStop: () {
-                  // widget.onStopTap();
-                  showGoToQuizScreen();
-                },
-              ),
-              SizedBox(height: 23),
-              // 시간 표시
-              ValueListenableBuilder<String>(
-                valueListenable: widget.controller.currentTime,
-                builder: (context, timeString, child) {
-                  final parts = timeString.split(':');
-                  final displayTime = '${parts[1]}:${parts[2]}'; // MM:SS 형식
-                  return Text(
-                    displayTime,
-                    style: TextStyle(
-                        fontSize: 50,
-                        color: ColorName.p1,
-                        fontWeight: FontWeight.w900,
-                        fontFamily: 'AkiraExpandedDemo'),
-                  );
-                },
-              ),
-              SizedBox(height: 60),
-            ],
+          child: Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(height: 16),
+                _buildDeepTimeLock(
+                    isLock: widget.isLock,
+                    toggleIsLock: () async {
+                      widget.onLockToggle();
+                    }),
+                SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.center,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildTimer(
+                        screenSize: screenSize,
+                        controller: widget.controller,
+                      ),
+                      SizedBox(height: 38),
+                      _buildButtons(
+                        controller: widget.controller,
+                        onStart: () {
+                          widget.onStartTap();
+                        },
+                        onPause: () {
+                          widget.onPauseTap();
+                        },
+                        onResume: () {
+                          widget.onResumeTap();
+                        },
+                        onStop: () {
+                          widget.onStopTap();
+                        },
+                      ),
+                      SizedBox(height: 23),
+                      // 시간 표시
+                      ValueListenableBuilder<String>(
+                        valueListenable: widget.controller.currentTime,
+                        builder: (context, timeString, child) {
+                          final parts = timeString.split(':');
+                          final displayTime =
+                              '${parts[1]}:${parts[2]}'; // MM:SS 형식
+                          return Text(
+                            displayTime,
+                            style: TextStyle(
+                                fontSize: 50,
+                                color: ColorName.p1,
+                                fontWeight: FontWeight.w900,
+                                fontFamily: 'AkiraExpandedDemo'),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 60),
+              ],
+            ),
           ),
         ),
       ),
     );
-  }
-
-  showGoToQuizScreen() async {
-    // 독립 화면으로 사용될 때의 기존 로직
-    final result = await showDialog(
-        context: context,
-        builder: (context) {
-          return CustomDialog(
-            title: '퀴즈를 풀러 가시겠습니까?',
-            content: '선택한 챕터를 다 읽으셨다면, 퀴즈 풀러가기를 눌러주세요!',
-            titleStyle: AppTexts.b7.copyWith(color: ColorName.w1),
-            contentStyle: AppTexts.b11.copyWith(color: ColorName.g2),
-            icon: Assets.icons.icDeepTimeGoToQuiz.svg(width: 100, height: 100),
-            onCancel: () {
-              Navigator.of(context).pop(false);
-            },
-            onConfirm: () {
-              Navigator.of(context).pop(true);
-            },
-            confirmButtonText: '퀴즈 풀러가기',
-            cancelButtonText: '취소',
-          );
-        });
-    if (result != null && result) {
-      final notifier =
-          ref.read(challengeQuizViewModelProvider(widget.chapterId).notifier);
-      final parts = widget.controller.currentTime.value.split(':');
-      final minutes = int.parse(parts[1]);
-      final seconds = int.parse(parts[2]);
-      final totalSeconds = minutes * 60 + seconds;
-      await notifier.postReadingTimers(
-        challengeId: widget.challengeId,
-        totalSeconds: totalSeconds,
-      );
-      await notifier.postProgress(
-        challengeId: widget.challengeId,
-        chapterId: widget.chapterId,
-      );
-
-      if (mounted) {
-        widget.onStopTap();
-      }
-    }
   }
 
   Widget _buildDeepTimeLock({

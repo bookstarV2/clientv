@@ -1,6 +1,8 @@
 import 'package:bookstar/common/components/base_screen.dart';
+import 'package:bookstar/common/components/dialog/custom_dialog.dart';
 import 'package:bookstar/common/service/analytics_service.dart';
 import 'package:bookstar/common/theme/style/app_texts.dart';
+import 'package:bookstar/gen/assets.gen.dart';
 import 'package:bookstar/gen/colors.gen.dart';
 import 'package:bookstar/modules/reading_challenge/view/screens/reading_challenge_quiz_check_screen.dart';
 import 'package:bookstar/modules/reading_challenge/view/screens/reading_challenge_quiz_deep_time_screen.dart';
@@ -9,6 +11,7 @@ import 'package:bookstar/modules/reading_challenge/view/widgets/report_quiz_erro
 import 'package:bookstar/modules/reading_challenge/view/widgets/report_quiz_error_success_dialog.dart';
 import 'package:bookstar/modules/reading_challenge/view_model/challenge_quiz_view_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 class ReadingChallengeWrapQuizScreen extends BaseScreen {
@@ -29,6 +32,7 @@ class _ReadingChallengeWrapQuizScreenState
   late TabController _tabController;
   bool _showQuizTab = false;
   bool _isLock = false;
+  bool _hasQuizScreen = false;
   final CustomCountDownController _timerController =
       CustomCountDownController();
 
@@ -56,6 +60,48 @@ class _ReadingChallengeWrapQuizScreenState
     return !_isLock;
   }
 
+  Future<bool> _postTimer() async {
+    // 독립 화면으로 사용될 때의 기존 로직
+    final result = await showDialog(
+        context: context,
+        builder: (context) {
+          return CustomDialog(
+            title: '퀴즈를 풀러 가시겠습니까?',
+            content: '선택한 챕터를 다 읽으셨다면, 퀴즈 풀러가기를 눌러주세요!',
+            titleStyle: AppTexts.b7.copyWith(color: ColorName.w1),
+            contentStyle: AppTexts.b11.copyWith(color: ColorName.g2),
+            icon: Assets.icons.icDeepTimeGoToQuiz.svg(width: 100, height: 100),
+            onCancel: () {
+              Navigator.of(context).pop(false);
+            },
+            onConfirm: () {
+              Navigator.of(context).pop(true);
+            },
+            confirmButtonText: '퀴즈 풀러가기',
+            cancelButtonText: '취소',
+          );
+        });
+    if (result != null && result) {
+      final notifier =
+          ref.read(challengeQuizViewModelProvider(widget.chapterId).notifier);
+      final parts = _timerController.currentTime.value.split(':');
+      final minutes = int.parse(parts[1]);
+      final seconds = int.parse(parts[2]);
+      final totalSeconds = minutes * 60 + seconds;
+      await notifier.postReadingTimers(
+        challengeId: widget.challengeId,
+        totalSeconds: totalSeconds,
+      );
+      await notifier.postProgress(
+        challengeId: widget.challengeId,
+        chapterId: widget.chapterId,
+      );
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   void _onShowQuizTab() {
     if (!_showQuizTab) {
       setState(() {
@@ -65,6 +111,9 @@ class _ReadingChallengeWrapQuizScreenState
       _tabController.dispose();
       _tabController = TabController(length: 3, vsync: this);
       _tabController.index = currentIndex;
+      setState(() {
+        _hasQuizScreen = true;
+      });
     }
   }
 
@@ -113,81 +162,100 @@ class _ReadingChallengeWrapQuizScreenState
 
   @override
   Widget buildBody(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            children: [
-              SizedBox(height: 23),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    final state = ref.watch(challengeQuizViewModelProvider(widget.chapterId));
+
+    return state.when(
+      data: (data) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
                 children: [
-                  _buildCustomTabBar(
-                    tabController: _tabController,
-                  ),
-                  GestureDetector(
-                    onTap: () => _onTapQuizError(),
-                    child: Text("오류 신고하기",
-                        style: AppTexts.b8.copyWith(color: ColorName.g3)),
+                  SizedBox(height: 23),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildCustomTabBar(
+                        tabController: _tabController,
+                      ),
+                      GestureDetector(
+                        onTap: () => _onTapQuizError(),
+                        child: Text("오류 신고하기",
+                            style: AppTexts.b8.copyWith(color: ColorName.g3)),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: TabBarView(
-            key: ValueKey(_showQuizTab),
-            controller: _tabController,
-            children: [
-              // 퀴즈확인 탭
-              ReadingChallengeQuizCheckScreen(
-                  chapterId: widget.chapterId,
-                  challengeId: widget.challengeId,
-                  onButtonTap: () {
-                    _tabController.animateTo(1);
-                  }),
-              // 딥타이머 탭
-              ReadingChallengeQuizDeepTimeScreen(
-                  chapterId: widget.chapterId,
-                  challengeId: widget.challengeId,
-                  isLock: _isLock,
-                  controller: _timerController,
-                  onStartTap: () {
-                    // WidgetsBinding.instance.addPostFrameCallback((_) {
-                    _timerController.start();
-                    // });
-                  },
-                  onPauseTap: () {
-                    _timerController.pause();
-                    setState(() {});
-                  },
-                  onResumeTap: () {
-                    _timerController.resume();
-                    setState(() {});
-                  },
-                  onStopTap: () {
-                    _onShowQuizTab();
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      _tabController.animateTo(2);
-                    });
-                  },
-                  onLockToggle: () {
-                    setState(() {
-                      _isLock = !_isLock;
-                    });
-                  }),
-              // 퀴즈 풀기 탭
-              if (_showQuizTab)
-                ReadingChallengeQuizScreen(
-                    chapterId: widget.chapterId,
-                    challengeId: widget.challengeId),
-            ],
-          ),
-        ),
-      ],
+            ),
+            Expanded(
+              child: TabBarView(
+                key: ValueKey(_showQuizTab),
+                controller: _tabController,
+                children: [
+                  // 퀴즈확인 탭
+                  ReadingChallengeQuizCheckScreen(
+                      question: data.chapter.question,
+                      choices: data.chapter.choices,
+                      onButtonTap: () {
+                        _tabController.animateTo(1);
+                      }),
+                  // 딥타이머 탭
+                  ReadingChallengeQuizDeepTimeScreen(
+                      chapterId: widget.chapterId,
+                      challengeId: widget.challengeId,
+                      isLock: _isLock,
+                      controller: _timerController,
+                      onStartTap: () {
+                        // WidgetsBinding.instance.addPostFrameCallback((_) {
+                        _timerController.start();
+                        // });
+                      },
+                      onPauseTap: () {
+                        _timerController.pause();
+                        setState(() {});
+                      },
+                      onResumeTap: () {
+                        _timerController.resume();
+                        setState(() {});
+                      },
+                      onStopTap: () async {
+                        if (!_hasQuizScreen) {
+                          final isPost = await _postTimer();
+                          if (isPost) {
+                            _onShowQuizTab();
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              _tabController.animateTo(2);
+                            });
+                          }
+                        } else {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            _tabController.animateTo(2);
+                          });
+                        }
+                      },
+                      onLockToggle: () {
+                        setState(() {
+                          _isLock = !_isLock;
+                        });
+                      }),
+                  // 퀴즈 풀기 탭
+                  if (_showQuizTab)
+                    ReadingChallengeQuizScreen(
+                        chapterId: widget.chapterId,
+                        challengeId: widget.challengeId,
+                        choiceResults: data.choiceResults,
+                        chapter: data.chapter),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+      loading: loading,
+      error: error("리딩 챌린지 퀴즈 정보 취득 중 오류가 발생했습니다."),
     );
   }
 

@@ -114,7 +114,7 @@ class _MyFeedScreenState extends BaseScreenState<MyFeedScreen> {
                     ),
                     Text(
                       introduction,
-                      style: AppTexts.b11.copyWith(color: ColorName.g1),
+                      style: AppTexts.b8.copyWith(color: ColorName.g1),
                       softWrap: true,
                       overflow: TextOverflow.ellipsis,
                       maxLines: 4,

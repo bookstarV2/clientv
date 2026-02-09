@@ -4,6 +4,7 @@ import 'package:bookstar/common/theme/style/app_texts.dart';
 import 'package:bookstar/gen/assets.gen.dart';
 import 'package:bookstar/gen/colors.gen.dart';
 import 'package:bookstar/modules/reading_challenge/model/challenge_detail_chapter.dart';
+import 'package:bookstar/modules/reading_challenge/model/challenge_detail_chapter_detail.dart';
 import 'package:bookstar/modules/reading_challenge/model/choice_result.dart';
 import 'package:bookstar/modules/reading_challenge/model/quiz_choice.dart';
 import 'package:bookstar/modules/reading_challenge/view/widgets/reading_challenge_complete_dialog.dart';
@@ -14,16 +15,19 @@ import 'package:bookstar/modules/reading_data/view_model/reading_data_view_model
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 class ReadingChallengeQuizScreen extends BaseScreen {
   const ReadingChallengeQuizScreen({
     super.key,
+    required this.chapter,
+    required this.choiceResults,
     required this.chapterId,
     required this.challengeId,
     this.showAppBar = true,
   });
 
+  final ChallengeDetailChapterDetail chapter;
+  final List<ChoiceResult>? choiceResults;
   final int chapterId;
   final int challengeId;
   final bool showAppBar;
@@ -53,51 +57,44 @@ class _ReadingChallengeQuizScreenState
 
   @override
   Widget buildBody(BuildContext context) {
-    final state = ref.watch(challengeQuizViewModelProvider(widget.chapterId));
-    return state.when(
-      data: (data) {
-        return data.choiceResults == null
-            ? _buildQuizPage(
-                scrollController: scrollController,
-                question: data.chapter.question,
-                choices: data.chapter.choices,
-                changeChoiceId: (choiceId) {
-                  setState(() {
-                    _selectedChoiceId = choiceId;
-                  });
-                },
-                selectedChoiceId: _selectedChoiceId,
-              )
-            : _buildQuizResultPage(
-                scrollController: scrollController,
-                question: data.chapter.question,
-                choices: data.chapter.choices,
-                selectedChoiceId: _selectedChoiceId,
-                choiceResults: data.choiceResults!,
-                iconTurnList: _iconTurnsList,
-                animationList: _animationList,
-                isTappedQuestion: _isTappedQuestion,
-                onQuestionTap: () {
-                  setState(() {
-                    _isTappedQuestion = true;
-                  });
-                },
-                onArrowTap: (index) {
-                  setState(() {
-                    _isExpandedList[index] = !_isExpandedList[index];
-                  });
+    return widget.choiceResults == null
+        ? _buildQuizPage(
+            scrollController: scrollController,
+            question: widget.chapter.question,
+            choices: widget.chapter.choices,
+            changeChoiceId: (choiceId) {
+              setState(() {
+                _selectedChoiceId = choiceId;
+              });
+            },
+            selectedChoiceId: _selectedChoiceId,
+          )
+        : _buildQuizResultPage(
+            scrollController: scrollController,
+            question: widget.chapter.question,
+            choices: widget.chapter.choices,
+            selectedChoiceId: _selectedChoiceId,
+            choiceResults: widget.choiceResults!,
+            iconTurnList: _iconTurnsList,
+            animationList: _animationList,
+            isTappedQuestion: _isTappedQuestion,
+            onQuestionTap: () {
+              setState(() {
+                _isTappedQuestion = true;
+              });
+            },
+            onArrowTap: (index) {
+              setState(() {
+                _isExpandedList[index] = !_isExpandedList[index];
+              });
 
-                  if (_isExpandedList[index]) {
-                    _animationControllerList[index].forward();
-                  } else {
-                    _animationControllerList[index].reverse();
-                  }
-                },
-              );
-      },
-      loading: loading,
-      error: error("리딩 챌린지 퀴즈 정보 취득 중 오류가 발생했습니다. ${widget.chapterId}"),
-    );
+              if (_isExpandedList[index]) {
+                _animationControllerList[index].forward();
+              } else {
+                _animationControllerList[index].reverse();
+              }
+            },
+          );
   }
 
   Widget _buildQuizPage({

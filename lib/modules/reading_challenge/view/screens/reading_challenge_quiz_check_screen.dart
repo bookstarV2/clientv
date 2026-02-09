@@ -4,20 +4,18 @@ import 'package:bookstar/common/theme/style/app_texts.dart';
 import 'package:bookstar/gen/assets.gen.dart';
 import 'package:bookstar/gen/colors.gen.dart';
 import 'package:bookstar/modules/reading_challenge/model/quiz_choice.dart';
-import 'package:bookstar/modules/reading_challenge/view_model/challenge_quiz_view_model.dart';
 import 'package:flutter/material.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 class ReadingChallengeQuizCheckScreen extends BaseScreen {
   const ReadingChallengeQuizCheckScreen({
     super.key,
-    required this.chapterId,
-    required this.challengeId,
+    required this.question,
+    required this.choices,
     required this.onButtonTap,
   });
 
-  final int chapterId;
-  final int challengeId;
+  final String question;
+  final List<QuizChoice> choices;
   final VoidCallback onButtonTap;
 
   @override
@@ -29,16 +27,9 @@ class _ReadingChallengeQuizCheckScreenState
     extends BaseScreenState<ReadingChallengeQuizCheckScreen> {
   @override
   Widget buildBody(BuildContext context) {
-    final state = ref.watch(challengeQuizViewModelProvider(widget.chapterId));
-    return state.when(
-      data: (data) {
-        return _buildQuizPage(
-          question: data.chapter.question,
-          choices: data.chapter.choices,
-        );
-      },
-      loading: loading,
-      error: error("리딩 챌린지 퀴즈 정보 취득 중 오류가 발생했습니다. ${widget.chapterId}"),
+    return _buildQuizPage(
+      question: widget.question,
+      choices: widget.choices,
     );
   }
 

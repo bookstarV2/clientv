@@ -121,11 +121,13 @@ class _ReadingChallengeSearchNewScreenState
                               context, '이 책은 목차가 없습니다.');
                         } else {
                           if (!book.hasQuiz) {
-                            final result = await showDialog(
-                                context: context,
-                                builder: (_) {
-                                  return ReadingChallengeHasQuizDialog();
-                                });
+                            final result = await Navigator.push<bool>(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ReadingChallengeHasQuizDialog(),
+                                fullscreenDialog: true,
+                              ),
+                            );
                             if (result != null && result) {
                               // 챌린지가 존재하지 않으면 다음 화면으로 이동
                               final challengeId =

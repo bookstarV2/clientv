@@ -158,9 +158,11 @@ class _ReadingChallengeCompletedScreenState
   }) {
     return Flexible(
       child: CustomListView(
-          emptyIcon: Assets.icons.icBookpickSearchCharacter.svg(),
-          emptyText: '읽던 책이 없네요!',
-          emptyTextStyle: AppTexts.b8.copyWith(color: ColorName.w1),
+          emptyIcon: Assets.icons.icBooktalkSearchCharacter.svg(),
+          emptyText: '완독한 책이 없어요',
+          emptyTextStyle: AppTexts.b3.copyWith(color: ColorName.w1),
+          emptyDescription: '완독한 책이 생기면 이곳에서 확인할 수 있어요',
+          emptyDescriptionStyle: AppTexts.b8.copyWith(color: ColorName.g2),
           isEmpty: items.isEmpty,
           disableScroll: true,
           itemCount: items.length,

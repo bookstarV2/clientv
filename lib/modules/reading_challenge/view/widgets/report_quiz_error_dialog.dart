@@ -91,7 +91,7 @@ class _ReportQuizErrorDialogState extends ConsumerState<ReportQuizErrorDialog>
     AnalyticsService.logEvent('click_report_quiz_error', parameters: {
       'screen_name': "report_quiz_error",
       "quiz_id": widget.quizId,
-      "error_type": _selectedValue!,
+      "error_type": _selectedValue!.toString(),
     });
 
     await ref.read(readingChallengeRepositoryProvider).reportQuizError(
