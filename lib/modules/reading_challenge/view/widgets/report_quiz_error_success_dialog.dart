@@ -34,11 +34,13 @@ class ReportQuizErrorSuccessDialog extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 40),
               child: Center(child: Assets.icons.icPointShopChar2.svg()),
             ),
-            CtaButtonL1(
-              text: '닫기',
-              onPressed: () {
-                context.pop();
-              },
+            Center(
+              child: CtaButtonL1(
+                text: '닫기',
+                onPressed: () {
+                  context.pop();
+                },
+              ),
             ),
             SizedBox(
               height: 16,

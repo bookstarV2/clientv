@@ -185,7 +185,7 @@ GoRouter router(Ref ref) {
                 },
                 routes: [
                   GoRoute(
-                    path: 'completed',
+                    path: '/completed',
                     parentNavigatorKey: rootNavigatorKey,
                     builder: (context, state) {
                       return ReadingChallengeCompletedScreen();
