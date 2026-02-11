@@ -73,3 +73,11 @@ ios/Keys.xcconfig
 
 .claude/**
 docs/**
+
+# Android keystore files
+key.properties
+**/*.jks
+**/*.keystore
+
+# Coverage
+coverage/
