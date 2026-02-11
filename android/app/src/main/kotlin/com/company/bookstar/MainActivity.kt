@@ -12,20 +12,20 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
     // Channel name as requested
-    private val CHANNEL = "com.example.blocker/control"
+    private val CHANNEL = "com.company.bookstar/control"
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "startBlock" -> {
-                    val prefs = getSharedPreferences("FocusModePrefs", Context.MODE_PRIVATE)
-                    prefs.edit().putBoolean("is_active", true).apply()
+                    val prefs = getSharedPreferences(FocusAccessibilityService.PREFS_NAME, Context.MODE_PRIVATE)
+                    prefs.edit().putBoolean(FocusAccessibilityService.KEY_IS_ACTIVE, true).apply()
                     result.success(true)
                 }
                 "stopBlock" -> {
-                    val prefs = getSharedPreferences("FocusModePrefs", Context.MODE_PRIVATE)
-                    prefs.edit().putBoolean("is_active", false).apply()
+                    val prefs = getSharedPreferences(FocusAccessibilityService.PREFS_NAME, Context.MODE_PRIVATE)
+                    prefs.edit().putBoolean(FocusAccessibilityService.KEY_IS_ACTIVE, false).apply()
                     result.success(true)
                 }
                 "requestPermission" -> {

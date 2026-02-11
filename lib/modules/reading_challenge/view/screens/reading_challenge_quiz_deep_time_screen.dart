@@ -138,9 +138,7 @@ class _ReadingChallengeQuizDeepTimeScreenState
               SizedBox(height: 16),
               _buildDeepTimeLock(
                   isLock: widget.isLock,
-                  toggleIsLock: () async {
-                    widget.onLockToggle();
-                  }),
+              ),
               SizedBox(height: 16),
               _buildTimer(
                 screenSize: screenSize,
@@ -233,7 +231,6 @@ class _ReadingChallengeQuizDeepTimeScreenState
 
   Widget _buildDeepTimeLock({
     required bool isLock,
-    required Function() toggleIsLock,
   }) {
     return Align(
       alignment: Alignment.centerRight,

@@ -1,15 +1,16 @@
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 
 class NativeBlockController {
-  static const MethodChannel _channel = MethodChannel('com.example.blocker/control');
+  static const MethodChannel _channel = MethodChannel('com.company.bookstar/control');
 
   /// 네이티브에 차단 모드 시작을 요청합니다.
   Future<void> startBlocking() async {
     try {
       await _channel.invokeMethod('startBlock');
-      print('Blocking started on native side.');
+      debugPrint('Blocking started on native side.');
     } on PlatformException catch (e) {
-      print("Failed to start blocking: '${e.message}'.");
+      debugPrint("Failed to start blocking: '${e.message}'.");
     }
   }
 
@@ -17,9 +18,9 @@ class NativeBlockController {
   Future<void> stopBlocking() async {
     try {
       await _channel.invokeMethod('stopBlock');
-      print('Blocking stopped on native side.');
+      debugPrint('Blocking stopped on native side.');
     } on PlatformException catch (e) {
-      print("Failed to stop blocking: '${e.message}'.");
+      debugPrint("Failed to stop blocking: '${e.message}'.");
     }
   }
 
@@ -28,10 +29,10 @@ class NativeBlockController {
   Future<bool> requestPermission() async {
     try {
       final bool? result = await _channel.invokeMethod('requestPermission');
-      print('Permission request sent to native side. Result: $result');
+      debugPrint('Permission request sent to native side. Result: $result');
       return result ?? false; // true if settings were opened, false if already enabled
     } on PlatformException catch (e) {
-      print("Failed to request permission: '${e.message}'.");
+      debugPrint("Failed to request permission: '${e.message}'.");
       return false;
     }
   }
@@ -41,10 +42,10 @@ class NativeBlockController {
   Future<bool> checkPermission() async {
     try {
       final bool? result = await _channel.invokeMethod('checkPermission');
-      print('Permission check result from native side: $result');
+      debugPrint('Permission check result from native side: $result');
       return result ?? false;
     } on PlatformException catch (e) {
-      print("Failed to check permission: '${e.message}'.");
+      debugPrint("Failed to check permission: '${e.message}'.");
       return false;
     }
   }

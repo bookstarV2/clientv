@@ -11,8 +11,8 @@ class FocusAccessibilityService : AccessibilityService() {
 
     companion object {
         private const val TAG = "FocusAccessibility"
-        private const val PREFS_NAME = "FocusModePrefs"
-        private const val KEY_IS_ACTIVE = "is_active"
+        const val PREFS_NAME = "FocusModePrefs"
+        const val KEY_IS_ACTIVE = "is_active"
         // Whitelisted packages: Our app + Keyboards
         private val WHITELISTED_PACKAGES = setOf(
             "com.company.bookstar",
