@@ -56,8 +56,9 @@ class NativeBlockController {
     if (Platform.isIOS) {
       try {
         await _channel.invokeMethod('selectAppsToBlock');
+        debugPrint('App selector opened on native side.');
       } on PlatformException catch (e) {
-        print("Failed to open app selector: '${e.message}'.");
+        debugPrint("Failed to open app selector: '${e.message}'.");
       }
     }
   }
