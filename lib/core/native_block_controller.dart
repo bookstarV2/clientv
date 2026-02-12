@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 
@@ -47,6 +48,18 @@ class NativeBlockController {
     } on PlatformException catch (e) {
       debugPrint("Failed to check permission: '${e.message}'.");
       return false;
+    }
+  }
+
+  /// iOS 전용: 차단할 앱 선택 피커 열기
+  Future<void> selectAppsToBlock() async {
+    if (Platform.isIOS) {
+      try {
+        await _channel.invokeMethod('selectAppsToBlock');
+        debugPrint('App selector opened on native side.');
+      } on PlatformException catch (e) {
+        debugPrint("Failed to open app selector: '${e.message}'.");
+      }
     }
   }
 }
