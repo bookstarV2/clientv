@@ -50,11 +50,11 @@ import '../../modules/reading_challenge/view/screens/my_diary_feeds_screen.dart'
 
 part 'router.g.dart';
 
-@riverpod
+final rootNavigatorKey = GlobalKey<NavigatorState>();
+
+ @riverpod
 GoRouter router(Ref ref) {
-  final rootNavigatorKey = GlobalKey<NavigatorState>();
-  final authState = ValueNotifier<AsyncValue<AuthState>>(const AsyncLoading());
-  final analytics = FirebaseAnalytics.instance;
+  final authState = ValueNotifier<AsyncValue<AuthState>>(const AsyncLoading());  final analytics = FirebaseAnalytics.instance;
 
   ref
     ..onDispose(authState.dispose)
