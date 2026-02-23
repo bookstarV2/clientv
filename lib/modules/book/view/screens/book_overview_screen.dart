@@ -1,3 +1,4 @@
+import 'package:bookstar/common/components/base_screen.dart';
 import 'package:bookstar/common/components/grid/async_Image_grid_view.dart';
 import 'package:bookstar/common/theme/app_style.dart';
 import 'package:bookstar/gen/assets.gen.dart';
@@ -15,7 +16,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../view_model/book_view_model.dart';
 
-class BookOverviewScreen extends ConsumerStatefulWidget {
+class BookOverviewScreen extends BaseScreen {
   const BookOverviewScreen({
     super.key,
     required this.bookId,
@@ -24,48 +25,19 @@ class BookOverviewScreen extends ConsumerStatefulWidget {
   final int bookId;
 
   @override
-  ConsumerState<BookOverviewScreen> createState() => _BookOverviewScreenState();
+  BaseScreenState<BookOverviewScreen> createState() =>
+      _BookOverviewScreenState();
 }
 
-class _BookOverviewScreenState extends ConsumerState<BookOverviewScreen> {
-  final ScrollController _scrollController = ScrollController();
-  bool _isLoadingMore = false;
-  DateTime? _lastBottomReachedTime;
+class _BookOverviewScreenState extends BaseScreenState<BookOverviewScreen> {
+  @override
+  bool enableRefreshIndicator() => false;
 
   @override
-  void initState() {
-    super.initState();
-    _setupScrollListener();
-  }
-
-  void _setupScrollListener() {
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels >=
-              _scrollController.position.maxScrollExtent * 0.8 &&
-          !_isLoadingMore) {
-        _onBottomReached();
-      }
-    });
-  }
-
-  Future<void> _onBottomReached() async {
-    final now = DateTime.now();
-    // 디바운싱: 마지막 호출로부터 2초가 지나지 않았으면 무시
-    if (_lastBottomReachedTime != null &&
-        now.difference(_lastBottomReachedTime!).inSeconds < 2) {
-      return;
-    }
-    // 이미 로딩 중이면 무시
-    if (_isLoadingMore) {
-      return;
-    }
-    _lastBottomReachedTime = now;
-    _isLoadingMore = true;
-    // 실제 로딩 로직 실행
+  void onBottomReached() async {
     await ref
         .read(relatedDiariesViewModelProvider(widget.bookId).notifier)
         .refreshState();
-    _isLoadingMore = false;
   }
 
   Future<void> _updateStar(double rating) async {
@@ -90,24 +62,17 @@ class _BookOverviewScreenState extends ConsumerState<BookOverviewScreen> {
   }
 
   @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget buildBody(BuildContext context) {
     final bookAsync = ref.watch(bookViewModelProvider(widget.bookId));
     final currentStar = bookAsync.valueOrNull?.overview.star ?? 0;
     final relatedDiariesAsync =
         ref.watch(relatedDiariesViewModelProvider(widget.bookId));
 
-    return Scaffold(
-        body: bookAsync.when(
+    return bookAsync.when(
       data: (bookOverview) => relatedDiariesAsync.when(
         data: (relatedDiaries) {
           return CustomScrollView(
-            controller: _scrollController,
+            controller: scrollController,
             slivers: [
               SliverAppBar(
                 pinned: true,
@@ -171,12 +136,12 @@ class _BookOverviewScreenState extends ConsumerState<BookOverviewScreen> {
             ],
           );
         },
-        loading: _loading,
-        error: _error("관련 게시물 정보를 불러올 수 없습니다."),
+        loading: loading,
+        error: error("관련 게시물 정보를 불러올 수 없습니다."),
       ),
-      loading: _loading,
-      error: _error("북 상세 정보를 불러올 수 없습니다."),
-    ));
+      loading: loading,
+      error: error("북 상세 정보를 불러올 수 없습니다."),
+    );
   }
 
   List<Widget> _buildBackgroundImage(String imageUrl) {
@@ -210,18 +175,18 @@ class _BookOverviewScreenState extends ConsumerState<BookOverviewScreen> {
         child: Column(mainAxisAlignment: MainAxisAlignment.start, children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   ConstrainedBox(
                     constraints: BoxConstraints(
-                        maxWidth: MediaQuery.of(context).size.width * 0.6),
+                        maxWidth: MediaQuery.of(context).size.width * 0.5),
                     child: Text(
                       book.title,
                       style: AppTexts.h3.copyWith(color: ColorName.w1),
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -238,17 +203,25 @@ class _BookOverviewScreenState extends ConsumerState<BookOverviewScreen> {
                 ],
               ),
               Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                spacing: 4,
                 children: [
-                  InkWell(
+                  GestureDetector(
                       onTap: () => onAladin(book.aladinUrl),
-                      child: Assets.icons.aladin.svg(width: 24, height: 24)),
-                  const SizedBox(width: 8),
-                  InkWell(
-                      onTap: onLike,
-                      child: book.liked
-                          ? Assets.icons.icHeartFilled
-                              .svg(width: 24, height: 24)
-                          : Assets.icons.icHeart.svg(width: 24, height: 24)),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Assets.icons.aladin.svg(width: 24, height: 24),
+                      )),
+                  GestureDetector(
+                      onTap: () => onLike(),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: book.liked
+                            ? Assets.icons.icHeartFilled
+                                .svg(width: 24, height: 24)
+                            : Assets.icons.icHeart.svg(width: 24, height: 24),
+                      )),
                 ],
               )
             ],
@@ -417,8 +390,4 @@ class _BookOverviewScreenState extends ConsumerState<BookOverviewScreen> {
           ],
         ),
       );
-
-  Widget _loading() => const Center(child: CircularProgressIndicator());
-  Widget Function(Object, StackTrace) _error(String msg) => (e, st) =>
-      Center(child: Text(msg, style: TextStyle(color: ColorName.g3)));
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:bookstar/common/components/base_screen.dart';
@@ -20,7 +21,7 @@ class SelectedImage {
   });
 }
 
-const int PAGE_SIZE = 100;
+const int PAGE_SIZE = 30;
 const int MAX_COUNT = 10;
 
 class SelectImageDialog extends BaseScreen {
@@ -42,6 +43,8 @@ class _SelectImageDialogState extends BaseScreenState<SelectImageDialog> {
   int _currentPage = 0;
   List<AssetEntity> _images = [];
   List<SelectedImage> _selectedImages = [];
+  Timer? _scrollDebounce;
+  bool _isTapProcessing = false;
 
   @override
   void initState() {
@@ -68,7 +71,7 @@ class _SelectImageDialogState extends BaseScreenState<SelectImageDialog> {
             return GalleryPermissionRequestDialog();
           });
 
-      if (response["result"]) {
+      if (response != null && response["result"]) {
         // 퍼미션이 거부된 경우의 처리
         await PhotoManager.openSetting();
       } else {
@@ -97,47 +100,67 @@ class _SelectImageDialogState extends BaseScreenState<SelectImageDialog> {
   }
 
   @override
-  void onScrollDown(double offset) async {
-    setState(() {
-      _currentPage++;
-    });
-    List<AssetEntity> images = await _albums[_selectedAlbumIndex]
-        .getAssetListPaged(page: _currentPage, size: PAGE_SIZE);
-    setState(() {
-      _images.addAll(images);
+  void dispose() {
+    _scrollDebounce?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void onScrollDown(double offset) {
+    if (_scrollDebounce?.isActive ?? false) return;
+    _scrollDebounce = Timer(const Duration(milliseconds: 300), () async {
+      setState(() {
+        _currentPage++;
+      });
+      List<AssetEntity> images = await _albums[_selectedAlbumIndex]
+          .getAssetListPaged(page: _currentPage, size: PAGE_SIZE);
+      setState(() {
+        _images.addAll(images);
+      });
     });
   }
 
   Future<void> _onTapImage(AssetEntity image, bool isSelected) async {
-    AnalyticsService.logEvent('click_select_image', parameters: {
-      'screen_name': 'select_image_dialog',
-      'image_id': image.id,
-      'is_selected': (!isSelected).toString()
+    if (_isTapProcessing) return;
+    setState(() {
+      _isTapProcessing = true;
     });
-    if (isSelected) {
-      setState(() {
-        _selectedImages.removeWhere((x) => x.id == image.id);
+
+    try {
+      AnalyticsService.logEvent('click_select_image', parameters: {
+        'screen_name': 'select_image_dialog',
+        'image_id': image.id,
+        'is_selected': (!isSelected).toString()
       });
-    } else {
-      final thumbnailData = await image.thumbnailData;
-      final originBytes = await image.originBytes;
-      if (thumbnailData == null || originBytes == null) {
-        return;
+      if (isSelected) {
+        setState(() {
+          _selectedImages.removeWhere((x) => x.id == image.id);
+        });
+      } else {
+        final thumbnailData = await image.thumbnailData;
+        final originBytes = await image.originBytes;
+        if (thumbnailData == null || originBytes == null) {
+          return;
+        }
+        if (_selectedImages.length >= widget.maxCount) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("최대 ${widget.maxCount}장까지만 선택할 수 있습니다.")),
+          );
+          return;
+        }
+        setState(() {
+          _selectedImages.add(
+            SelectedImage(
+              thumbnailData: thumbnailData,
+              originBytes: originBytes,
+              id: image.id,
+            ),
+          );
+        });
       }
-      if (_selectedImages.length >= widget.maxCount) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("최대 ${widget.maxCount}장까지만 선택할 수 있습니다.")),
-        );
-        return;
-      }
+    } finally {
       setState(() {
-        _selectedImages.add(
-          SelectedImage(
-            thumbnailData: thumbnailData,
-            originBytes: originBytes,
-            id: image.id,
-          ),
-        );
+        _isTapProcessing = false;
       });
     }
   }

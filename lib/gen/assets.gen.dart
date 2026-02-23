@@ -396,6 +396,10 @@ class $AssetsIconsGen {
   SvgGenImage get icScrapFilled =>
       const SvgGenImage('assets/icons/ic_scrap_filled.svg');
 
+  /// File path: assets/icons/ic_search_empty_character.svg
+  SvgGenImage get icSearchEmptyCharacter =>
+      const SvgGenImage('assets/icons/ic_search_empty_character.svg');
+
   /// File path: assets/icons/ic_star.svg
   SvgGenImage get icStar => const SvgGenImage('assets/icons/ic_star.svg');
 
@@ -502,6 +506,7 @@ class $AssetsIconsGen {
     icReadingDataSolvedCount,
     icScrap,
     icScrapFilled,
+    icSearchEmptyCharacter,
     icStar,
     icStar01,
     icStar4Filled,

@@ -420,23 +420,44 @@ GoRouter router(Ref ref) {
                     parentNavigatorKey: rootNavigatorKey,
                     builder: (context, state) => const MyPageScreen(),
                     routes: [
+                      /// 회원 정보
                       GoRoute(
-                        path: 'challenge-quit-books',
+                        path: 'login-info',
                         parentNavigatorKey: rootNavigatorKey,
-                        builder: (context, state) =>
-                            const ChallengeQuitBooksScreen(),
-                      ),
-                      GoRoute(
-                        path: 'customer-support',
-                        parentNavigatorKey: rootNavigatorKey,
-                        builder: (context, state) =>
-                            const CustomerSupportScreen(),
+                        builder: (context, state) => const LoginInfoScreen(),
                       ),
                       GoRoute(
                         path: 'delete-account',
                         parentNavigatorKey: rootNavigatorKey,
                         builder: (context, state) =>
                             const DeleteAccountScreen(),
+                      ),
+
+                      /// 활동 정보
+                      GoRoute(
+                        path: 'customer-support',
+                        parentNavigatorKey: rootNavigatorKey,
+                        builder: (context, state) =>
+                            const CustomerSupportScreen(),
+                      ),
+
+                      /// 활동 내역
+                      GoRoute(
+                        path: 'liked-diaries',
+                        parentNavigatorKey: rootNavigatorKey,
+                        builder: (context, state) => const LikedDiariesScreen(),
+                        routes: [
+                          GoRoute(
+                            path: 'feed',
+                            parentNavigatorKey: rootNavigatorKey,
+                            builder: (context, state) {
+                              final extra =
+                                  state.extra as Map<String, dynamic>?;
+                              final index = extra?['index'] as int? ?? 0;
+                              return LikedDiaryFeedScreen(initialIndex: index);
+                            },
+                          ),
+                        ],
                       ),
                       GoRoute(
                         path: 'scrapped-diaries',
@@ -464,26 +485,10 @@ GoRouter router(Ref ref) {
                             const FollowerManagementScreen(),
                       ),
                       GoRoute(
-                        path: 'liked-diaries',
+                        path: 'challenge-quit-books',
                         parentNavigatorKey: rootNavigatorKey,
-                        builder: (context, state) => const LikedDiariesScreen(),
-                        routes: [
-                          GoRoute(
-                            path: 'feed',
-                            parentNavigatorKey: rootNavigatorKey,
-                            builder: (context, state) {
-                              final extra =
-                                  state.extra as Map<String, dynamic>?;
-                              final index = extra?['index'] as int? ?? 0;
-                              return LikedDiaryFeedScreen(initialIndex: index);
-                            },
-                          ),
-                        ],
-                      ),
-                      GoRoute(
-                        path: 'login-info',
-                        parentNavigatorKey: rootNavigatorKey,
-                        builder: (context, state) => const LoginInfoScreen(),
+                        builder: (context, state) =>
+                            const ChallengeQuitBooksScreen(),
                       ),
                     ],
                   ),

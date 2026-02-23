@@ -10,6 +10,7 @@ import 'package:bookstar/modules/reading_diary/model/user_search_history_respons
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../gen/colors.gen.dart';
@@ -178,7 +179,10 @@ class _BookLogSearchScreenState extends ConsumerState<BookLogSearchScreen> {
       required Function(SearchUserResponse) onTapUser}) {
     return CustomListView(
       emptyIcon: Assets.icons.icBookpickSearchCharacter.svg(),
-      emptyText: '검색 결과가 없습니다.',
+      emptyText: '검색 결과가 없어요',
+      emptyTextStyle: AppTexts.b3.copyWith(color: ColorName.w1),
+      emptyDescription: '유저의 닉네임을 다시 확인해 보세요',
+      emptyDescriptionStyle: AppTexts.b6.copyWith(color: ColorName.g2),
       isEmpty: users.isEmpty,
       itemCount: users.length,
       itemBuilder: (context, index) {
@@ -229,12 +233,13 @@ class _BookLogSearchScreenState extends ConsumerState<BookLogSearchScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text("최근 검색", style: AppTexts.b10.copyWith(color: ColorName.g1)),
+        Text("최근 검색", style: AppTexts.b8.copyWith(color: ColorName.g1)),
         SizedBox(height: 20),
         Flexible(
           child: CustomListView(
-            emptyIcon: Assets.icons.icBookpickSearchCharacter.svg(),
-            emptyText: '검색 기록이 없습니다.',
+            emptyIcon:
+                SvgPicture.string('<svg xmlns="http://www.w3.org/2000/svg"/>'),
+            emptyText: '',
             isEmpty: history.isEmpty,
             itemCount: history.length,
             itemBuilder: (context, index) {
