@@ -9,6 +9,9 @@ class CustomGridView extends StatelessWidget {
     super.key,
     required this.emptyIcon,
     required this.emptyText,
+    this.emptyTextStyle,
+    this.emptyDescription,
+    this.emptyDescriptionStyle,
     required this.isEmpty,
     required this.itemCount,
     required this.itemBuilder,
@@ -25,6 +28,9 @@ class CustomGridView extends StatelessWidget {
 
   final SvgPicture emptyIcon;
   final String emptyText;
+  final TextStyle? emptyTextStyle;
+  final String? emptyDescription;
+  final TextStyle? emptyDescriptionStyle;
   final bool isEmpty;
   final int itemCount;
   final Widget? Function(BuildContext, int) itemBuilder;
@@ -52,8 +58,15 @@ class CustomGridView extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   emptyText,
-                  style: AppTexts.b8.copyWith(color: ColorName.g3),
+                  style: emptyTextStyle ??
+                      AppTexts.b8.copyWith(color: ColorName.g3),
                 ),
+                if (emptyDescription != null)
+                  Text(
+                    emptyDescription!,
+                    style: emptyDescriptionStyle ??
+                        AppTexts.b8.copyWith(color: ColorName.g3),
+                  ),
               ],
             ),
           )

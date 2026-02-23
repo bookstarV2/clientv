@@ -7,11 +7,11 @@ part of 'abandoned_challenges_view_model.dart';
 // **************************************************************************
 
 String _$abandonedChallengesViewModelHash() =>
-    r'6d19979aff36bad7dc9d5d7b58ee2ef91a1d890d';
+    r'43421b826a00e95e94234cdefd69290afabeba62';
 
 /// See also [AbandonedChallengesViewModel].
 @ProviderFor(AbandonedChallengesViewModel)
-final abandonedChallengesViewModelProvider = AutoDisposeNotifierProvider<
+final abandonedChallengesViewModelProvider = AutoDisposeAsyncNotifierProvider<
     AbandonedChallengesViewModel, AbandonedChallengesState>.internal(
   AbandonedChallengesViewModel.new,
   name: r'abandonedChallengesViewModelProvider',
@@ -23,6 +23,6 @@ final abandonedChallengesViewModelProvider = AutoDisposeNotifierProvider<
 );
 
 typedef _$AbandonedChallengesViewModel
-    = AutoDisposeNotifier<AbandonedChallengesState>;
+    = AutoDisposeAsyncNotifier<AbandonedChallengesState>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

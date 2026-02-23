@@ -1,4 +1,5 @@
 import 'package:bookstar/common/components/base_screen.dart';
+import 'package:bookstar/common/models/image_request.dart';
 import 'package:bookstar/modules/auth/view_model/auth_view_model.dart';
 import 'package:bookstar/modules/book_log/view/widgets/book_log_feed_list.dart';
 import 'package:bookstar/modules/book_log/view/widgets/diary_feed_comment_dialog.dart';
@@ -6,6 +7,7 @@ import 'package:bookstar/modules/book_log/view/widgets/diary_feed_delete_dialog.
 import 'package:bookstar/modules/book_log/view/widgets/report_dialog.dart';
 import 'package:bookstar/modules/book_log/view/widgets/report_success_dialog.dart';
 import 'package:bookstar/modules/follow/view_model/follow_info_view_model.dart';
+import 'package:bookstar/modules/reading_diary/model/diary_update_request.dart';
 import 'package:bookstar/modules/reading_diary/view_model/related_diaries_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -166,17 +168,19 @@ class _BookRelatedFeedScreenState
                     targetFeed.diaryId, targetFeed.scraped, targetIndex);
               },
               onUpdate: (int targetIndex) {
-                // final targetFeed = bookLog.feeds[targetIndex];
-                // context.push('/book-log/${targetFeed.diaryId}/update',
-                //     extra: {
-                //       "memberId": targetFeed.memberId,
-                //       "request": DiaryUpdateRequest(
-                //           content: targetFeed.content,
-                //           images: targetFeed.images
-                //               .map((e) => ImageRequest(
-                //                   imageUrl: e.imageUrl, sequence: e.sequence))
-                //               .toList())
-                //     });
+                final targetFeed = bookLog.feeds[targetIndex];
+                context.push('/book-log/update/${targetFeed.diaryId}', extra: {
+                  "memberId": targetFeed.memberId,
+                  "request": DiaryUpdateRequest(
+                    bookId: targetFeed.bookId,
+                    content: targetFeed.content,
+                    images: targetFeed.images
+                        .map((e) => ImageRequest(
+                            imageUrl: e.imageUrl, sequence: e.sequence))
+                        .toList(),
+                    privacy: targetFeed.privacy,
+                  )
+                });
               },
             ),
             error: _error("팔로우 정보를 불러올 수 없습니다."),

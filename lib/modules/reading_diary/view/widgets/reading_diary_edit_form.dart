@@ -541,10 +541,15 @@ class _ReadingDiaryEditFormState extends BaseScreenState<ReadingDiaryEditForm> {
               Expanded(
                 child: Row(
                   children: [
-                    Assets.icons.icBookSearch.svg(),
+                    Assets.icons.icBookSearch.svg(
+                      colorFilter: ColorFilter.mode(
+                          !privacy ? ColorName.g3 : ColorName.w1,
+                          BlendMode.srcIn),
+                    ),
                     SizedBox(width: 8),
                     Text("나만 보기",
-                        style: AppTexts.b7.copyWith(color: ColorName.g3)),
+                        style: AppTexts.b7.copyWith(
+                            color: !privacy ? ColorName.g3 : ColorName.w1)),
                   ],
                 ),
               ),
