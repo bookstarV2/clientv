@@ -98,6 +98,12 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
+        <!-- Ably 리시버가 FCM을 가로채서 ANR을 일으키는 문제를 방지하기 위해 제거 -->
+        <receiver
+            android:name="io.ably.flutter.plugin.push.FirebaseMessagingReceiver"
+            android:exported="false"
+            tools:node="remove" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

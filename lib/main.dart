@@ -1,4 +1,6 @@
-import 'package:bookstar/firebase_options.dart';
+import 'core/notification_service.dart';
+import 'firebase_options.dart';
+import 'package:firebase_messaging/firebase_messaging.dart'; // 추가
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/services.dart';
@@ -8,7 +10,6 @@ import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 
 import 'common/router/router.dart';
 import 'common/theme/app_theme.dart';
-import 'core/notification_service.dart';
 import 'gen/assets.gen.dart';
 
 void main() async {
@@ -16,8 +17,8 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   await dotenv.load(fileName: Assets.env.aEnv);
-
   KakaoSdk.init(
     nativeAppKey: dotenv.env['KAKAO_NATIVE_KEY'],
   );
@@ -25,18 +26,15 @@ void main() async {
   final fontLoader = FontLoader('BookkMyungjo');
   fontLoader.addFont(rootBundle.load(Assets.fonts.bookkMyungjoBold));
   fontLoader.addFont(rootBundle.load(Assets.fonts.akiraExpandedDemo));
-  await fontLoader.load();
-
-  // await FlutterSecureStorage().deleteAll();
-
+  fontLoader.load(); 
   runApp(
     ProviderScope(
       child: Center(
         child: ConstrainedBox(
-          constraints: BoxConstraints(
+          constraints: const BoxConstraints(
             maxWidth: 480, // 스마트폰 크기 정도로 고정
           ),
-          child: MyApp(),
+          child: const MyApp(),
         ),
       ),
     ),

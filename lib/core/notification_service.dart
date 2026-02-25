@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer' as dev; // 추가
 import 'dart:io';
 import 'package:bookstar/modules/auth/view_model/auth_state.dart';
 import 'package:bookstar/modules/auth/view_model/auth_view_model.dart';
@@ -15,13 +16,12 @@ part 'notification_service.g.dart';
 
 // 백그라운드 메시지 핸들러 (최상위 레벨 함수여야 함)
 @pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // 백그라운드에서 메시지 수신 시 처리 로직
-  // Firebase.initializeApp()이 필요한 경우 여기서 호출해야 할 수도 있음
-  debugPrint("Handling a background message: ${message.messageId}");
-  debugPrint("Background message data: ${message.data}");
-  // backgroundHandler에서는 UI 업데이트나 복잡한 라우팅은 지양
-  // 필요한 경우 local notification을 띄우거나 데이터 저장
+  if (kDebugMode) {
+    dev.log("Handling a background message: ${message.messageId}", name: 'NOTIFICATION');
+    dev.log("Background message data: ${message.data}", name: 'NOTIFICATION');
+  }
 }
 
 @Riverpod(keepAlive: true)
@@ -40,25 +40,26 @@ class NotificationService {
 
   // 초기화 함수
   Future<void> initialize() async {
-    // 1. 권한 요청 (iOS)
-    NotificationSettings settings = await _firebaseMessaging.requestPermission(
+    // 1. 권한 요청 (iOS/Android 13+)
+    _firebaseMessaging.requestPermission(
       alert: true,
       badge: true,
       sound: true,
       provisional: false,
-    );
+    ).then((settings) {
+      if (kDebugMode) {
+        if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+          dev.log('User granted permission', name: 'NOTIFICATION');
+        } else if (settings.authorizationStatus == AuthorizationStatus.provisional) {
+          dev.log('User granted provisional permission', name: 'NOTIFICATION');
+        } else {
+          dev.log('User declined or has not accepted permission', name: 'NOTIFICATION');
+        }
+      }
+    });
 
-    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      debugPrint('User granted permission');
-    } else if (settings.authorizationStatus == AuthorizationStatus.provisional) {
-      debugPrint('User granted provisional permission');
-    } else {
-      debugPrint('User declined or has not accepted permission');
-      return;
-    }
-
-    // 2. 백그라운드 핸들러 등록
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    // 2. 백그라운드 핸들러 등록 (main.dart에서 등록하는 것이 권장되지만, 여기서도 중복 등록 방지하며 처리)
+    // FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
     // 3. 로컬 알림 플러그인 초기화
     const AndroidInitializationSettings initializationSettingsAndroid =
@@ -76,19 +77,23 @@ class NotificationService {
       iOS: initializationSettingsDarwin,
     );
 
-    await _flutterLocalNotificationsPlugin.initialize(
+    _flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: _onDidReceiveNotificationResponse,
     );
 
     // 4. 포그라운드 메시지 수신 리스너 등록
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      debugPrint('Got a message whilst in the foreground!');
-      debugPrint('Message data: ${message.data}');
+      if (kDebugMode) {
+        dev.log('Got a message whilst in the foreground!', name: 'NOTIFICATION');
+        dev.log('Message data: ${message.data}', name: 'NOTIFICATION');
 
+        if (message.notification != null) {
+          dev.log('Message also contained a notification: ${message.notification}', name: 'NOTIFICATION');
+        }
+      }
+      
       if (message.notification != null) {
-        debugPrint('Message also contained a notification: ${message.notification}');
-        
         // 포그라운드에서도 시스템 알림 표시
         _showNotification(message);
       }
@@ -97,25 +102,21 @@ class NotificationService {
     // 5. 알림 탭하여 앱이 열렸을 때 처리 (백그라운드/종료 상태에서)
     _setupInteractedMessage();
     
-    // 6. FCM 토큰 가져오기 및 서버 등록 (로그인 시점에)
-    // 앱 시작 시 토큰은 가져오되, 등록은 로그인 성공 시점에
+    // 6. FCM 토큰 갱신 리스너 (한 번만 등록)
+    _firebaseMessaging.onTokenRefresh.listen((newToken) async {
+        if (kDebugMode) dev.log("FCM Token Refreshed: $newToken", name: 'NOTIFICATION');
+        await _registerToken(newToken);
+    });
+
+    // 7. 로그인 성공 시점에만 토큰 등록 시도 (최적화)
     _ref.listen(authViewModelProvider, (previousState, nextState) async {
-      final String? currentToken = await _firebaseMessaging.getToken();
-      if (currentToken == null) {
-        debugPrint("FCM Token is null, cannot register.");
-        return;
-      }
-      
       if (previousState?.value is! AuthSuccess && nextState.value is AuthSuccess) {
-        // 로그인 성공 시점에 토큰 등록 시도
-        debugPrint("AuthSuccess detected. Attempting to register FCM token.");
-        await _registerToken(currentToken);
+        final String? currentToken = await _firebaseMessaging.getToken();
+        if (currentToken != null) {
+          if (kDebugMode) dev.log("AuthSuccess detected. Registering FCM token.", name: 'NOTIFICATION');
+          await _registerToken(currentToken);
+        }
       }
-      // 토큰 갱신 리스너는 여기서 처리해도 무방 (로그인 상태를 항상 체크)
-      _firebaseMessaging.onTokenRefresh.listen((newToken) async {
-          debugPrint("FCM Token Refreshed: $newToken");
-          await _registerToken(newToken); // 갱신된 토큰 등록
-      });
     });
   }
 
@@ -126,7 +127,7 @@ class NotificationService {
     // 로그인 상태가 아니거나 로딩 중이면 토큰 등록을 보류하거나 스킵
     // (나중에 로그인 성공 시 다시 호출하도록 로직 보완 필요할 수 있음)
     if (authState.value is! AuthSuccess) {
-      debugPrint("User not logged in. Skipping FCM token registration.");
+      if (kDebugMode) dev.log("User not logged in. Skipping FCM token registration.", name: 'NOTIFICATION');
       return;
     }
     
@@ -139,17 +140,18 @@ class NotificationService {
       deviceType: deviceType,
     );
 
-    debugPrint("FCM Token Registration Request Data:");
-    debugPrint("  userId: ${request.userId}");
-    debugPrint("  fcmToken: ${request.fcmToken}");
-    debugPrint("  deviceType: ${request.deviceType}");
-
+    if (kDebugMode) {
+      dev.log("FCM Token Registration Request Data:", name: 'NOTIFICATION');
+      dev.log("  userId: ${request.userId}", name: 'NOTIFICATION');
+      dev.log("  fcmToken: ${request.fcmToken}", name: 'NOTIFICATION');
+      dev.log("  deviceType: ${request.deviceType}", name: 'NOTIFICATION');
+    }
 
     try {
       await _ref.read(notificationRepositoryProvider).save(request);
-      debugPrint("FCM Token registered successfully for user: $userId");
+      if (kDebugMode) dev.log("FCM Token registered successfully for user: $userId", name: 'NOTIFICATION');
     } catch (e) {
-      debugPrint("Failed to register FCM token: $e");
+      if (kDebugMode) dev.log("Failed to register FCM token: $e", name: 'NOTIFICATION');
     }
   }
 
@@ -181,7 +183,7 @@ class NotificationService {
   void _onDidReceiveNotificationResponse(NotificationResponse notificationResponse) {
     final String? payload = notificationResponse.payload;
     if (payload != null) {
-      debugPrint('notification payload: $payload');
+      if (kDebugMode) dev.log('notification payload: $payload', name: 'NOTIFICATION');
       _handleMessageData(jsonDecode(payload));
     }
   }
@@ -201,13 +203,13 @@ class NotificationService {
   }
 
   void _handleMessage(RemoteMessage message) {
-    debugPrint('Message clicked!');
+    if (kDebugMode) dev.log('Message clicked!', name: 'NOTIFICATION');
     _handleMessageData(message.data);
   }
 
   // 데이터 페이로드 처리 및 화면 이동 로직 (라우터 연동 필요)
   void _handleMessageData(Map<String, dynamic> data) {
-    debugPrint("Notification Data received: $data");
+    if (kDebugMode) dev.log("Notification Data received: $data", name: 'NOTIFICATION');
 
     // TODO: 여기서 데이터 파싱 및 라우팅 로직 구현
     // routerProvider 접근을 위해 BuildContext가 필요하며,
@@ -215,20 +217,22 @@ class NotificationService {
     // rootNavigatorKey를 통해 context를 얻어 GoRouter를 사용해야 합니다.
     final context = rootNavigatorKey.currentContext;
     if (context == null) {
-      debugPrint("Router context not available for navigation.");
+      if (kDebugMode) dev.log("Router context not available for navigation.", name: 'NOTIFICATION');
       return;
     }
 
     final String? notificationType = data['notificationType'];
     final String? metadataString = data['metadata'];
     
-    debugPrint("Parsed Notification Type: $notificationType");
-    debugPrint("Parsed Metadata String: $metadataString");
+    if (kDebugMode) {
+      dev.log("Parsed Notification Type: $notificationType", name: 'NOTIFICATION');
+      dev.log("Parsed Metadata String: $metadataString", name: 'NOTIFICATION');
+    }
     
     if (metadataString != null) {
        try {
          final Map<String, dynamic> metadata = jsonDecode(metadataString);
-         debugPrint("Parsed Metadata: $metadata");
+         if (kDebugMode) dev.log("Parsed Metadata: $metadata", name: 'NOTIFICATION');
 
          // GoRouter.of(context).go(...) 또는 push(...)를 사용하여 화면 이동
          // 예시:
@@ -241,14 +245,14 @@ class NotificationService {
              if (diaryId != null) {
                // 현재 일기 상세 라우트가 없으므로, 필요 시 GoRouter에 추가해야 함
                // GoRouter.of(context).push('/book-log/detail/$diaryId');
-               debugPrint("Navigating to Diary Detail for diaryId: $diaryId (Currently commented out)");
+               if (kDebugMode) dev.log("Navigating to Diary Detail for diaryId: $diaryId (Currently commented out)", name: 'NOTIFICATION');
              }
              break;
            case 'FOLLOW':
              final memberId = metadata['memberId'];
              if (memberId != null) {
                GoRouter.of(context).push('/profile/$memberId'); // 예시 라우트
-               debugPrint("Navigating to Member Profile for memberId: $memberId (Currently commented out)");
+               if (kDebugMode) dev.log("Navigating to Member Profile for memberId: $memberId (Currently commented out)", name: 'NOTIFICATION');
              }
              break;
            case 'QUIZ_COMPLETED':
@@ -256,19 +260,19 @@ class NotificationService {
              final challengeId = metadata['challengeId'];
              if (bookId != null && challengeId != null) {
                GoRouter.of(context).push('/reading-challenge/detail/$bookId?challengeId=$challengeId');
-               debugPrint("Navigating to Reading Challenge Detail for bookId: $bookId, challengeId: $challengeId (Currently commented out)");
+               if (kDebugMode) dev.log("Navigating to Reading Challenge Detail for bookId: $bookId, challengeId: $challengeId (Currently commented out)", name: 'NOTIFICATION');
              }
              break;
            default:
-             debugPrint("Unknown notification type or no navigation defined for: $notificationType");
+             if (kDebugMode) dev.log("Unknown notification type or no navigation defined for: $notificationType", name: 'NOTIFICATION');
              break;
          }
          */
        } catch (e) {
-         debugPrint("Error parsing metadata JSON: $e");
+         if (kDebugMode) dev.log("Error parsing metadata JSON: $e", name: 'NOTIFICATION');
        }
     } else {
-      debugPrint("No metadata found in notification payload.");
+      if (kDebugMode) dev.log("No metadata found in notification payload.", name: 'NOTIFICATION');
     }
   }
 }

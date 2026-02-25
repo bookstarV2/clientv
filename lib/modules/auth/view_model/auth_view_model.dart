@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:developer' as dev; // 추가
+import 'package:flutter/foundation.dart'; // kDebugMode용 추가
 
 import 'package:bookstar/modules/auth/model/policy.dart';
 import 'package:bookstar/modules/auth/repository/policy_repository.dart';
@@ -48,17 +50,15 @@ class AuthViewModel extends _$AuthViewModel {
       final response = await _authRepository.login(request);
       final authData = response.data;
 
-      // Debug: Print the received auth data
-      print('=== DEBUG: Auth Response Data ===');
-      print('memberId: ${authData.memberId}');
-      print('nickName: ${authData.nickName}');
-      print('profileImage: ${authData.profileImage}');
-      print('providerType: ${authData.providerType}');
-      print('email: ${authData.email}');
-      print('accessToken: ${authData.accessToken.substring(0, 20)}...');
-      print('refreshToken: ${authData.refreshToken.substring(0, 20)}...');
-      print('memberRole: ${authData.memberRole}');
-      print('================================');
+      if (kDebugMode) {
+        dev.log('=== AUTH: Login Response Data ===', name: 'AUTH');
+        dev.log('memberId: ${authData.memberId}', name: 'AUTH');
+        dev.log('nickName: ${authData.nickName}', name: 'AUTH');
+        dev.log('providerType: ${authData.providerType}', name: 'AUTH');
+        dev.log('email: ${authData.email}', name: 'AUTH');
+        dev.log('accessToken: ${authData.accessToken.substring(0, 10)}...', name: 'AUTH');
+        dev.log('memberRole: ${authData.memberRole}', name: 'AUTH');
+      }
 
       await _secureStorageRepository.saveTokens(
         accessToken: authData.accessToken,
@@ -103,7 +103,9 @@ class AuthViewModel extends _$AuthViewModel {
   }
 
   Future<void> forceSignOut() async {
-    print('=== FORCE SIGNOUT: Clearing all tokens ===');
+    if (kDebugMode) {
+      dev.log('=== FORCE SIGNOUT: Clearing all tokens ===', name: 'AUTH');
+    }
     await _secureStorageRepository.deleteTokens();
     state = AsyncData(AuthIdle());
   }
@@ -134,17 +136,15 @@ class AuthViewModel extends _$AuthViewModel {
         return null;
       }
 
-      // Debug: Print the received auth data from refresh token
-      print('=== DEBUG: Refresh Token Response Data ===');
-      print('memberId: ${authData.memberId}');
-      print('nickName: ${authData.nickName}');
-      print('profileImage: ${authData.profileImage}');
-      print('providerType: ${authData.providerType}');
-      print('email: ${authData.email}');
-      print('accessToken: ${authData.accessToken}');
-      print('refreshToken: ${authData.refreshToken}');
-      print('memberRole: ${authData.memberRole}');
-      print('==========================================');
+      if (kDebugMode) {
+        dev.log('=== AUTH: Refresh Token Response Data ===', name: 'AUTH');
+        dev.log('memberId: ${authData.memberId}', name: 'AUTH');
+        dev.log('nickName: ${authData.nickName}', name: 'AUTH');
+        dev.log('providerType: ${authData.providerType}', name: 'AUTH');
+        dev.log('email: ${authData.email}', name: 'AUTH');
+        dev.log('New AccessToken: ${authData.accessToken.substring(0, 10)}...', name: 'AUTH');
+        dev.log('memberRole: ${authData.memberRole}', name: 'AUTH');
+      }
 
       await _secureStorageRepository.saveTokens(
         accessToken: authData.accessToken,
