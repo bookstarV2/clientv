@@ -28,6 +28,7 @@ class ReadingChallengeStartScreen extends BaseScreen {
 class _ReadingChallengeStartScreenState
     extends BaseScreenState<ReadingChallengeStartScreen> {
   int? _selectedChapterId;
+  // bool _isShowWarningDialog = false;
 
   @override
   void onInitState() {
@@ -42,11 +43,11 @@ class _ReadingChallengeStartScreenState
   }
 
   _onTapChapter(int chapterId) async {
-    if (_targetChapter?.chapterId == chapterId) {
+    if (_targetChapter?.chapterId == chapterId || _isSkippedTargetChapter) {
       setState(() {
         _selectedChapterId = chapterId;
       });
-    } else {
+    } else if (!_isSkippedTargetChapter) {
       final result = await showDialog(
           context: context,
           builder: (context) {
@@ -82,6 +83,30 @@ class _ReadingChallengeStartScreenState
       ?.detail
       .chapters
       .firstWhereOrNull((element) => element.status == ChapterStatus.LOCKED);
+
+  int get _targetChapterIndex =>
+      ref
+          .watch(challengeStartViewModelProvider(widget.challengeId))
+          .value
+          ?.detail
+          .chapters
+          .indexWhere((element) => element.status == ChapterStatus.LOCKED) ??
+      -1;
+  bool get _isSkippedTargetChapter {
+    final chapters = ref
+        .watch(challengeStartViewModelProvider(widget.challengeId))
+        .value
+        ?.detail
+        .chapters;
+
+    if (chapters == null) return false;
+    if (_targetChapterIndex == -1) return false;
+    if (_targetChapterIndex == chapters.length - 1) return false;
+
+    return chapters
+        .skip(_targetChapterIndex + 1)
+        .any((element) => element.status != ChapterStatus.LOCKED);
+  }
 
   @override
   PreferredSizeWidget? buildAppBar(BuildContext context) {
@@ -124,6 +149,8 @@ class _ReadingChallengeStartScreenState
                           goToQuizScreen();
                         }
                       },
+                      isSkippedTargetChapter: _isSkippedTargetChapter,
+                      targetChapterTitle: _targetChapter?.title ?? "",
                       selectedChapterId: _selectedChapterId),
                   if (_selectedChapterId != null)
                     SizedBox(
@@ -269,37 +296,50 @@ class _ReadingChallengeStartScreenState
       {required List<ChallengeDetailChapter> chapters,
       required Function(int) onTapItem,
       required Function onTapTargetChapter,
+      required bool isSkippedTargetChapter,
+      required String targetChapterTitle,
       required int? selectedChapterId}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        GestureDetector(
-          onTap: () => onTapTargetChapter(),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
-                "오늘의 목차 바로 읽기 📖",
-                style: AppTexts.b1.copyWith(color: ColorName.w1),
-              ),
-              SizedBox(
-                width: 4,
-              ),
-              Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-              ),
-            ],
+        if (isSkippedTargetChapter)
+          GestureDetector(
+            onTap: () => onTapTargetChapter(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      "건너뛴 목차 읽기 📖",
+                      style: AppTexts.b8.copyWith(color: ColorName.g2),
+                    ),
+                    SizedBox(
+                      width: 4,
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                    ),
+                  ],
+                ),
+                Text(
+                  targetChapterTitle,
+                  style: AppTexts.b1.copyWith(color: ColorName.w1),
+                  overflow: TextOverflow.ellipsis,
+                )
+              ],
+            ),
           ),
-        ),
         SizedBox(
           height: 16,
         ),
         Column(
           spacing: 12,
           children: chapters
-              .map(
-                (chapter) => GestureDetector(
+              .mapIndexed(
+                (index, chapter) => GestureDetector(
                   onTap: () {
                     if (chapter.status == ChapterStatus.COMPLETED) return;
                     onTapItem(chapter.chapterId);
@@ -330,6 +370,11 @@ class _ReadingChallengeStartScreenState
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
+                                      Text(
+                                        "목차 ${index + 1}",
+                                        style: AppTexts.b8
+                                            .copyWith(color: ColorName.g3),
+                                      ),
                                       Text(
                                         chapter.title,
                                         style: AppTexts.b5
