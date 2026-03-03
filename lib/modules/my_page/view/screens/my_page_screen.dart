@@ -88,16 +88,16 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                   context.go('/my-feed/my-page/scrapped-diaries');
                 },
               ),
-              CustomTextButton(
-                label: '팔로워 관리',
-                analyticsEventName: 'click_follower_management',
-                analyticsEventParams: const {
-                  'screen_name': 'my_page',
-                },
-                onTap: () {
-                  context.go('/my-feed/my-page/follower-management');
-                },
-              ),
+              // CustomTextButton(
+              //   label: '팔로워 관리',
+              //   analyticsEventName: 'click_follower_management',
+              //   analyticsEventParams: const {
+              //     'screen_name': 'my_page',
+              //   },
+              //   onTap: () {
+              //     context.go('/my-feed/my-page/follower-management');
+              //   },
+              // ),
               CustomTextButton(
                 label: '챌린지 중단 도서',
                 analyticsEventName: 'click_challenge_quit_books',
