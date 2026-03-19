@@ -1,4 +1,6 @@
+import 'dart:developer' as dev;
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -43,6 +45,10 @@ class CustomInterceptor extends Interceptor {
   @override
   Future<void> onRequest(
       RequestOptions options, RequestInterceptorHandler handler) async {
+    if (kDebugMode) {
+      dev.log('[DIO] REQUEST: ${options.method} ${options.path}', name: 'NETWORK');
+    }
+    
     if (options.path == '/login') {
       // login은 토큰이 없어도 가능
     } else {
@@ -59,8 +65,20 @@ class CustomInterceptor extends Interceptor {
   }
 
   @override
+  void onResponse(Response response, ResponseInterceptorHandler handler) {
+    if (kDebugMode) {
+      dev.log('[DIO] RESPONSE: ${response.statusCode} ${response.requestOptions.path}', name: 'NETWORK');
+    }
+    super.onResponse(response, handler);
+  }
+
+  @override
   Future<void> onError(
       DioException err, ErrorInterceptorHandler handler) async {
+    if (kDebugMode) {
+      dev.log('[DIO] ERROR: ${err.response?.statusCode} ${err.requestOptions.path}', name: 'NETWORK');
+    }
+
     if (err.response?.statusCode == 401 &&
         err.requestOptions.path != '/login' &&
         err.requestOptions.path != '/renew') {

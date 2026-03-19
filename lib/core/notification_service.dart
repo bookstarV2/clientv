@@ -6,6 +6,7 @@ import 'package:bookstar/modules/auth/view_model/auth_view_model.dart';
 import 'package:bookstar/modules/notification/model/fcm_token_create_request.dart';
 import 'package:bookstar/modules/notification/repository/notification_repository.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -77,6 +78,20 @@ class NotificationService {
       iOS: initializationSettingsDarwin,
     );
 
+    // 안드로이드 알림 채널 생성 (중요!)
+    final androidPlugin = _flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    
+    if (androidPlugin != null) {
+      await androidPlugin.createNotificationChannel(const AndroidNotificationChannel(
+        'high_importance_channel', // ID
+        'High Importance Notifications', // 이름
+        description: 'This channel is used for important notifications.',
+        importance: Importance.max,
+      ));
+      if (kDebugMode) dev.log("Android Notification Channel created", name: 'NOTIFICATION');
+    }
+
     _flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: _onDidReceiveNotificationResponse,
@@ -85,18 +100,21 @@ class NotificationService {
     // 4. 포그라운드 메시지 수신 리스너 등록
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       if (kDebugMode) {
-        dev.log('Got a message whilst in the foreground!', name: 'NOTIFICATION');
-        dev.log('Message data: ${message.data}', name: 'NOTIFICATION');
-
+        dev.log('🔔 Got a message whilst in the foreground!', name: 'NOTIFICATION');
+        dev.log('Message ID: ${message.messageId}', name: 'NOTIFICATION');
+        dev.log('Data Payload:', name: 'NOTIFICATION');
+        message.data.forEach((key, value) {
+          dev.log('  $key: $value', name: 'NOTIFICATION');
+        });
+        
         if (message.notification != null) {
-          dev.log('Message also contained a notification: ${message.notification}', name: 'NOTIFICATION');
+          dev.log('Notification Title: ${message.notification?.title}', name: 'NOTIFICATION');
+          dev.log('Notification Body: ${message.notification?.body}', name: 'NOTIFICATION');
         }
       }
       
-      if (message.notification != null) {
-        // 포그라운드에서도 시스템 알림 표시
-        _showNotification(message);
-      }
+      // 알림 표시 시도 (데이터 메시지 및 알림 메시지 통합 처리)
+      _showNotification(message);
     });
     
     // 5. 알림 탭하여 앱이 열렸을 때 처리 (백그라운드/종료 상태에서)
@@ -114,6 +132,18 @@ class NotificationService {
         final String? currentToken = await _firebaseMessaging.getToken();
         if (currentToken != null) {
           if (kDebugMode) dev.log("AuthSuccess detected. Registering FCM token.", name: 'NOTIFICATION');
+          await _registerToken(currentToken);
+        }
+      }
+    });
+
+    // 8. 앱 시작 시 이미 로그인 상태인 경우 즉시 토큰 등록 확인
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final currentState = _ref.read(authViewModelProvider);
+      if (currentState.value is AuthSuccess) {
+        final String? currentToken = await _firebaseMessaging.getToken();
+        if (currentToken != null) {
+          if (kDebugMode) dev.log("User already logged in at startup. Registering FCM token.", name: 'NOTIFICATION');
           await _registerToken(currentToken);
         }
       }
@@ -157,6 +187,22 @@ class NotificationService {
 
   // 포그라운드 알림 표시 함수
   Future<void> _showNotification(RemoteMessage message) async {
+    // 1. 제목과 내용 추출 (notification 객체 우선, 없으면 data 객체 확인)
+    String? title = message.notification?.title ?? message.data['title'] ?? message.data['messageTitle'];
+    String? body = message.notification?.body ?? message.data['body'] ?? message.data['messageBody'] ?? message.data['content'];
+
+    if (kDebugMode) {
+      dev.log('Attempting to show notification:', name: 'NOTIFICATION');
+      dev.log('  Derived Title: $title', name: 'NOTIFICATION');
+      dev.log('  Derived Body: $body', name: 'NOTIFICATION');
+    }
+
+    // 제목과 내용이 모두 없으면 알림을 띄우지 않음
+    if (title == null && body == null) {
+      if (kDebugMode) dev.log('Aborting notification: No title or body found in payload.', name: 'NOTIFICATION');
+      return;
+    }
+
     const AndroidNotificationDetails androidNotificationDetails =
         AndroidNotificationDetails(
       'high_importance_channel', // id
@@ -165,6 +211,7 @@ class NotificationService {
       importance: Importance.max,
       priority: Priority.high,
       ticker: 'ticker',
+      showWhen: true,
     );
     
     const NotificationDetails notificationDetails =
@@ -172,8 +219,8 @@ class NotificationService {
 
     await _flutterLocalNotificationsPlugin.show(
       message.hashCode,
-      message.notification?.title,
-      message.notification?.body,
+      title,
+      body,
       notificationDetails,
       payload: jsonEncode(message.data), // 데이터 페이로드를 전달
     );

@@ -53,7 +53,6 @@ dependencies:
   sleek_circular_slider: ^2.0.1
   flutter_rating_bar: ^4.0.1
   collection: ^1.19.1
-  ably_flutter: ^1.2.40
   intl: ^0.20.2
   scrollable_positioned_list: ^0.3.8
   flutter_slidable: ^4.0.0
