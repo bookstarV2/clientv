@@ -126,13 +126,18 @@ class NotificationService {
         await _registerToken(newToken);
     });
 
-    // 7. 로그인 성공 시점에만 토큰 등록 시도 (최적화)
+    // 7. 로그인 상태 변화 감시 및 토큰 등록 시도
     _ref.listen(authViewModelProvider, (previousState, nextState) async {
-      if (previousState?.value is! AuthSuccess && nextState.value is AuthSuccess) {
+      // 로그인 성공 상태로 전환되거나, 이미 성공 상태인데 이전 정보가 없었을 때 실행
+      final isNowSuccess = nextState.value is AuthSuccess;
+      final wasNotSuccess = previousState?.value is! AuthSuccess;
+
+      if (isNowSuccess && wasNotSuccess) {
         final String? currentToken = await _firebaseMessaging.getToken();
         if (currentToken != null) {
           if (kDebugMode) dev.log("AuthSuccess detected. Registering FCM token.", name: 'NOTIFICATION');
-          await _registerToken(currentToken);
+          // 비동기로 실행하여 초기화 흐름을 방해하지 않음
+          _registerToken(currentToken);
         }
       }
     });
@@ -144,18 +149,18 @@ class NotificationService {
         final String? currentToken = await _firebaseMessaging.getToken();
         if (currentToken != null) {
           if (kDebugMode) dev.log("User already logged in at startup. Registering FCM token.", name: 'NOTIFICATION');
-          await _registerToken(currentToken);
+          _registerToken(currentToken);
         }
       }
     });
   }
 
-  // FCM 토큰 서버 등록
-  Future<void> _registerToken(String token) async {
+  // FCM 토큰 서버 등록 (재시도 로직 포함)
+  Future<void> _registerToken(String token, {int retryCount = 0}) async {
+    const int maxRetries = 3;
     final authState = _ref.read(authViewModelProvider);
     
-    // 로그인 상태가 아니거나 로딩 중이면 토큰 등록을 보류하거나 스킵
-    // (나중에 로그인 성공 시 다시 호출하도록 로직 보완 필요할 수 있음)
+    // 1. 로그인 상태 확인 (AuthSuccess가 아니면 등록 중단)
     if (authState.value is! AuthSuccess) {
       if (kDebugMode) dev.log("User not logged in. Skipping FCM token registration.", name: 'NOTIFICATION');
       return;
@@ -170,18 +175,24 @@ class NotificationService {
       deviceType: deviceType,
     );
 
-    if (kDebugMode) {
-      dev.log("FCM Token Registration Request Data:", name: 'NOTIFICATION');
-      dev.log("  userId: ${request.userId}", name: 'NOTIFICATION');
-      dev.log("  fcmToken: ${request.fcmToken}", name: 'NOTIFICATION');
-      dev.log("  deviceType: ${request.deviceType}", name: 'NOTIFICATION');
-    }
-
     try {
       await _ref.read(notificationRepositoryProvider).save(request);
       if (kDebugMode) dev.log("FCM Token registered successfully for user: $userId", name: 'NOTIFICATION');
     } catch (e) {
-      if (kDebugMode) dev.log("Failed to register FCM token: $e", name: 'NOTIFICATION');
+      if (kDebugMode) dev.log("Failed to register FCM token (Attempt ${retryCount + 1}/$maxRetries): $e", name: 'NOTIFICATION');
+      
+      // 2. 재시도 로직 (지수 백오프 적용: 2s, 4s, 8s...)
+      if (retryCount < maxRetries) {
+        final nextRetryDelay = Duration(seconds: (2 * (retryCount + 1)));
+        if (kDebugMode) dev.log("Retrying FCM token registration in ${nextRetryDelay.inSeconds}s...", name: 'NOTIFICATION');
+        
+        Future.delayed(nextRetryDelay, () {
+          // 재시도 시점에 다시 로그인 상태인지 확인하기 위해 재호출
+          _registerToken(token, retryCount: retryCount + 1);
+        });
+      } else {
+        if (kDebugMode) dev.log("Max retries reached. FCM token registration failed.", name: 'NOTIFICATION');
+      }
     }
   }
 

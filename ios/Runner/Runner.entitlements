@@ -9,6 +9,6 @@
 	<key>com.apple.developer.family-controls</key>
 	<true/>
 	<key>aps-environment</key>
-	<string>development</string>
+	<string>$(APS_ENVIRONMENT)</string>
 </dict>
 </plist>
