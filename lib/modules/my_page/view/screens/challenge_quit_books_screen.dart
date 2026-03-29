@@ -1,23 +1,25 @@
+import 'package:bookstar/common/components/base_screen.dart';
+import 'package:bookstar/common/components/custom_list_view.dart';
 import 'package:bookstar/common/components/form/book_with_checkbok.dart';
 import 'package:bookstar/common/components/button/cta_button_l1.dart';
-import 'package:bookstar/common/theme/style/app_paddings.dart';
+import 'package:bookstar/common/theme/style/app_texts.dart';
+import 'package:bookstar/gen/assets.gen.dart';
 import 'package:bookstar/gen/colors.gen.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:bookstar/modules/reading_challenge/state/abandoned_challenges_state.dart';
 import 'package:bookstar/modules/reading_challenge/view_model/abandoned_challenges_view_model.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ChallengeQuitBooksScreen extends ConsumerStatefulWidget {
+class ChallengeQuitBooksScreen extends BaseScreen {
   const ChallengeQuitBooksScreen({super.key});
 
   @override
-  ConsumerState<ChallengeQuitBooksScreen> createState() =>
+  BaseScreenState<ChallengeQuitBooksScreen> createState() =>
       _ChallengeQuitBooksScreenState();
 }
 
 class _ChallengeQuitBooksScreenState
-    extends ConsumerState<ChallengeQuitBooksScreen> {
+    extends BaseScreenState<ChallengeQuitBooksScreen> {
   @override
   void initState() {
     super.initState();
@@ -27,84 +29,38 @@ class _ChallengeQuitBooksScreenState
   }
 
   @override
-  Widget build(BuildContext context) {
-    final state = ref.watch(abandonedChallengesViewModelProvider);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('챌린지 중단 도서'),
-        leading: IconButton(
-          icon: const BackButton(),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () {
-              GoRouter.of(context).go('/my-feed');
-            },
-          ),
-        ],
+  PreferredSizeWidget? buildAppBar(BuildContext context) {
+    return AppBar(
+      title: const Text('챌린지 중단 도서'),
+      leading: IconButton(
+        icon: const BackButton(),
+        onPressed: () => Navigator.of(context).pop(),
       ),
-      body: _buildBody(state),
     );
   }
 
-  Widget _buildBody(AbandonedChallengesState state) {
-    if (state.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+  @override
+  Widget buildBody(BuildContext context) {
+    final state = ref.watch(abandonedChallengesViewModelProvider);
 
-    if (state.errorMessage != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              '오류가 발생했습니다',
-              style: TextStyle(color: ColorName.g3),
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: () {
-                ref
-                    .read(abandonedChallengesViewModelProvider.notifier)
-                    .initState();
-              },
-              child: const Text('다시 시도'),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (state.challenges.isEmpty) {
-      return const Center(
-        child: Text(
-          '중단된 챌린지가 없습니다.',
-          style: TextStyle(
-            color: ColorName.g7,
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
-          ),
-        ),
-      );
-    }
-
-    return Stack(
-      children: [
-        Padding(
-          padding: AppPaddings.SCREEN_BODY_PADDING.copyWith(left: 0, right: 0),
-          child: ListView.builder(
-            itemCount: state.challenges.length,
+    return state.when(
+        data: (data) {
+          return CustomListView(
+            emptyIcon: Assets.icons.icSearchEmptyCharacter.svg(),
+            emptyText: '검색 결과가 없어요',
+            emptyTextStyle: AppTexts.b3.copyWith(color: ColorName.w1),
+            emptyDescription: '유저의 닉네임을 다시 확인해 보세요',
+            emptyDescriptionStyle: AppTexts.b6.copyWith(color: ColorName.g2),
+            isEmpty: data.challenges.isEmpty,
+            itemCount: data.challenges.length,
             itemBuilder: (context, index) {
-              final challenge = state.challenges[index];
+              final challenge = data.challenges[index];
               return BookWithCheckbox(
                 thumbnailUrl: challenge.bookImageUrl,
                 title: challenge.bookTitle,
                 author: challenge.bookAuthor,
                 lastReadAt: challenge.createdAt.toString(),
-                checked: state.checkedList[index],
+                checked: data.checkedList[index],
                 onChanged: (v) {
                   ref
                       .read(abandonedChallengesViewModelProvider.notifier)
@@ -112,57 +68,60 @@ class _ChallengeQuitBooksScreenState
                 },
               );
             },
-          ),
-        ),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(14, 0, 14, 54),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CtaButtonL1(
-                  text: '다시 시작하기',
-                  enabled: state.checkedList.contains(true),
-                  analyticsEventName: 'click_restart_challenges',
-                  analyticsEventParams: const {
-                    'screen_name': 'challenge_quit_books',
-                  },
-                  onPressed: state.checkedList.contains(true)
-                      ? () async {
-                          await ref
-                              .read(
-                                  abandonedChallengesViewModelProvider.notifier)
-                              .restartSelectedChallenges();
-                        }
-                      : null,
-                ),
-                const SizedBox(height: 8),
-                CtaButtonL1(
-                  text: '삭제하기',
-                  enabled: state.checkedList.contains(true),
-                  analyticsEventName: 'click_delete_abandoned_challenges',
-                  analyticsEventParams: const {
-                    'screen_name': 'challenge_quit_books',
-                  },
-                  onPressed: state.checkedList.contains(true)
-                      ? () async {
-                          await ref
-                              .read(
-                                  abandonedChallengesViewModelProvider.notifier)
-                              .deleteSelectedChallenges();
-                        }
-                      : null,
-                  backgroundColor: ColorName.g7,
-                  borderColor: ColorName.g6,
-                ),
-              ],
+            separatorBuilder: (context, index) => SizedBox(
+              height: 20,
             ),
-          ),
-        ),
-      ],
-    );
+            scrollController: scrollController,
+          );
+        },
+        loading: loading,
+        error: error("오류가 발생했습니다"));
+  }
+
+  @override
+  Widget? buildFloatingActionButton(BuildContext context) {
+    final state = ref.watch(abandonedChallengesViewModelProvider);
+    final data = state.value ?? AbandonedChallengesState();
+
+    return data.challenges.isNotEmpty
+        ? Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CtaButtonL1(
+                text: '다시 시작하기',
+                enabled: data.checkedList.contains(true),
+                analyticsEventName: 'click_restart_challenges',
+                analyticsEventParams: const {
+                  'screen_name': 'challenge_quit_books',
+                },
+                onPressed: data.checkedList.contains(true)
+                    ? () async {
+                        await ref
+                            .read(abandonedChallengesViewModelProvider.notifier)
+                            .restartSelectedChallenges();
+                      }
+                    : null,
+              ),
+              const SizedBox(height: 8),
+              CtaButtonL1(
+                text: '삭제하기',
+                enabled: data.checkedList.contains(true),
+                analyticsEventName: 'click_delete_abandoned_challenges',
+                analyticsEventParams: const {
+                  'screen_name': 'challenge_quit_books',
+                },
+                onPressed: data.checkedList.contains(true)
+                    ? () async {
+                        await ref
+                            .read(abandonedChallengesViewModelProvider.notifier)
+                            .deleteSelectedChallenges();
+                      }
+                    : null,
+                backgroundColor: ColorName.g7,
+                borderColor: ColorName.g6,
+              ),
+            ],
+          )
+        : null;
   }
 }

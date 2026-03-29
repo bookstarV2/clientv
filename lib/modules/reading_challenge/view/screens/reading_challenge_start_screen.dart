@@ -1,5 +1,6 @@
 import 'package:bookstar/common/components/base_screen.dart';
 import 'package:bookstar/common/components/button/cta_button_l1.dart';
+import 'package:bookstar/common/components/dialog/custom_dialog.dart';
 import 'package:bookstar/common/theme/style/app_texts.dart';
 import 'package:bookstar/gen/assets.gen.dart';
 import 'package:bookstar/gen/colors.gen.dart';
@@ -27,6 +28,7 @@ class ReadingChallengeStartScreen extends BaseScreen {
 class _ReadingChallengeStartScreenState
     extends BaseScreenState<ReadingChallengeStartScreen> {
   int? _selectedChapterId;
+  // bool _isShowWarningDialog = false;
 
   @override
   void onInitState() {
@@ -40,16 +42,76 @@ class _ReadingChallengeStartScreenState
     }
   }
 
-  _onTapChapter(int chapterId) {
-    setState(() {
-      _selectedChapterId = chapterId;
-    });
+  _onTapChapter(int chapterId) async {
+    if (_targetChapter?.chapterId == chapterId || _isSkippedTargetChapter) {
+      setState(() {
+        _selectedChapterId = chapterId;
+      });
+    } else if (!_isSkippedTargetChapter) {
+      final result = await showDialog(
+          context: context,
+          builder: (context) {
+            return CustomDialog(
+              title: '잠시만요!',
+              content: '"${_targetChapter?.title}"를 읽지 않았어요.\n 건너뛰고 진행할까요?',
+              titleStyle: AppTexts.b7.copyWith(color: ColorName.w1),
+              contentStyle: AppTexts.b11.copyWith(color: ColorName.g2),
+              icon:
+                  Assets.icons.icDeepTimeGoToQuiz.svg(width: 100, height: 100),
+              onCancel: () {
+                Navigator.of(context).pop(false);
+              },
+              onConfirm: () {
+                Navigator.of(context).pop(true);
+              },
+              confirmButtonText: '계속하기',
+              cancelButtonText: '취소',
+            );
+          });
+
+      if (result != null && result) {
+        setState(() {
+          _selectedChapterId = chapterId;
+        });
+      }
+    }
+  }
+
+  ChallengeDetailChapter? get _targetChapter => ref
+      .watch(challengeStartViewModelProvider(widget.challengeId))
+      .value
+      ?.detail
+      .chapters
+      .firstWhereOrNull((element) => element.status == ChapterStatus.LOCKED);
+
+  int get _targetChapterIndex =>
+      ref
+          .watch(challengeStartViewModelProvider(widget.challengeId))
+          .value
+          ?.detail
+          .chapters
+          .indexWhere((element) => element.status == ChapterStatus.LOCKED) ??
+      -1;
+  bool get _isSkippedTargetChapter {
+    final chapters = ref
+        .watch(challengeStartViewModelProvider(widget.challengeId))
+        .value
+        ?.detail
+        .chapters;
+
+    if (chapters == null) return false;
+    if (_targetChapterIndex == -1) return false;
+    if (_targetChapterIndex == chapters.length - 1) return false;
+
+    return chapters
+        .skip(_targetChapterIndex + 1)
+        .any((element) => element.status != ChapterStatus.LOCKED);
   }
 
   @override
   PreferredSizeWidget? buildAppBar(BuildContext context) {
     return AppBar(
-      title: const Text('리딩챌린지'),
+      title: Text('리딩챌린지'),
       leading: IconButton(
         icon: const BackButton(),
         onPressed: () => Navigator.of(context).pop(),
@@ -81,6 +143,14 @@ class _ReadingChallengeStartScreenState
                       onTapItem: (chapterId) {
                         _onTapChapter(chapterId);
                       },
+                      onTapTargetChapter: () {
+                        if (_targetChapter != null) {
+                          _onTapChapter(_targetChapter!.chapterId);
+                          goToQuizScreen();
+                        }
+                      },
+                      isSkippedTargetChapter: _isSkippedTargetChapter,
+                      targetChapterTitle: _targetChapter?.title ?? "",
                       selectedChapterId: _selectedChapterId),
                   if (_selectedChapterId != null)
                     SizedBox(
@@ -225,22 +295,51 @@ class _ReadingChallengeStartScreenState
   Widget _buildChaptersSection(
       {required List<ChallengeDetailChapter> chapters,
       required Function(int) onTapItem,
+      required Function onTapTargetChapter,
+      required bool isSkippedTargetChapter,
+      required String targetChapterTitle,
       required int? selectedChapterId}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          "목차",
-          style: AppTexts.b1.copyWith(color: ColorName.w1),
-        ),
+        if (isSkippedTargetChapter)
+          GestureDetector(
+            onTap: () => onTapTargetChapter(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      "건너뛴 목차 읽기 📖",
+                      style: AppTexts.b8.copyWith(color: ColorName.g2),
+                    ),
+                    SizedBox(
+                      width: 4,
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                    ),
+                  ],
+                ),
+                Text(
+                  targetChapterTitle,
+                  style: AppTexts.b1.copyWith(color: ColorName.w1),
+                  overflow: TextOverflow.ellipsis,
+                )
+              ],
+            ),
+          ),
         SizedBox(
           height: 16,
         ),
         Column(
           spacing: 12,
           children: chapters
-              .map(
-                (chapter) => GestureDetector(
+              .mapIndexed(
+                (index, chapter) => GestureDetector(
                   onTap: () {
                     if (chapter.status == ChapterStatus.COMPLETED) return;
                     onTapItem(chapter.chapterId);
@@ -271,6 +370,11 @@ class _ReadingChallengeStartScreenState
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
+                                      Text(
+                                        "목차 ${index + 1}",
+                                        style: AppTexts.b8
+                                            .copyWith(color: ColorName.g3),
+                                      ),
                                       Text(
                                         chapter.title,
                                         style: AppTexts.b5
