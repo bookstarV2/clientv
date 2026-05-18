@@ -45,13 +45,14 @@ dependencies:
 
   # Firebase
   firebase_auth:
+  firebase_messaging: ^15.2.0
+  flutter_local_notifications: ^18.0.1
   firebase_core:
   firebase_analytics:
 
   sleek_circular_slider: ^2.0.1
   flutter_rating_bar: ^4.0.1
   collection: ^1.19.1
-  ably_flutter: ^1.2.40
   intl: ^0.20.2
   scrollable_positioned_list: ^0.3.8
   flutter_slidable: ^4.0.0

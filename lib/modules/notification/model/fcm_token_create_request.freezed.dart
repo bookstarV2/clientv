@@ -14,8 +14,9 @@ T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$FCMTokenCreateRequest {
-  int? get userId;
-  String get token;
+  int get userId;
+  String get fcmToken;
+  String get deviceType;
 
   /// Create a copy of FCMTokenCreateRequest
   /// with the given fields replaced by the non-null parameter values.
@@ -34,16 +35,19 @@ mixin _$FCMTokenCreateRequest {
         (other.runtimeType == runtimeType &&
             other is FCMTokenCreateRequest &&
             (identical(other.userId, userId) || other.userId == userId) &&
-            (identical(other.token, token) || other.token == token));
+            (identical(other.fcmToken, fcmToken) ||
+                other.fcmToken == fcmToken) &&
+            (identical(other.deviceType, deviceType) ||
+                other.deviceType == deviceType));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, userId, token);
+  int get hashCode => Object.hash(runtimeType, userId, fcmToken, deviceType);
 
   @override
   String toString() {
-    return 'FCMTokenCreateRequest(userId: $userId, token: $token)';
+    return 'FCMTokenCreateRequest(userId: $userId, fcmToken: $fcmToken, deviceType: $deviceType)';
   }
 }
 
@@ -53,7 +57,7 @@ abstract mixin class $FCMTokenCreateRequestCopyWith<$Res> {
           $Res Function(FCMTokenCreateRequest) _then) =
       _$FCMTokenCreateRequestCopyWithImpl;
   @useResult
-  $Res call({int? userId, String token});
+  $Res call({int userId, String fcmToken, String deviceType});
 }
 
 /// @nodoc
@@ -69,17 +73,22 @@ class _$FCMTokenCreateRequestCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? userId = freezed,
-    Object? token = null,
+    Object? userId = null,
+    Object? fcmToken = null,
+    Object? deviceType = null,
   }) {
     return _then(_self.copyWith(
-      userId: freezed == userId
+      userId: null == userId
           ? _self.userId
           : userId // ignore: cast_nullable_to_non_nullable
-              as int?,
-      token: null == token
-          ? _self.token
-          : token // ignore: cast_nullable_to_non_nullable
+              as int,
+      fcmToken: null == fcmToken
+          ? _self.fcmToken
+          : fcmToken // ignore: cast_nullable_to_non_nullable
+              as String,
+      deviceType: null == deviceType
+          ? _self.deviceType
+          : deviceType // ignore: cast_nullable_to_non_nullable
               as String,
     ));
   }
@@ -178,13 +187,14 @@ extension FCMTokenCreateRequestPatterns on FCMTokenCreateRequest {
 
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
-    TResult Function(int? userId, String token)? $default, {
+    TResult Function(int userId, String fcmToken, String deviceType)?
+        $default, {
     required TResult orElse(),
   }) {
     final _that = this;
     switch (_that) {
       case _FCMTokenCreateRequest() when $default != null:
-        return $default(_that.userId, _that.token);
+        return $default(_that.userId, _that.fcmToken, _that.deviceType);
       case _:
         return orElse();
     }
@@ -205,12 +215,12 @@ extension FCMTokenCreateRequestPatterns on FCMTokenCreateRequest {
 
   @optionalTypeArgs
   TResult when<TResult extends Object?>(
-    TResult Function(int? userId, String token) $default,
+    TResult Function(int userId, String fcmToken, String deviceType) $default,
   ) {
     final _that = this;
     switch (_that) {
       case _FCMTokenCreateRequest():
-        return $default(_that.userId, _that.token);
+        return $default(_that.userId, _that.fcmToken, _that.deviceType);
       case _:
         throw StateError('Unexpected subclass');
     }
@@ -230,12 +240,12 @@ extension FCMTokenCreateRequestPatterns on FCMTokenCreateRequest {
 
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>(
-    TResult? Function(int? userId, String token)? $default,
+    TResult? Function(int userId, String fcmToken, String deviceType)? $default,
   ) {
     final _that = this;
     switch (_that) {
       case _FCMTokenCreateRequest() when $default != null:
-        return $default(_that.userId, _that.token);
+        return $default(_that.userId, _that.fcmToken, _that.deviceType);
       case _:
         return null;
     }
@@ -245,15 +255,17 @@ extension FCMTokenCreateRequestPatterns on FCMTokenCreateRequest {
 /// @nodoc
 @JsonSerializable()
 class _FCMTokenCreateRequest implements FCMTokenCreateRequest {
-  const _FCMTokenCreateRequest({this.userId, this.token = ''});
+  const _FCMTokenCreateRequest(
+      {required this.userId, required this.fcmToken, required this.deviceType});
   factory _FCMTokenCreateRequest.fromJson(Map<String, dynamic> json) =>
       _$FCMTokenCreateRequestFromJson(json);
 
   @override
-  final int? userId;
+  final int userId;
   @override
-  @JsonKey()
-  final String token;
+  final String fcmToken;
+  @override
+  final String deviceType;
 
   /// Create a copy of FCMTokenCreateRequest
   /// with the given fields replaced by the non-null parameter values.
@@ -277,16 +289,19 @@ class _FCMTokenCreateRequest implements FCMTokenCreateRequest {
         (other.runtimeType == runtimeType &&
             other is _FCMTokenCreateRequest &&
             (identical(other.userId, userId) || other.userId == userId) &&
-            (identical(other.token, token) || other.token == token));
+            (identical(other.fcmToken, fcmToken) ||
+                other.fcmToken == fcmToken) &&
+            (identical(other.deviceType, deviceType) ||
+                other.deviceType == deviceType));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, userId, token);
+  int get hashCode => Object.hash(runtimeType, userId, fcmToken, deviceType);
 
   @override
   String toString() {
-    return 'FCMTokenCreateRequest(userId: $userId, token: $token)';
+    return 'FCMTokenCreateRequest(userId: $userId, fcmToken: $fcmToken, deviceType: $deviceType)';
   }
 }
 
@@ -298,7 +313,7 @@ abstract mixin class _$FCMTokenCreateRequestCopyWith<$Res>
       __$FCMTokenCreateRequestCopyWithImpl;
   @override
   @useResult
-  $Res call({int? userId, String token});
+  $Res call({int userId, String fcmToken, String deviceType});
 }
 
 /// @nodoc
@@ -314,17 +329,22 @@ class __$FCMTokenCreateRequestCopyWithImpl<$Res>
   @override
   @pragma('vm:prefer-inline')
   $Res call({
-    Object? userId = freezed,
-    Object? token = null,
+    Object? userId = null,
+    Object? fcmToken = null,
+    Object? deviceType = null,
   }) {
     return _then(_FCMTokenCreateRequest(
-      userId: freezed == userId
+      userId: null == userId
           ? _self.userId
           : userId // ignore: cast_nullable_to_non_nullable
-              as int?,
-      token: null == token
-          ? _self.token
-          : token // ignore: cast_nullable_to_non_nullable
+              as int,
+      fcmToken: null == fcmToken
+          ? _self.fcmToken
+          : fcmToken // ignore: cast_nullable_to_non_nullable
+              as String,
+      deviceType: null == deviceType
+          ? _self.deviceType
+          : deviceType // ignore: cast_nullable_to_non_nullable
               as String,
     ));
   }

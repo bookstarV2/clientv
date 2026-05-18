@@ -9,13 +9,15 @@ part of 'fcm_token_create_request.dart';
 _FCMTokenCreateRequest _$FCMTokenCreateRequestFromJson(
         Map<String, dynamic> json) =>
     _FCMTokenCreateRequest(
-      userId: (json['userId'] as num?)?.toInt(),
-      token: json['token'] as String? ?? '',
+      userId: (json['userId'] as num).toInt(),
+      fcmToken: json['fcmToken'] as String,
+      deviceType: json['deviceType'] as String,
     );
 
 Map<String, dynamic> _$FCMTokenCreateRequestToJson(
         _FCMTokenCreateRequest instance) =>
     <String, dynamic>{
       'userId': instance.userId,
-      'token': instance.token,
+      'fcmToken': instance.fcmToken,
+      'deviceType': instance.deviceType,
     };
