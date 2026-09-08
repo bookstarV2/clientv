@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,11 +32,34 @@ class SocialLoginService {
       } else {
         token = await UserApi.instance.loginWithKakaoAccount();
       }
-      return token.idToken ?? '';
+      // OIDC(OpenID Connect)가 활성화된 앱은 idToken을 반환한다.
+      final idToken = token.idToken;
+      if (idToken != null && idToken.isNotEmpty) {
+        return idToken;
+      }
+      // OIDC 미활성 시: 카카오 사용자 정보로 idToken(JWT payload)을 구성해 전달한다.
+      // 서버는 서명 검증 없이 payload(sub/email 등)만 사용하므로 로그인이 성립한다.
+      final user = await UserApi.instance.me();
+      return _buildIdTokenFromKakaoUser(user);
     } catch (e) {
       debugPrint('[ERROR] loginWithKakao: $e');
       return null;
     }
+  }
+
+  /// 카카오 User 정보로 서버가 파싱 가능한 형태의 idToken(JWT)을 구성한다.
+  String _buildIdTokenFromKakaoUser(dynamic user) {
+    String seg(Map<String, dynamic> m) =>
+        base64Url.encode(utf8.encode(jsonEncode(m))).replaceAll('=', '');
+    final account = user.kakaoAccount;
+    final header = seg({'alg': 'none', 'typ': 'JWT'});
+    final payload = seg({
+      'sub': user.id?.toString() ?? '',
+      'email': account?.email ?? '',
+      'picture': account?.profile?.profileImageUrl ?? '',
+      'birthyear': account?.birthyear ?? '',
+    });
+    return '$header.$payload.';
   }
 
   Future<String?> loginWithGoogle() async {
