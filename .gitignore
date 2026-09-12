@@ -63,11 +63,10 @@ ios/Runner/GoogleService-Info.plist
 
 # iOS
 ios/Keys.xcconfig
+ios/Flutter/Keys.xcconfig
 *.p8
 
 # fvm
-.fvm/flutter_sdk
-.fvmrc
 
 .vscode
 
@@ -81,3 +80,6 @@ key.properties
 
 # Coverage
 coverage/
+
+# FVM Version Cache
+.fvm/

@@ -350,13 +350,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -386,13 +382,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -530,10 +522,6 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 8Z2GR346YM;
 				ENABLE_BITCODE = NO;
-				FLUTTER_BUILD_NAME = 1.0.17;
-				FLUTTER_BUILD_NUMBER = 100;
-				GOOGLE_CLIENT_ID = "19504330253-v89qfipl8inhuvm0b3uns5j83s51u190.apps.googleusercontent.com";
-				GOOGLE_REVERSED_CLIENT_ID = "com.googleusercontent.apps.119504330253-v89qfipl8inhuvm0b3uns5j83s51u190";
 				INFOPLIST_FILE = Runner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = BookStar;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.books";
@@ -723,10 +711,6 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 8Z2GR346YM;
 				ENABLE_BITCODE = NO;
-				FLUTTER_BUILD_NAME = 1.0.17;
-				FLUTTER_BUILD_NUMBER = 100;
-				GOOGLE_CLIENT_ID = "19504330253-v89qfipl8inhuvm0b3uns5j83s51u190.apps.googleusercontent.com";
-				GOOGLE_REVERSED_CLIENT_ID = "com.googleusercontent.apps.119504330253-v89qfipl8inhuvm0b3uns5j83s51u190";
 				INFOPLIST_FILE = Runner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = BookStar;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.books";
@@ -756,10 +740,6 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 8Z2GR346YM;
 				ENABLE_BITCODE = NO;
-				FLUTTER_BUILD_NAME = 1.0.17;
-				FLUTTER_BUILD_NUMBER = 100;
-				GOOGLE_CLIENT_ID = "19504330253-v89qfipl8inhuvm0b3uns5j83s51u190.apps.googleusercontent.com";
-				GOOGLE_REVERSED_CLIENT_ID = "com.googleusercontent.apps.119504330253-v89qfipl8inhuvm0b3uns5j83s51u190";
 				INFOPLIST_FILE = Runner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = BookStar;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.books";

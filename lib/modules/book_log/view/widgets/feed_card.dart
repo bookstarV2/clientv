@@ -1,4 +1,5 @@
 import 'package:bookstar/common/components/button/menu_button.dart';
+import 'package:bookstar/common/components/image/fullscreen_image_viewer.dart';
 import 'package:bookstar/common/components/text/expandable_text.dart';
 import 'package:bookstar/common/service/analytics_service.dart';
 import 'package:bookstar/gen/assets.gen.dart';
@@ -51,6 +52,38 @@ class _FeedCardState extends ConsumerState<FeedCard> {
     setState(() {
       _currentImageIndex = index;
     });
+  }
+
+  /// 이미지 로딩 중/실패 시 검은 공백 대신 표시하는 플레이스홀더.
+  Widget _imageFallback({required bool loading}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: ColorName.g7,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      alignment: Alignment.center,
+      child: loading
+          ? const SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation(ColorName.g5),
+              ),
+            )
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.image_not_supported_outlined,
+                    size: 32, color: ColorName.g5),
+                const SizedBox(height: 6),
+                Text(
+                  '이미지를 불러올 수 없어요',
+                  style: AppTexts.b11.copyWith(color: ColorName.g4),
+                ),
+              ],
+            ),
+    );
   }
 
   @override
@@ -156,41 +189,60 @@ class _FeedCardState extends ConsumerState<FeedCard> {
             ],
           ),
         ),
-        AspectRatio(
-          aspectRatio: 1,
-          child: PageView.builder(
-            itemCount: widget.feed.images.length,
-            onPageChanged: _onImageIndexChanged,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: const EdgeInsets.all(16),
-                child: CachedNetworkImage(
-                  imageUrl: widget.feed.images[index].imageUrl,
-                  fit: BoxFit.contain,
-                  errorWidget: (context, url, error) => Container(),
-                ),
-              );
-            },
+        // 이미지가 없는 다이어리는 정사각 빈 영역을 예약하지 않는다.
+        if (widget.feed.images.isNotEmpty) ...[
+          AspectRatio(
+            aspectRatio: 1,
+            child: PageView.builder(
+              itemCount: widget.feed.images.length,
+              onPageChanged: _onImageIndexChanged,
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: GestureDetector(
+                    // 탭하면 전체화면에서 핀치 줌으로 크게 볼 수 있다.
+                    onTap: () => FullscreenImageViewer.show(
+                      context,
+                      imageUrls: widget.feed.images
+                          .map((e) => e.imageUrl)
+                          .toList(),
+                      initialIndex: index,
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: CachedNetworkImage(
+                        imageUrl: widget.feed.images[index].imageUrl,
+                        fit: BoxFit.contain,
+                        placeholder: (context, url) =>
+                            _imageFallback(loading: true),
+                        errorWidget: (context, url, error) =>
+                            _imageFallback(loading: false),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(
-            widget.feed.images.length,
-            (index) => AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              width: _currentImageIndex == index ? 20 : 8,
-              height: 8,
-              decoration: BoxDecoration(
-                color: _currentImageIndex == index
-                    ? ColorName.p1 // 활성화된 인디케이터 색상
-                    : ColorName.g7, // 비활성화된 인디케이터 색상
-                borderRadius: BorderRadius.circular(4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              widget.feed.images.length,
+              (index) => AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                width: _currentImageIndex == index ? 20 : 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: _currentImageIndex == index
+                      ? ColorName.p1 // 활성화된 인디케이터 색상
+                      : ColorName.g7, // 비활성화된 인디케이터 색상
+                  borderRadius: BorderRadius.circular(4),
+                ),
               ),
             ),
           ),
-        ),
+        ],
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(

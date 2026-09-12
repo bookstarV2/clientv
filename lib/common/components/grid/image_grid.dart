@@ -75,11 +75,24 @@ class ImageGrid extends StatelessWidget {
                         fit: BoxFit.cover,
                         width: double.infinity,
                         height: double.infinity,
-                        errorWidget: (context, url, error) => Container(),
+                        placeholder: (context, url) => const Center(
+                          child: SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation(ColorName.g5),
+                            ),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => const Center(
+                          child: Icon(Icons.image_not_supported_outlined,
+                              color: ColorName.g5, size: 28),
+                        ),
                       )
                     : const Center(
-                        child: Icon(Icons.image_not_supported,
-                            color: ColorName.g7, size: 36),
+                        child: Icon(Icons.image_not_supported_outlined,
+                            color: ColorName.g5, size: 28),
                       ),
               ),
             );

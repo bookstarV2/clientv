@@ -128,37 +128,40 @@ class _BookPickScreenState extends BaseScreenState<BookPickScreen> {
                     context.push('/book-pick/search');
                   },
                 ),
-                SizedBox(
-                  height: 60,
-                ),
-                _buildYoutubeBook(
-                  ctx: context,
-                  list: bookPickState.youtubeRecommends,
-                  currentIndex: _currentIndex,
-                  updateIndex: _updateIndex,
-                  onItemTap: (index) {
-                    final item = bookPickState.youtubeRecommends[index];
-                    AnalyticsService.logEvent('click_youtube_recommend',
-                        parameters: {
-                          'screen_name': 'book_pick',
-                          'video_id': item.videoId,
-                          'video_title': item.title,
-                        });
-                    _launchYouTube(item.videoId);
-                  },
-                  onDirectShow: () {
-                    final item =
-                        bookPickState.youtubeRecommends[_currentIndex];
-                    AnalyticsService.logEvent('click_watch_youtube_now',
-                        parameters: {
-                          'screen_name': 'book_pick',
-                          'video_id': item.videoId,
-                          'video_title': item.title,
-                        });
-                    _launchYouTube(item.videoId);
-                  },
-                  onOtherRecommend: _otherRecommend,
-                ),
+                // 유튜브 추천이 없으면 섹션 전체(상하 여백 포함)를 숨겨 빈 공백을 방지한다.
+                if (bookPickState.youtubeRecommends.isNotEmpty) ...[
+                  SizedBox(
+                    height: 60,
+                  ),
+                  _buildYoutubeBook(
+                    ctx: context,
+                    list: bookPickState.youtubeRecommends,
+                    currentIndex: _currentIndex,
+                    updateIndex: _updateIndex,
+                    onItemTap: (index) {
+                      final item = bookPickState.youtubeRecommends[index];
+                      AnalyticsService.logEvent('click_youtube_recommend',
+                          parameters: {
+                            'screen_name': 'book_pick',
+                            'video_id': item.videoId,
+                            'video_title': item.title,
+                          });
+                      _launchYouTube(item.videoId);
+                    },
+                    onDirectShow: () {
+                      final item =
+                          bookPickState.youtubeRecommends[_currentIndex];
+                      AnalyticsService.logEvent('click_watch_youtube_now',
+                          parameters: {
+                            'screen_name': 'book_pick',
+                            'video_id': item.videoId,
+                            'video_title': item.title,
+                          });
+                      _launchYouTube(item.videoId);
+                    },
+                    onOtherRecommend: _otherRecommend,
+                  ),
+                ],
                 SizedBox(
                   height: 60,
                 ),

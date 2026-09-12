@@ -279,6 +279,7 @@ class _BookLogThumbnailScreenState
                   alignment: Alignment.topCenter,
                   child: ProfileSpeechBubble(
                       text: bookLog.profile.introduction,
+                      isMyProfile: isMyProfile,
                       onTap: () => _onTapBubble(
                           nickName: bookLog.profile.nickName,
                           profileImageUrl: bookLog.profile.profileImageUrl,

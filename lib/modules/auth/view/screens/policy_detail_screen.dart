@@ -1,5 +1,4 @@
-import 'package:bookstar/common/theme/style/app_texts.dart';
-import 'package:bookstar/gen/colors.gen.dart';
+import 'package:bookstar/modules/learning/view/learning_design.dart';
 import 'package:bookstar/modules/auth/model/policy.dart';
 import 'package:flutter/material.dart' hide IconAlignment;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,20 +10,9 @@ class PolicyDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      backgroundColor: ColorName.b1,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const BackButton(),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          getTitle(policyType),
-        ),
-      ),
-      body: getTargetWidget(policyType: policyType),
+    return LearningPage(
+      title: getTitle(policyType),
+      child: getTargetWidget(policyType: policyType),
     );
   }
 
@@ -86,7 +74,7 @@ class PolicyDetailScreen extends ConsumerWidget {
 
 공고일자: 2025년 8월 14일
 시행일자: 2025년 8월 14일''',
-            style: AppTexts.b6.copyWith(color: ColorName.w1),
+            style: learningBodyStyle,
           ),
         );
       case PolicyType.personalInformation:
@@ -119,7 +107,7 @@ class PolicyDetailScreen extends ConsumerWidget {
 
 공고일자: 2025년 8월 14일
 시행일자: 2025년 8월 14일''',
-            style: AppTexts.b6.copyWith(color: ColorName.w1),
+            style: learningBodyStyle,
           ),
         );
       case PolicyType.marketing:
@@ -148,7 +136,7 @@ class PolicyDetailScreen extends ConsumerWidget {
 
 공고일자: 2025년 8월 14일
 시행일자: 2025년 8월 14일''',
-            style: AppTexts.b6.copyWith(color: ColorName.w1, height: 1.5),
+            style: learningBodyStyle,
           ),
         );
     }
