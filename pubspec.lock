@@ -940,10 +940,10 @@ packages:
     dependency: transitive
     description:
       name: jose
-      sha256: "7955ec5d131960104e81fbf151abacb9d835c16c9e793ed394b2809f28b2198d"
+      sha256: a0a339d0a0652dc1bd89f8b92d38479e07e16db83858fb55fa57212479f323f7
       url: "https://pub.dev"
     source: hosted
-    version: "0.3.4"
+    version: "0.3.5+2"
   js:
     dependency: transitive
     description:
