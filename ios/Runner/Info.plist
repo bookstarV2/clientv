@@ -36,7 +36,7 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
-	<key>GoogleClientID</key>
+	<key>GIDClientID</key>
 	<string>$(GOOGLE_CLIENT_ID)</string>
 	<key>KakaoNativeAppKey</key>
 	<string>kakao$(KAKAO_NATIVE_APP_KEY)</string>
