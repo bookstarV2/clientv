@@ -12,6 +12,7 @@ export HOMEBREW_NO_AUTO_UPDATE=1
 
 cd "$CI_PRIMARY_REPOSITORY_PATH"
 ruby ios/ci_scripts/prepare_config.rb
+ruby ios/ci_scripts/distribution_metadata_test.rb
 
 bookstar_flutter_dir=$(mktemp -d "${TMPDIR:-/tmp}/bookstar-flutter.XXXXXX")
 git clone --depth 1 --branch 3.32.6 https://github.com/flutter/flutter.git "$bookstar_flutter_dir/sdk"
