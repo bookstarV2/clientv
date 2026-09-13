@@ -35,6 +35,18 @@ class BookstarCloudConfigTest < Minitest::Test
     end
   end
 
+  def test_allows_authorized_production_cutover_only_from_build_406
+    data = payload.merge('assets/env/.env' =>
+                         Base64.strict_encode64("BASE_URL=https://bookstar.trade\nKAKAO_NATIVE_KEY=#{'a' * 32}\n"))
+    assert_equal "BASE_URL=https://bookstar.trade\nKAKAO_NATIVE_KEY=#{'a' * 32}\n",
+                 validate(data, 'https://bookstar.trade', '406').fetch('assets/env/.env')
+    assert_raises(ArgumentError) { validate(data, 'https://bookstar.trade', '405') }
+    %w[https://book.trade https://bookstar.trade.evil.example https://user@bookstar.trade
+       https://bookstar.trade/path http://bookstar.trade https://bookstar.trade:444].each do |origin|
+      assert_raises(ArgumentError) { validate(data, origin, '406') }
+    end
+  end
+
   def test_rejects_missing_extra_and_traversal_paths
     missing = payload.reject { |path, _| path == 'assets/env/.env' }
     assert_raises(ArgumentError) { validate(missing) }

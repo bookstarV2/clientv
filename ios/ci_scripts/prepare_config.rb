@@ -13,13 +13,16 @@ module BookstarCloudConfig
 
   def self.validate(payload, origin, build_number)
     uri = URI.parse(origin)
-    unless uri.scheme == 'https' && uri.host == 'beta.bookstar.trade' &&
+    unless uri.scheme == 'https' && %w[beta.bookstar.trade bookstar.trade].include?(uri.host) &&
            uri.userinfo.nil? && uri.query.nil? && uri.fragment.nil? &&
            ['', '/'].include?(uri.path) && uri.port == 443
-      raise ArgumentError, 'Use the isolated beta.bookstar.trade HTTPS origin'
+      raise ArgumentError, 'Use an approved BookStar HTTPS origin'
     end
     unless build_number.match?(/\A[0-9]+\z/) && build_number.to_i >= 402
       raise ArgumentError, 'Set Xcode Cloud Next Build Number to at least 402'
+    end
+    if uri.host == 'bookstar.trade' && build_number.to_i < 406
+      raise ArgumentError, 'Production cutover requires build 406 or newer'
     end
 
     encoded = JSON.parse(payload)
@@ -41,7 +44,7 @@ module BookstarCloudConfig
       raise ArgumentError, 'Kakao SDK and iOS callback must use the same native app key'
     end
     unless setting(env, 'BASE_URL').sub(%r{/$}, '') == origin.sub(%r{/$}, '')
-      raise ArgumentError, 'App API origin must match the isolated Cloud origin'
+      raise ArgumentError, 'App API origin must match the Cloud origin'
     end
     decoded
   end
@@ -74,7 +77,7 @@ if $PROGRAM_NAME == __FILE__
     BookstarCloudConfig.install(ENV, ENV.fetch('CI_PRIMARY_REPOSITORY_PATH'))
     puts 'Private app configuration restored; values are not logged.'
   rescue StandardError
-    warn 'Cloud configuration rejected. Check the four-file secret, beta origin, login keys and build number.'
+    warn 'Cloud configuration rejected. Check the four-file secret, approved origin, login keys and build number.'
     exit 1
   end
 end

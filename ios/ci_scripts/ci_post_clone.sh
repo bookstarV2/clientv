@@ -8,10 +8,11 @@ export HOMEBREW_NO_AUTO_UPDATE=1
 
 : "${CI_PRIMARY_REPOSITORY_PATH:?Run this script in Xcode Cloud}"
 : "${CI_BUILD_NUMBER:?Xcode Cloud build number is required}"
-: "${BOOKSTAR_API_BASE_URL:?Set the isolated TestFlight HTTPS origin}"
+: "${BOOKSTAR_API_BASE_URL:?Set the approved BookStar HTTPS origin}"
 
 cd "$CI_PRIMARY_REPOSITORY_PATH"
 ruby ios/ci_scripts/prepare_config.rb
+ruby ios/ci_scripts/prepare_config_test.rb
 ruby ios/ci_scripts/distribution_metadata_test.rb
 
 bookstar_flutter_dir=$(mktemp -d "${TMPDIR:-/tmp}/bookstar-flutter.XXXXXX")
