@@ -34,7 +34,26 @@ module BookstarCloudConfig
     if keys.match?(/stub|placeholder|YOUR_/i)
       raise ArgumentError, 'Replace placeholder iOS login configuration before building'
     end
+    env = decoded.fetch('assets/env/.env')
+    native_key = setting(env, 'KAKAO_NATIVE_KEY')
+    unless native_key.match?(/\A[a-f0-9]{32}\z/) &&
+           native_key == setting(keys, 'KAKAO_NATIVE_APP_KEY')
+      raise ArgumentError, 'Kakao SDK and iOS callback must use the same native app key'
+    end
+    unless setting(env, 'BASE_URL').sub(%r{/$}, '') == origin.sub(%r{/$}, '')
+      raise ArgumentError, 'App API origin must match the isolated Cloud origin'
+    end
     decoded
+  end
+
+  def self.setting(content, name)
+    values = content.scan(/^#{Regexp.escape(name)}[ \t]*=[ \t]*(.*)$/).flatten
+    raise ArgumentError, 'Required app setting is missing or duplicated' unless values.length == 1
+
+    value = values.first.strip
+    value = value[1...-1] if (value.start_with?('"') && value.end_with?('"')) ||
+                            (value.start_with?("'") && value.end_with?("'"))
+    value
   end
 
   def self.install(environment, root)

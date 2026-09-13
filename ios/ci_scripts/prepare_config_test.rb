@@ -4,7 +4,10 @@ require_relative 'prepare_config'
 
 class BookstarCloudConfigTest < Minitest::Test
   def payload
-    BookstarCloudConfig::PATHS.to_h { |path| [path, Base64.strict_encode64('fixture')] }
+    files = BookstarCloudConfig::PATHS.to_h { |path| [path, 'fixture'] }
+    files['assets/env/.env'] = "BASE_URL=https://beta.bookstar.trade\nKAKAO_NATIVE_KEY=#{'a' * 32}\n"
+    files['ios/Flutter/Keys.xcconfig'] = "KAKAO_NATIVE_APP_KEY = #{'a' * 32}\n"
+    files.transform_values { |value| Base64.strict_encode64(value) }
   end
 
   def validate(data = payload, origin = 'https://beta.bookstar.trade', number = '402')
@@ -18,7 +21,7 @@ class BookstarCloudConfigTest < Minitest::Test
              'CI_BUILD_NUMBER' => '402'}
       BookstarCloudConfig.install(env, root)
       BookstarCloudConfig::PATHS.each do |path|
-        assert_equal 'fixture', File.read(File.join(root, path))
+        assert_equal Base64.strict_decode64(payload.fetch(path)), File.read(File.join(root, path))
         assert_equal 0o600, File.stat(File.join(root, path)).mode & 0o777
       end
     end
@@ -49,5 +52,25 @@ class BookstarCloudConfigTest < Minitest::Test
       data = payload.merge('ios/Flutter/Keys.xcconfig' => value)
       assert_raises(ArgumentError) { validate(data) }
     end
+  end
+
+  def test_rejects_kakao_sdk_and_callback_key_mismatch
+    data = payload.merge('ios/Flutter/Keys.xcconfig' =>
+                         Base64.strict_encode64("KAKAO_NATIVE_APP_KEY = #{'b' * 32}\n"))
+    assert_raises(ArgumentError) { validate(data) }
+  end
+
+  def test_rejects_missing_malformed_and_duplicate_native_keys
+    ['', 'KAKAO_NATIVE_KEY=bad', "KAKAO_NATIVE_KEY=#{'a' * 32}\nKAKAO_NATIVE_KEY=#{'b' * 32}"].each do |key|
+      data = payload.merge('assets/env/.env' =>
+                           Base64.strict_encode64("BASE_URL=https://beta.bookstar.trade\n#{key}\n"))
+      assert_raises(ArgumentError) { validate(data) }
+    end
+  end
+
+  def test_rejects_app_origin_that_disagrees_with_cloud_origin
+    data = payload.merge('assets/env/.env' =>
+                         Base64.strict_encode64("BASE_URL=https://bookstar.trade\nKAKAO_NATIVE_KEY=#{'a' * 32}\n"))
+    assert_raises(ArgumentError) { validate(data) }
   end
 end
