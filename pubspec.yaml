@@ -1,5 +1,5 @@
 name: bookstar
-description: "BookStar - 독서 SNS 앱"
+description: "BookStar - AI 퀴즈로 읽은 책을 되짚고 기억하는 독서 앱"
 publish_to: 'none'
 version: 1.0.17+402
 
@@ -69,6 +69,8 @@ dependencies:
   gal: ^2.3.0
   pro_image_editor: ^11.3.0
   path_provider: ^2.1.5
+  share_plus: 10.1.4
+  shared_preferences: 2.5.3
   photo_manager: ^3.7.1
 
 dev_dependencies:

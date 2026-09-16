@@ -31,6 +31,11 @@ import SwiftUI
         methodChannel.setMethodCallHandler { [weak self] (call: FlutterMethodCall, result: @escaping FlutterResult) in
             guard let self = self else { return }
             
+            // The current quiz/review routes do not use the legacy app blocker.
+            // Re-enable only with Family Controls distribution approval AND
+            // the matching entitlement; never report blocking as successful
+            // in builds that do not have this capability.
+            #if BOOKSTAR_ENABLE_FAMILY_CONTROLS
             // iOS 16.0 이상에서만 차단 기능 지원
             if #available(iOS 16.0, *) {
                 guard let methodName = MethodName(rawValue: call.method) else {
@@ -68,6 +73,13 @@ import SwiftUI
                     result(FlutterMethodNotImplemented)
                 }
             }
+            #else
+            if MethodName(rawValue: call.method) != nil {
+                result(false)
+            } else {
+                result(FlutterMethodNotImplemented)
+            }
+            #endif
         }
 
         GeneratedPluginRegistrant.register(with: self)

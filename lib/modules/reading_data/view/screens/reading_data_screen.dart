@@ -115,41 +115,46 @@ class _ReadingDataScreenState extends BaseScreenState<ReadingDataScreen> {
                       SizedBox(
                         height: 36,
                       ),
-                      Container(
-                        constraints: BoxConstraints(
-                          minHeight: podium1Height,
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          spacing: 8,
-                          children: [
-                            Expanded(
-                                child: _buildPodium(
-                              podiumHeight: podium23Height,
-                              podiumColor: ColorName.g7,
-                              rank: 2,
-                              item: data.top2,
-                              onItemTap: onItemTap,
-                            )),
-                            Expanded(
-                                child: _buildPodium(
-                              podiumHeight: podium1Height,
-                              podiumColor: ColorName.p1,
-                              rank: 1,
-                              item: data.top1,
-                              onItemTap: onItemTap,
-                            )),
-                            Expanded(
-                                child: _buildPodium(
-                              podiumHeight: podium23Height,
-                              podiumColor: ColorName.g7,
-                              rank: 3,
-                              item: data.top3,
-                              onItemTap: onItemTap,
-                            )),
-                          ],
-                        ),
-                      )
+                      if (data.top1 == null &&
+                          data.top2 == null &&
+                          data.top3 == null)
+                        _buildRankingEmpty()
+                      else
+                        Container(
+                          constraints: BoxConstraints(
+                            minHeight: podium1Height,
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            spacing: 8,
+                            children: [
+                              Expanded(
+                                  child: _buildPodium(
+                                podiumHeight: podium23Height,
+                                podiumColor: ColorName.g7,
+                                rank: 2,
+                                item: data.top2,
+                                onItemTap: onItemTap,
+                              )),
+                              Expanded(
+                                  child: _buildPodium(
+                                podiumHeight: podium1Height,
+                                podiumColor: ColorName.p1,
+                                rank: 1,
+                                item: data.top1,
+                                onItemTap: onItemTap,
+                              )),
+                              Expanded(
+                                  child: _buildPodium(
+                                podiumHeight: podium23Height,
+                                podiumColor: ColorName.g7,
+                                rank: 3,
+                                item: data.top3,
+                                onItemTap: onItemTap,
+                              )),
+                            ],
+                          ),
+                        )
                     ],
                   ),
                 ),
@@ -159,6 +164,35 @@ class _ReadingDataScreenState extends BaseScreenState<ReadingDataScreen> {
         },
         loading: loading,
         error: error("리딩 데이터 정보를 불러올 수 없습니다."));
+  }
+
+  /// 이번 주 랭킹 데이터가 없을 때 빈 시상대 대신 표시하는 빈 상태.
+  Widget _buildRankingEmpty() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 48),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 120,
+              height: 120,
+              child: Assets.icons.icBookpickSearchCharacter.svg(),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              '아직 이번 주 랭킹이 없어요',
+              style: AppTexts.b7.copyWith(color: ColorName.g1),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '챌린지에 참여하고 첫 랭커가 되어보세요!',
+              style: AppTexts.b10.copyWith(color: ColorName.g3),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildPodium({

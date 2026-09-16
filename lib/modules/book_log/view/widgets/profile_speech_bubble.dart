@@ -9,15 +9,21 @@ class ProfileSpeechBubble extends StatelessWidget {
   final double width;
   final double height;
   final Function() onTap;
+  final bool isMyProfile;
 
   const ProfileSpeechBubble(
       {required this.text,
       this.width = 100,
       this.height = 38,
+      this.isMyProfile = false,
       required this.onTap});
 
   @override
   Widget build(BuildContext context) {
+    // 소개가 비어 있을 때: 내 프로필이면 작성 유도, 남의 프로필이면 말풍선을 숨긴다.
+    if (text.isEmpty && !isMyProfile) {
+      return const SizedBox.shrink();
+    }
     final displayText = text.isEmpty ? '소개를 작성해 보세요' : text;
     return GestureDetector(
       onTap: onTap,

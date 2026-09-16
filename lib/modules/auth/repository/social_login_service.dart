@@ -1,12 +1,10 @@
-import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 @riverpod
 SocialLoginService socialLoginService(Ref ref) {
@@ -37,36 +35,21 @@ class SocialLoginService {
       if (idToken != null && idToken.isNotEmpty) {
         return idToken;
       }
-      // OIDC 미활성 시: 카카오 사용자 정보로 idToken(JWT payload)을 구성해 전달한다.
-      // 서버는 서명 검증 없이 payload(sub/email 등)만 사용하므로 로그인이 성립한다.
-      final user = await UserApi.instance.me();
-      return _buildIdTokenFromKakaoUser(user);
+      // 서버는 카카오가 서명한 OIDC 토큰만 인증한다.
+      debugPrint('Kakao login requires OpenID Connect configuration.');
+      return null;
     } catch (e) {
       debugPrint('[ERROR] loginWithKakao: $e');
       return null;
     }
   }
 
-  /// 카카오 User 정보로 서버가 파싱 가능한 형태의 idToken(JWT)을 구성한다.
-  String _buildIdTokenFromKakaoUser(dynamic user) {
-    String seg(Map<String, dynamic> m) =>
-        base64Url.encode(utf8.encode(jsonEncode(m))).replaceAll('=', '');
-    final account = user.kakaoAccount;
-    final header = seg({'alg': 'none', 'typ': 'JWT'});
-    final payload = seg({
-      'sub': user.id?.toString() ?? '',
-      'email': account?.email ?? '',
-      'picture': account?.profile?.profileImageUrl ?? '',
-      'birthyear': account?.birthyear ?? '',
-    });
-    return '$header.$payload.';
-  }
-
   Future<String?> loginWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
-      final GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
+      final GoogleSignInAuthentication? googleAuth =
+          await googleUser?.authentication;
 
       // final credential = GoogleAuthProvider.credential(
       //   accessToken: googleAuth?.accessToken,
@@ -74,7 +57,6 @@ class SocialLoginService {
       // );
 
       return googleAuth?.idToken;
-
     } catch (e) {
       debugPrint('[ERROR] loginWithGoogle: $e');
 
@@ -84,11 +66,10 @@ class SocialLoginService {
 
   Future<String?> loginWithApple() async {
     try {
-      final appleProvider = AppleAuthProvider();
-
-      final userCredential = await FirebaseAuth.instance.signInWithProvider(appleProvider);
-
-      return userCredential.user?.getIdToken();
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: [AppleIDAuthorizationScopes.email],
+      );
+      return credential.identityToken;
     } catch (e) {
       debugPrint('[ERROR] loginWithApple: $e');
 

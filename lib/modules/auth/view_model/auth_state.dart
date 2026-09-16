@@ -6,6 +6,9 @@ sealed class AuthState {}
 
 class AuthIdle extends AuthState {}
 
+// Credentials are retained when the server is temporarily unreachable.
+class AuthRestoreFailed extends AuthState {}
+
 class AuthSuccess extends AuthState {
   final int memberId;
   final String nickName;

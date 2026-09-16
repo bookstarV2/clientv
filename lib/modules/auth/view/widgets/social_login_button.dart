@@ -45,7 +45,7 @@ class SocialLoginButton extends StatelessWidget {
               ? BorderSide(color: Colors.grey.shade300)
               : BorderSide.none,
         ),
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
         elevation: 0,
       ),
       child: Row(
@@ -53,12 +53,14 @@ class SocialLoginButton extends StatelessWidget {
         children: [
           SvgPicture.asset(assetName, width: 20, height: 20),
           const SizedBox(width: 10),
-          Text(label,
-              style: TextStyle(
-                color: textColor,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ))
+          Flexible(
+              child: Text(label,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  )))
         ],
       ),
     );
