@@ -24,7 +24,8 @@ class GraphFixtureRepository extends LearningRepository {
     '아주 세속적인 철학'
   ];
   @override
-  Future<ReviewPage> getReviews({int? cursor, bool dueOnly = false}) async {
+  Future<ReviewPage> getReviews(
+      {int? cursor, bool dueOnly = false, bool reviewedOnly = false}) async {
     final start = cursor ?? 0;
     final end = (start + 30).clamp(0, count);
     return ReviewPage(

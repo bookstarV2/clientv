@@ -1,17 +1,19 @@
-import 'package:bookstar/modules/reading_challenge/model/quiz_choice.dart';
+import 'package:bookstar/modules/reading_challenge/model/challenge_detail_chapter.dart';
+import 'package:bookstar/modules/reading_challenge/model/choice_result.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
-import '../data/learning_repository.dart';
 import '../data/learning_footprint.dart';
+import '../data/learning_repository.dart';
 import '../data/reading_graph.dart';
+import 'bs_ui.dart';
 import 'learning_chapters_screen.dart';
-import 'learning_design.dart';
-import 'reading_graph_screen.dart';
+import 'learning_report_screen.dart';
 
+/// 2.3 AI 퀴즈 (from 내 서재, [challengeId] set) and 3.2 복습: question →
+/// selected → 정답 확인, then the next quiz or the same quiz again.
 class LearningQuizScreen extends ConsumerStatefulWidget {
   const LearningQuizScreen(
       {super.key, required this.chapterId, this.challengeId});
@@ -27,13 +29,35 @@ class _LearningQuizScreenState extends ConsumerState<LearningQuizScreen> {
   final _scrollController = ScrollController();
   int? _choiceId;
   bool _submitting = false;
+  bool _movingOn = false;
+  bool _answered = false;
   String? _error;
   String? _requestId;
   LearningQuizResult? _result;
 
+  bool get _fromLibrary => widget.challengeId != null;
+
   @override
   void initState() {
     super.initState();
+    _quiz = _load();
+  }
+
+  @override
+  void didUpdateWidget(LearningQuizScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // go_router can reuse this page when it replaces the only page.
+    if (oldWidget.chapterId == widget.chapterId &&
+        oldWidget.challengeId == widget.challengeId) {
+      return;
+    }
+    _choiceId = null;
+    _submitting = false;
+    _movingOn = false;
+    _answered = false;
+    _error = null;
+    _requestId = null;
+    _result = null;
     _quiz = _load();
   }
 
@@ -44,38 +68,42 @@ class _LearningQuizScreenState extends ConsumerState<LearningQuizScreen> {
   }
 
   Future<LearningQuizData> _load() async {
-    final chapter =
-        await ref.read(learningRepositoryProvider).getQuiz(widget.chapterId);
-    final answered =
-        await ref.read(learningRepositoryProvider).hasAnswered(chapter.quizId);
+    final repository = ref.read(learningRepositoryProvider);
+    final chapter = await repository.getQuiz(widget.chapterId);
+    final answered = await repository.hasAnswered(chapter.quizId);
     return LearningQuizData(chapter, answered);
   }
 
   Future<void> _submit(LearningQuizData quiz) async {
-    if (_submitting || _choiceId == null) return;
+    final choiceId = _choiceId;
+    final chapterId = widget.chapterId;
+    if (_submitting || choiceId == null) return;
     setState(() {
       _submitting = true;
       _error = null;
     });
     try {
-      LearningQuizResult result;
-      if (quiz.isReview) {
+      final repository = ref.read(learningRepositoryProvider);
+      final LearningQuizResult result;
+      if (quiz.isReview || _answered) {
         _requestId ??= LearningRepository.newRequestId();
-        result = await ref
-            .read(learningRepositoryProvider)
-            .submitReview(quiz.chapter.quizId, _choiceId!, _requestId!);
+        result = await repository.submitReview(
+            quiz.chapter.quizId, choiceId, _requestId!);
       } else {
         final challengeId = widget.challengeId;
         if (challengeId == null) {
           throw StateError('A first quiz requires a book');
         }
-        result = await ref
-            .read(learningRepositoryProvider)
-            .submitFirstAnswer(quiz.chapter.quizId, _choiceId!, challengeId);
+        result = await repository.submitFirstAnswer(
+            quiz.chapter.quizId, choiceId, challengeId);
       }
-      if (!mounted) return;
-      setState(() => _result = result);
+      if (!mounted || chapterId != widget.chapterId) return;
+      setState(() {
+        _result = result;
+        _answered = true;
+      });
       ref.invalidate(reviewOverviewProvider);
+      ref.invalidate(reviewedQuizzesProvider);
       ref.invalidate(learningBooksProvider);
       ref.invalidate(finishedLearningBooksProvider);
       ref.invalidate(learningFootprintProvider);
@@ -83,18 +111,86 @@ class _LearningQuizScreenState extends ConsumerState<LearningQuizScreen> {
       if (widget.challengeId != null) {
         ref.invalidate(learningChaptersProvider(widget.challengeId!));
       }
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_scrollController.hasClients) {
-          _scrollController.jumpTo(0);
-        }
-      });
+      _scrollToTop();
     } catch (error) {
-      if (mounted) {
+      if (mounted && chapterId == widget.chapterId) {
         setState(() => _error = learningErrorMessage(error,
             answerIsRetained: true, quizContext: true));
       }
     } finally {
-      if (mounted) setState(() => _submitting = false);
+      if (mounted && chapterId == widget.chapterId) {
+        setState(() => _submitting = false);
+      }
+    }
+  }
+
+  void _scrollToTop() => WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) _scrollController.jumpTo(0);
+      });
+
+  void _select(int choiceId) {
+    if (_submitting || _result != null) return;
+    setState(() {
+      if (_choiceId != choiceId) _requestId = null;
+      _choiceId = choiceId;
+      _error = null;
+    });
+  }
+
+  void _retry() {
+    setState(() {
+      _result = null;
+      _choiceId = null;
+      _requestId = null;
+      _error = null;
+    });
+    _scrollToTop();
+  }
+
+  Future<void> _next(LearningQuizData quiz) async {
+    if (_movingOn) return;
+    setState(() => _movingOn = true);
+    String? location;
+    try {
+      location = await _nextLocation(quiz.chapter.quizId);
+    } catch (_) {
+      // The list the quiz was opened from still offers every other quiz.
+    }
+    if (!mounted) return;
+    setState(() => _movingOn = false);
+    if (location == null) {
+      _close();
+    } else {
+      context.pushReplacement(location);
+    }
+  }
+
+  Future<String?> _nextLocation(int quizId) async {
+    final repository = ref.read(learningRepositoryProvider);
+    final challengeId = widget.challengeId;
+    if (challengeId == null) {
+      final due = await repository.getReviews(dueOnly: true);
+      final next = due.items.firstWhereOrNull((item) => item.quizId != quizId);
+      return next == null ? null : '/review/quiz/${next.chapterId}';
+    }
+    final chapters = (await repository.getChapters(challengeId)).chapters;
+    final index =
+        chapters.indexWhere((chapter) => chapter.chapterId == widget.chapterId);
+    final next = [
+      ...chapters.skip(index + 1),
+      ...chapters.take(index < 0 ? 0 : index),
+    ].firstWhereOrNull((chapter) =>
+        chapter.chapterId != widget.chapterId &&
+        chapter.status != ChapterStatus.COMPLETED);
+    return next == null ? null : '/library/$challengeId/quiz/${next.chapterId}';
+  }
+
+  void _close() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go(
+          _fromLibrary ? '/library/${widget.challengeId}/chapters' : '/review');
     }
   }
 
@@ -104,325 +200,203 @@ class _LearningQuizScreenState extends ConsumerState<LearningQuizScreen> {
         child: FutureBuilder<LearningQuizData>(
           future: _quiz,
           builder: (context, snapshot) {
-            final quiz = snapshot.data;
-            return LearningPage(
-              title: _result != null
-                  ? '퀴즈 해설'
-                  : quiz?.isReview == true
-                      ? '다시 떠올리기'
-                      : '오늘의 한 문제',
-              actions: quiz == null
-                  ? null
-                  : [
-                      IconButton(
-                        tooltip: '퀴즈 내용 안내',
-                        onPressed: _submitting
-                            ? null
-                            : () => _showQuizInfo(context, quiz.chapter.quizId),
-                        icon: const Icon(Icons.help_outline_rounded),
+            final loading = snapshot.connectionState != ConnectionState.done;
+            final quiz = loading ? null : snapshot.data;
+            return Scaffold(
+              backgroundColor: Bs.bg,
+              body: DecoratedBox(
+                decoration: BoxDecoration(
+                    gradient: _result == null ? null : _answerGradient),
+                child: SafeArea(
+                  child: Column(
+                    children: [
+                      BsTopBar(
+                        title: _fromLibrary ? 'AI 퀴즈' : '복습',
+                        showBack: true,
+                        trailing: BsTopBarAction(
+                          icon: 'ic_report',
+                          tooltip: '퀴즈 오류 신고',
+                          onPressed: quiz == null || _submitting
+                              ? null
+                              : () => showQuizReportSheet(
+                                  context, quiz.chapter.quizId),
+                        ),
                       ),
+                      Expanded(
+                        child: loading
+                            ? const Center(
+                                child: CircularProgressIndicator(
+                                    color: Bs.primary))
+                            : quiz == null
+                                ? _loadError(snapshot.error)
+                                : _content(quiz),
+                      ),
+                      if (quiz != null)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 15),
+                          child: _actions(quiz),
+                        ),
                     ],
-              bottom: quiz == null
-                  ? null
-                  : Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (_error != null) ...[
-                          Semantics(
-                              liveRegion: true,
-                              child: Text(_error!,
-                                  style: const TextStyle(
-                                      color: LearningColors.amber,
-                                      height: 1.5))),
-                          const SizedBox(height: 12),
-                        ],
-                        SizedBox(
-                            width: double.infinity,
-                            child: FilledButton(
-                              onPressed: _result != null
-                                  ? () => context.canPop()
-                                      ? context.pop()
-                                      : context.go('/quiz')
-                                  : _choiceId == null || _submitting
-                                      ? null
-                                      : () => _submit(quiz),
-                              child: _submitting
-                                  ? const SizedBox(
-                                      height: 22,
-                                      width: 22,
-                                      child: CircularProgressIndicator(
-                                          strokeWidth: 2, color: Colors.white))
-                                  : Text(_result != null
-                                      ? widget.challengeId == null
-                                          ? '복습 목록으로'
-                                          : '목차로 돌아가기'
-                                      : _choiceId == null
-                                          ? '생각한 답을 골라 주세요'
-                                          : '답 확인하기'),
-                            )),
-                        if (_result == null) ...[
-                          const SizedBox(height: 10),
-                          const Text('기억이 안 나도 괜찮아요. 해설로 다시 짚어봐요.',
-                              style: TextStyle(
-                                  fontSize: 12, color: LearningColors.muted)),
-                        ],
-                      ],
-                    ),
-              child: snapshot.connectionState == ConnectionState.waiting
-                  ? const Center(child: CircularProgressIndicator())
-                  : snapshot.hasError
-                      ? SingleChildScrollView(
-                          child: LearningError(
-                          message: learningErrorMessage(snapshot.error!,
-                              quizContext: true),
-                          onRetry: () {
-                            final nextQuiz = _load();
-                            setState(() {
-                              _quiz = nextQuiz;
-                            });
-                          },
-                        ))
-                      : quiz == null
-                          ? const SizedBox.shrink()
-                          : ListView(
-                              key: ValueKey(
-                                  _result == null ? 'question' : 'result'),
-                              controller: _scrollController,
-                              padding:
-                                  const EdgeInsets.fromLTRB(20, 12, 20, 24),
-                              children: _result == null
-                                  ? _question(quiz)
-                                  : _answer(quiz, _result!),
-                            ),
+                  ),
+                ),
+              ),
             );
           },
         ),
       );
 
-  List<Widget> _question(LearningQuizData quiz) => [
-        LearningLabel(
-            quiz.isReview ? '복습 · 기억에서 꺼내 보기' : 'AI 독서 퀴즈 · 한 목차 한 문제'),
-        const SizedBox(height: 12),
-        Text(quiz.chapter.chapterTitle,
-            style: const TextStyle(
-                fontSize: 13, height: 1.5, color: LearningColors.muted)),
-        const SizedBox(height: 16),
-        Text(quiz.chapter.question,
-            style: const TextStyle(
-                fontSize: 22,
-                height: 1.5,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.4)),
-        const SizedBox(height: 18),
-        ...quiz.chapter.choices.mapIndexed((index, choice) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _choice(choice, index),
-            )),
-      ];
-
-  void _selectChoice(int choiceId) {
-    if (_submitting) return;
-    setState(() {
-      if (_choiceId != choiceId) _requestId = null;
-      _choiceId = choiceId;
-      _error = null;
-    });
-  }
-
-  Widget _choice(QuizChoice choice, int index) {
-    final selected = _choiceId == choice.choiceId;
-    return Semantics(
-      button: true,
-      selected: selected,
-      enabled: !_submitting,
-      onTap: _submitting ? null : () => _selectChoice(choice.choiceId),
-      label: '${index + 1}번 ${choice.choiceText}',
-      excludeSemantics: true,
-      child: Material(
-        color: selected ? LearningColors.lavender : Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(
-              color: selected ? LearningColors.primary : LearningColors.line,
-              width: selected ? 1.5 : 1),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: _submitting ? null : () => _selectChoice(choice.choiceId),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Icon(
-                  selected
-                      ? Icons.radio_button_checked_rounded
-                      : Icons.radio_button_off_rounded,
-                  size: 22,
-                  color:
-                      selected ? LearningColors.primary : LearningColors.muted),
-              const SizedBox(width: 14),
-              Expanded(
-                  child: Text(choice.choiceText,
-                      style: TextStyle(
-                          fontSize: 16,
-                          height: 1.5,
-                          fontWeight:
-                              selected ? FontWeight.w600 : FontWeight.w400,
-                          color: LearningColors.ink))),
-            ]),
+  Widget _loadError(Object? error) => Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: BsEmptyState(
+            message: learningErrorMessage(
+                error ?? StateError('Quiz not available'),
+                quizContext: true),
+            action: BsSmallButton(
+              label: '다시 불러오기',
+              onPressed: () {
+                final next = _load();
+                setState(() {
+                  _quiz = next;
+                });
+              },
+            ),
           ),
         ),
-      ),
-    );
-  }
+      );
 
-  List<Widget> _answer(LearningQuizData quiz, LearningQuizResult result) {
-    final correct =
-        result.choiceResults.firstWhereOrNull((choice) => choice.isCorrect);
-    final selected =
-        result.choiceResults.firstWhereOrNull((choice) => choice.isSelected);
-    final color =
-        result.isCorrect ? LearningColors.green : LearningColors.amber;
-    return [
-      Semantics(
-          liveRegion: true,
-          child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                  color: result.isCorrect
-                      ? LearningColors.greenSoft
-                      : LearningColors.amberSoft,
-                  borderRadius: BorderRadius.circular(12)),
-              child: Icon(
-                  result.isCorrect
-                      ? Icons.check_rounded
-                      : Icons.lightbulb_outline_rounded,
-                  color: color,
-                  size: 22),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-                child: Text(result.isCorrect ? '잘 떠올렸어요' : '함께 다시 짚어봐요',
-                    style: TextStyle(
-                        fontSize: 19,
-                        height: 1.4,
-                        fontWeight: FontWeight.w700,
-                        color: color))),
-          ])),
-      const SizedBox(height: 16),
-      LearningCard(
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          LearningLabel(result.isCorrect ? '내가 고른 정답' : '정답 · 핵심 다시 보기',
-              color: LearningColors.green),
-          const SizedBox(height: 12),
-          Text(correct?.choiceText ?? '정답 정보를 확인할 수 없어요.',
-              style: const TextStyle(
-                  fontSize: 18, height: 1.5, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 12),
-          Text(
-              correct?.explanation.isNotEmpty == true
-                  ? correct!.explanation
-                  : '이 부분을 책에서 다시 확인해 보세요.',
-              style: const TextStyle(
-                  fontSize: 16, height: 1.6, color: LearningColors.ink)),
-          if (!result.isCorrect && selected != null) ...[
-            const SizedBox(height: 12),
-            const Divider(),
-            ExpansionTile(
-              tilePadding: EdgeInsets.zero,
-              childrenPadding: const EdgeInsets.only(bottom: 8),
-              title: const Text('내가 고른 답 살펴보기',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+  Widget _content(LearningQuizData quiz) {
+    final result = _result;
+    final chapterTitle = quiz.chapter.chapterTitle.trim();
+    return ListView(
+      key: ValueKey(result == null ? 'question' : 'answer'),
+      controller: _scrollController,
+      padding: const EdgeInsets.fromLTRB(16, 26, 16, 24),
+      children: [
+        BsQuizCard(
+          question: quiz.chapter.question,
+          options: result == null ? _choices(quiz) : _answers(quiz, result),
+        ),
+        if (result == null) ...[
+          if (chapterTitle.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Row(
               children: [
-                Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(selected.choiceText, style: learningBodyStyle)),
-                if (selected.explanation.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  Text(selected.explanation, style: learningBodyStyle),
-                ],
+                const SizedBox.square(
+                  dimension: 24,
+                  child: Center(
+                      child: BsIcon('ic_chapter_book', size: 20, color: Bs.g3)),
+                ),
+                const SizedBox(width: 7),
+                Expanded(
+                  child: Text(chapterTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Bs.text(14, color: Bs.g3, letterSpacing: 0)),
+                ),
               ],
             ),
           ],
-        ]),
-      ),
-      const SizedBox(height: 16),
-      LearningCard(
-          color: LearningColors.lavender,
-          child: Row(children: [
-            const Icon(Icons.event_repeat_rounded,
-                color: LearningColors.primary),
-            const SizedBox(width: 14),
-            Expanded(
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                  Text(
-                      result.nextReviewAt == null
-                          ? '복습에 저장했어요'
-                          : '${DateFormat('M월 d일').format(result.nextReviewAt!)}에 다시 만나요',
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 5),
-                  const Text('복습 탭에서 언제든 다시 풀 수 있어요.',
-                      style: TextStyle(
-                          fontSize: 13,
-                          height: 1.5,
-                          color: LearningColors.muted)),
-                ])),
-          ])),
-      const SizedBox(height: 18),
-      Text(
-          quiz.isReview
-              ? '다시 떠올린 흔적은 같은 질문의 점에 이어져요.'
-              : '이 퀴즈를 푼 흔적이 독서 지도에 남았어요.',
-          style: learningBodyStyle),
-      TextButton.icon(
-          onPressed: () => openReadingMap(context),
-          icon: const Icon(Icons.hub_outlined, size: 18),
-          label: const Text('쌓인 풀이 흔적 보기')),
-      const SizedBox(height: 12),
-      TextButton.icon(
-        onPressed: () => _showQuizInfo(context, quiz.chapter.quizId),
-        icon: const Icon(Icons.flag_outlined, size: 18),
-        label: const Text('책의 내용과 다른가요?'),
-      ),
+        ] else ...[
+          const SizedBox(height: 24),
+          Semantics(
+            liveRegion: true,
+            label: result.isCorrect ? '정답이에요.' : '아쉬워요. 정답을 확인해 보세요.',
+            child: BsExplanationCard(body: _explanation(result)),
+          ),
+        ],
+      ],
+    );
+  }
+
+  List<Widget> _choices(LearningQuizData quiz) => [
+        for (final (index, choice) in quiz.chapter.choices.indexed)
+          BsOptionTile(
+            text: choice.choiceText,
+            state: _choiceId == choice.choiceId
+                ? BsOptionState.selected
+                : BsOptionState.idle,
+            semanticsLabel: '${index + 1}번 ${choice.choiceText}',
+            onTap: _submitting ? null : () => _select(choice.choiceId),
+          ),
+      ];
+
+  List<Widget> _answers(LearningQuizData quiz, LearningQuizResult result) {
+    final byId = {
+      for (final choice in result.choiceResults) choice.choiceId: choice
+    };
+    return [
+      for (final choice in quiz.chapter.choices)
+        _answer(choice.choiceText, byId[choice.choiceId]),
     ];
   }
 
-  void _showQuizInfo(BuildContext context, int quizId) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: LearningColors.paper,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-          child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-        child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('AI 퀴즈와 함께 읽는 법',
-                  style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: LearningColors.ink)),
-              const SizedBox(height: 14),
-              const Text(
-                  'AI가 책 정보와 목차를 바탕으로 만든 퀴즈예요.\n책의 원문과 다른 내용이나 해석이 섞일 수 있어요.\n해설이 낯설다면 해당 부분을 책에서 확인해 주세요.',
-                  style: learningBodyStyle),
-              const SizedBox(height: 22),
-              SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.tonal(
-                    onPressed: () {
-                      Navigator.of(sheetContext).pop();
-                      context.push('/quiz/$quizId/report');
-                    },
-                    child: const Text('문제 오류 알려주기'),
-                  )),
-            ]),
-      )),
+  Widget _answer(String text, ChoiceResult? result) {
+    final correct = result?.isCorrect == true;
+    final picked = result?.isSelected == true;
+    return BsOptionTile(
+      text: text,
+      state: correct
+          ? BsOptionState.answer
+          : picked
+              ? BsOptionState.idle
+              : BsOptionState.dimmed,
+      semanticsLabel: [
+        if (correct) '정답',
+        if (picked) '내가 고른 답',
+        text,
+      ].join(', '),
+    );
+  }
+
+  String _explanation(LearningQuizResult result) {
+    final correct =
+        result.choiceResults.firstWhereOrNull((choice) => choice.isCorrect);
+    final explanation = correct?.explanation.trim() ?? '';
+    return explanation.isEmpty ? '이 부분을 책에서 다시 확인해 보세요.' : explanation;
+  }
+
+  Widget _actions(LearningQuizData quiz) {
+    if (_result == null) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_error != null) ...[
+            Semantics(
+              liveRegion: true,
+              child: Text(_error!,
+                  textAlign: TextAlign.center,
+                  style: Bs.text(14, color: quizErrorTextColor, height: 1.5)),
+            ),
+            const SizedBox(height: 12),
+          ],
+          BsPrimaryButton(
+            label: '정답 확인하기',
+            loading: _submitting,
+            onPressed: _choiceId == null ? null : () => _submit(quiz),
+          ),
+        ],
+      );
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        BsPrimaryButton(
+          label: _fromLibrary ? '다른 퀴즈 풀기' : '다른 퀴즈 복습하기',
+          loading: _movingOn,
+          onPressed: () => _next(quiz),
+        ),
+        const SizedBox(height: 8),
+        BsSecondaryButton(
+            label: '이 퀴즈 다시 풀기', onPressed: _movingOn ? null : _retry),
+      ],
     );
   }
 }
+
+const _answerGradient = LinearGradient(
+  begin: Alignment.topCenter,
+  end: Alignment.bottomCenter,
+  stops: [0, 0.7, 1],
+  colors: [Bs.bg, Bs.bg, Bs.gradientEnd],
+);

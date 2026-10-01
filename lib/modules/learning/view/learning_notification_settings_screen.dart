@@ -6,7 +6,9 @@ import 'package:go_router/go_router.dart';
 
 import '../data/learning_access.dart';
 import '../data/learning_repository.dart';
-import 'learning_design.dart';
+import 'bs_ui.dart';
+
+const _errorRed = Color(0xFFFF6469);
 
 class LearningNotificationSettingsScreen extends ConsumerStatefulWidget {
   const LearningNotificationSettingsScreen({super.key});
@@ -103,70 +105,105 @@ class _LearningNotificationSettingsScreenState
   }
 
   @override
-  Widget build(BuildContext context) => PopScope(
-        canPop: !_saving,
-        child: LearningPage(
-          title: '알림 설정',
-          child: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : _policy == null
-                  ? SingleChildScrollView(
-                      child: LearningError(
-                          message: _error ?? '동의 정보를 확인할 수 없어요.',
-                          onRetry: _load))
-                  : ListView(padding: const EdgeInsets.all(20), children: [
-                      const Text('받고 싶은 소식만\n직접 선택해요',
-                          style: learningTitleStyle),
-                      const SizedBox(height: 16),
-                      const Text(
-                          '현재 복습 푸시 알림은 제공하지 않아요. 아래 설정은 마케팅 정보 수신 동의이며, 기기의 알림 권한과는 달라요.',
-                          style: learningBodyStyle),
-                      const SizedBox(height: 24),
-                      LearningCard(
-                          padding: const EdgeInsets.all(8),
-                          child: Column(children: [
-                            SwitchListTile.adaptive(
-                              title: const Text('마케팅 정보 수신 동의 (선택)'),
-                              subtitle: const Text(
-                                  '새 소식·이벤트·광고성 정보. 동의하지 않아도 퀴즈와 복습을 이용할 수 있어요.'),
-                              value: _draft,
-                              onChanged: _saving
-                                  ? null
-                                  : (value) => setState(() => _draft = value),
-                            ),
-                            TextButton(
-                                onPressed: _saving
-                                    ? null
-                                    : () => context.push('/policies/marketing'),
-                                child: const Text('마케팅 수신 동의 내용 보기')),
-                          ])),
-                      const SizedBox(height: 16),
+  Widget build(BuildContext context) {
+    final policy = _policy;
+    final saved = policy?.marketingAgree == PolicyAgree.Y;
+    return PopScope(
+      canPop: !_saving,
+      child: BsScaffold(
+        title: '알림 설정',
+        showBack: true,
+        bottom: policy == null
+            ? null
+            : BsPrimaryButton(
+                label: _saving ? '저장하고 있어요' : '변경 내용 저장',
+                onPressed: _saving || _draft == saved ? null : _save),
+        body: _loading
+            ? const Center(child: CircularProgressIndicator(color: Bs.primary))
+            : policy == null
+                ? Center(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(16),
+                      child: BsEmptyState(
+                        message: _error ?? '동의 정보를 확인할 수 없어요.',
+                        action:
+                            BsPrimaryButton(label: '다시 불러오기', onPressed: _load),
+                      ),
+                    ),
+                  )
+                : ListView(
+                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
+                    children: [
+                      Text('받고 싶은 소식만\n직접 선택해요', style: Bs.title),
+                      const SizedBox(height: 12),
                       Text(
-                          '현재 저장된 설정: ${_policy!.marketingAgree == PolicyAgree.Y ? '동의' : '동의 안 함'}',
-                          style: learningBodyStyle),
-                      if (_draft != (_policy!.marketingAgree == PolicyAgree.Y))
-                        const Padding(
-                            padding: EdgeInsets.only(top: 8),
+                          '현재 복습 푸시 알림은 제공하지 않아요. 아래 설정은 마케팅 정보 수신 동의이며, 기기의 알림 권한과는 달라요.',
+                          style: Bs.text(14, color: Bs.g3, height: 1.5)),
+                      const SizedBox(height: 28),
+                      Text('마케팅 정보', style: Bs.text(14, color: Bs.g3)),
+                      const SizedBox(height: 6),
+                      SwitchListTile.adaptive(
+                        contentPadding: EdgeInsets.zero,
+                        activeColor: Bs.primary,
+                        title: Text('마케팅 정보 수신 동의 (선택)',
+                            style: Bs.text(16, color: Bs.g7)),
+                        subtitle: Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                              '새 소식·이벤트·광고성 정보. 동의하지 않아도 퀴즈와 복습을 이용할 수 있어요.',
+                              style: Bs.text(13, color: Bs.g3, height: 1.5)),
+                        ),
+                        value: _draft,
+                        onChanged: _saving
+                            ? null
+                            : (value) => setState(() => _draft = value),
+                      ),
+                      const Divider(height: 1, thickness: 1, color: Bs.surface),
+                      InkWell(
+                        onTap: _saving
+                            ? null
+                            : () => context.push('/policies/marketing'),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(minHeight: 47),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                  child: Text('마케팅 수신 동의 내용 보기',
+                                      style: Bs.text(16, color: Bs.g7))),
+                              const SizedBox(
+                                width: 9.7,
+                                height: 16.6,
+                                child: BsIcon('ic_chevron_right',
+                                    size: 16.6, color: Bs.g3),
+                              ),
+                              const SizedBox(width: 5.9),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const Divider(height: 1, thickness: 1, color: Bs.surface),
+                      const SizedBox(height: 20),
+                      Text('현재 저장된 설정: ${saved ? '동의' : '동의 안 함'}',
+                          style: Bs.text(14, color: Bs.g3)),
+                      if (_draft != saved)
+                        Padding(
+                            padding: const EdgeInsets.only(top: 8),
                             child: Text('변경한 설정은 아직 저장되지 않았어요.',
-                                style: TextStyle(color: LearningColors.amber))),
+                                style: Bs.text(14,
+                                    weight: FontWeight.w500,
+                                    color: Bs.primary))),
                       if (_error != null) ...[
                         const SizedBox(height: 16),
                         Text(_error!,
-                            style:
-                                const TextStyle(color: LearningColors.amber)),
-                        TextButton(
-                            onPressed: _saving ? null : _load,
-                            child: const Text('저장된 설정 다시 불러오기')),
+                            style: Bs.text(14, color: _errorRed, height: 1.5)),
+                        const SizedBox(height: 8),
+                        BsSecondaryButton(
+                            label: '저장된 설정 다시 불러오기',
+                            onPressed: _saving ? null : _load),
                       ],
-                      const SizedBox(height: 24),
-                      FilledButton(
-                          onPressed: _saving ||
-                                  _draft ==
-                                      (_policy!.marketingAgree == PolicyAgree.Y)
-                              ? null
-                              : _save,
-                          child: Text(_saving ? '저장하고 있어요' : '변경 내용 저장')),
-                    ]),
-        ),
-      );
+                    ],
+                  ),
+      ),
+    );
+  }
 }

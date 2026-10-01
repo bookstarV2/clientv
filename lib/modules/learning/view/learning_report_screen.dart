@@ -1,56 +1,61 @@
-import 'package:bookstar/infra/network/dio_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/learning_repository.dart';
-import 'learning_design.dart';
+import 'bs_ui.dart';
 
-class LearningReportScreen extends ConsumerStatefulWidget {
+/// 2.3.1 오류 신고: bottom sheet opened from the quiz top bar report icon.
+Future<void> showQuizReportSheet(BuildContext context, int quizId) =>
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      backgroundColor: Bs.white,
+      barrierColor: Bs.dim,
+      showDragHandle: false,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (_) => QuizReportPanel(quizId: quizId),
+    );
+
+/// `/quiz/:quizId/report`: the same report flow as a full page.
+class LearningReportScreen extends StatelessWidget {
   const LearningReportScreen({super.key, required this.quizId});
   final int quizId;
 
   @override
-  ConsumerState<LearningReportScreen> createState() =>
-      _LearningReportScreenState();
+  Widget build(BuildContext context) =>
+      QuizReportPanel(quizId: quizId, fullScreen: true);
 }
 
-class _LearningReportScreenState extends ConsumerState<LearningReportScreen> {
-  final _content = TextEditingController();
-  String? _reason;
+/// Report content shared by the sheet and the page: Default → Completed.
+class QuizReportPanel extends ConsumerStatefulWidget {
+  const QuizReportPanel(
+      {super.key, required this.quizId, this.fullScreen = false});
+  final int quizId;
+  final bool fullScreen;
+
+  @override
+  ConsumerState<QuizReportPanel> createState() => _QuizReportPanelState();
+}
+
+class _QuizReportPanelState extends ConsumerState<QuizReportPanel> {
   bool _sending = false;
   bool _sent = false;
   String? _error;
   String? _requestId;
-  static const _reasons = {
-    'DIFFERENT_FROM_BOOK': '책의 내용과 달라요',
-    'NOT_IN_BOOK': '책에 없는 내용이에요',
-    'SUBJECTIVE_CONTENT': '여러 답이 가능해 보여요',
-    'OTHER': '그 밖의 문제가 있어요',
-  };
-
-  @override
-  void dispose() {
-    _content.dispose();
-    super.dispose();
-  }
 
   Future<void> _send() async {
-    if (_sending || _reason == null) return;
-    FocusScope.of(context).unfocus();
+    if (_sending || _sent) return;
     setState(() {
       _sending = true;
       _error = null;
     });
     try {
       _requestId ??= LearningRepository.newRequestId();
-      await ref
-          .read(dioClientProvider)
-          .post('/api/v3/quizzes/${widget.quizId}/error-report', data: {
-        'errorType': _reason,
-        'content': _content.text.trim(),
-        'requestId': _requestId,
-      });
+      await ref.read(learningRepositoryProvider).reportQuiz(widget.quizId,
+          errorType: 'OTHER', requestId: _requestId!);
       if (mounted) setState(() => _sent = true);
     } catch (error) {
       if (mounted) setState(() => _error = learningErrorMessage(error));
@@ -59,81 +64,127 @@ class _LearningReportScreenState extends ConsumerState<LearningReportScreen> {
     }
   }
 
+  void _close() {
+    if (!widget.fullScreen) {
+      Navigator.of(context).pop();
+    } else if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/quiz');
+    }
+  }
+
   @override
-  Widget build(BuildContext context) => PopScope(
-      canPop: !_sending,
-      child: LearningPage(
-        title: '문제 오류 알려주기',
-        bottom: Padding(
-          padding:
-              EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-          child: SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: _sent
-                    ? () =>
-                        context.canPop() ? context.pop() : context.go('/quiz')
-                    : _reason == null || _sending
-                        ? null
-                        : _send,
-                child: Text(_sent
-                    ? '퀴즈로 돌아가기'
-                    : _sending
-                        ? '보내는 중…'
-                        : '의견 보내기'),
-              )),
+  Widget build(BuildContext context) {
+    final content = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Semantics(
+          header: true,
+          liveRegion: _sent,
+          child:
+              Text(_sent ? '신고가 접수되었어요.' : '퀴즈 내용에 오류가 있나요?', style: Bs.title),
         ),
-        child: _sent
-            ? const SingleChildScrollView(
-                child: LearningEmpty(
-                title: '알려주셔서 고마워요',
-                message: '보내주신 내용은 퀴즈를 검토하는 데 사용할게요.',
-                icon: Icons.mark_email_read_outlined,
-              ))
-            : ListView(padding: const EdgeInsets.all(20), children: [
-                const Text('어떤 부분을\n확인하면 좋을까요?', style: learningTitleStyle),
-                const SizedBox(height: 12),
-                const Text('책과 다른 내용이나 모호한 해설을 알려 주세요.\n좋은 질문을 만드는 데 도움이 돼요.',
-                    style: learningBodyStyle),
-                const SizedBox(height: 24),
-                if (_error != null) ...[
-                  Semantics(
-                      liveRegion: true,
-                      child: Text(_error!,
-                          style: const TextStyle(
-                              color: LearningColors.amber, height: 1.6))),
-                  const SizedBox(height: 16),
-                ],
-                ..._reasons.entries.map((reason) => RadioListTile<String>(
-                      value: reason.key,
-                      groupValue: _reason,
-                      title: Text(reason.value,
-                          style: const TextStyle(fontSize: 16)),
-                      contentPadding: EdgeInsets.zero,
-                      onChanged: _sending
-                          ? null
-                          : (value) => setState(() {
-                                _reason = value;
-                                _requestId = null;
-                              }),
-                    )),
-                const SizedBox(height: 18),
-                TextField(
-                  controller: _content,
-                  onChanged: (_) => _requestId = null,
-                  minLines: 4,
-                  maxLines: 6,
-                  maxLength: 1000,
-                  enabled: !_sending,
-                  decoration: const InputDecoration(
-                    labelText: '자세한 내용 (선택)',
-                    hintText: '해당 목차나 문장을 알려주시면 확인하기 쉬워요.',
-                    alignLabelWithHint: true,
-                    border: OutlineInputBorder(),
-                    filled: true,
-                    fillColor: Colors.white,
+        const SizedBox(height: 12),
+        Text(
+            _sent
+                ? '보내주신 의견은 더 나은 북스타 경험을 만드는 데\n도움이 돼요.'
+                : '책의 내용과 다르거나 정답에 오류가 있다면 알려주세요.\n확인 후 신속히 수정할게요.',
+            // Figma fits line 1 within 3px; the default tracking keeps two lines.
+            style: Bs.text(16,
+                weight: FontWeight.w500, color: Bs.g7, height: 1.5)),
+        if (_error != null) ...[
+          const SizedBox(height: 12),
+          Semantics(
+            liveRegion: true,
+            child: Text(_error!,
+                style: Bs.text(14, color: quizErrorTextColor, height: 1.5)),
+          ),
+        ],
+      ],
+    );
+    final button = BsPrimaryButton(
+      label: _sent ? '확인' : '퀴즈 신고하기',
+      loading: _sending,
+      onPressed: _sent ? _close : _send,
+    );
+    if (widget.fullScreen) {
+      return PopScope(
+        canPop: !_sending,
+        child: Scaffold(
+          backgroundColor: Bs.white,
+          body: SafeArea(
+            child: Column(
+              children: [
+                const BsTopBar(showBack: true),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const BsCharacterImage(BsCharacter.cloud, width: 82),
+                        const SizedBox(height: 20),
+                        content,
+                      ],
+                    ),
                   ),
                 ),
-              ]),
-      ));
+                Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 15),
+                    child: button),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    return PopScope(
+      canPop: !_sending,
+      child: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: 100,
+                child: Stack(
+                  children: [
+                    const Positioned(
+                      left: 15,
+                      top: 30,
+                      child: BsCharacterImage(BsCharacter.cloud, width: 82),
+                    ),
+                    Positioned(
+                      right: 4,
+                      top: 12,
+                      child: IconButton(
+                        tooltip: '닫기',
+                        onPressed: _sending ? null : _close,
+                        icon: const BsIcon('ic_close', size: 16, color: Bs.g3),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+                child: content,
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 28, 16, 15),
+                child: button,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
+
+/// Inline error text on report and quiz submissions.
+const quizErrorTextColor = Color(0xFFE5484D);

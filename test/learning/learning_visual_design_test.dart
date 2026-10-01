@@ -1,19 +1,19 @@
 import 'dart:math' as math;
 
+import 'package:bookstar/modules/learning/view/bs_ui.dart';
 import 'package:bookstar/modules/learning/view/learning_design.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('white surfaces are pure white and utility grays are neutral', () {
+  test('white surfaces are pure white and utility grays follow UI v2 W3', () {
     expect(LearningColors.paper, Colors.white);
     expect(LearningColors.theme.scaffoldBackgroundColor, Colors.white);
     expect(LearningColors.theme.appBarTheme.backgroundColor, Colors.white);
     expect(LearningColors.theme.bottomSheetTheme.backgroundColor, Colors.white);
-    for (final color in [LearningColors.line, LearningColors.surface]) {
-      expect(color.r, color.g);
-      expect(color.g, color.b);
-    }
+    expect(LearningColors.line, Bs.surface);
+    expect(LearningColors.surface, Bs.surface);
+    expect(LearningColors.primary, Bs.primary);
   });
 
   double contrast(Color a, Color b) {
@@ -22,7 +22,7 @@ void main() {
     return (math.max(x, y) + .05) / (math.min(x, y) + .05);
   }
 
-  test('editorial palette keeps normal text at least 4.5:1', () {
+  test('editorial palette keeps body text at least 4.5:1', () {
     for (final background in [
       LearningColors.paper,
       Colors.white,
@@ -33,11 +33,12 @@ void main() {
           contrast(LearningColors.ink, background), greaterThanOrEqualTo(4.5));
       expect(contrast(LearningColors.muted, background),
           greaterThanOrEqualTo(4.5));
+      // P1 is an accent/CTA color: large-text minimum (see contrast test).
       expect(contrast(LearningColors.primary, background),
-          greaterThanOrEqualTo(4.5));
+          greaterThanOrEqualTo(3.0));
     }
     expect(contrast(Colors.white, LearningColors.primary),
-        greaterThanOrEqualTo(4.5));
+        greaterThanOrEqualTo(3.0));
   });
 
   test('shared controls retain touch size and a consistent corner family', () {

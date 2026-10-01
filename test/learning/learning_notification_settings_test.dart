@@ -5,6 +5,7 @@ import 'package:bookstar/common/models/status_response.dart';
 import 'package:bookstar/modules/auth/model/policy.dart';
 import 'package:bookstar/modules/auth/repository/policy_repository.dart';
 import 'package:bookstar/modules/learning/data/learning_access.dart';
+import 'package:bookstar/modules/learning/view/bs_ui.dart';
 import 'package:bookstar/modules/learning/view/learning_design.dart';
 import 'package:bookstar/modules/learning/view/learning_notification_settings_screen.dart';
 import 'package:dio/dio.dart';
@@ -173,7 +174,7 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsOneWidget,
         reason:
             'The old finally must not stop the new account request spinner');
-    expect(find.byType(LearningError), findsNothing);
+    expect(find.byType(BsEmptyState), findsNothing);
     expect(find.byType(SwitchListTile), findsNothing);
 
     newer.complete(const ResponseForm(
@@ -181,7 +182,7 @@ void main() {
     await tester.pumpAndSettle();
     await _reveal(tester, find.byType(SwitchListTile));
     expect(_switch(tester).value, isFalse);
-    expect(find.byType(LearningError), findsNothing);
+    expect(find.byType(BsEmptyState), findsNothing);
     expect(api.saved, isEmpty);
     expect(tester.takeException(), isNull);
   });
@@ -222,8 +223,9 @@ class _Policies implements PolicyRepository {
 
 SwitchListTile _switch(WidgetTester tester) =>
     tester.widget<SwitchListTile>(find.byType(SwitchListTile));
-FilledButton _save(WidgetTester tester) =>
-    tester.widget<FilledButton>(find.byType(FilledButton));
+TextButton _save(WidgetTester tester) =>
+    tester.widget<TextButton>(find.descendant(
+        of: find.byType(BsPrimaryButton), matching: find.byType(TextButton)));
 Future<void> _toggle(WidgetTester tester) async {
   await _reveal(tester, find.byType(SwitchListTile));
   await tester.tap(find.byType(SwitchListTile));

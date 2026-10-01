@@ -6,7 +6,7 @@ import 'package:bookstar/modules/learning/data/reading_graph.dart';
 import 'package:bookstar/modules/learning/view/learning_design.dart';
 import 'package:bookstar/modules/learning/view/learning_quiz_screen.dart';
 import 'package:bookstar/modules/learning/view/reading_graph_canvas.dart';
-import 'package:bookstar/modules/learning/view/reading_graph_screen.dart';
+import 'package:bookstar/modules/learning/view/reading_map_screen.dart';
 import 'package:bookstar/modules/reading_challenge/model/challenge_detail_chapter_detail.dart';
 import 'package:bookstar/modules/reading_challenge/model/choice_result.dart';
 import 'package:bookstar/modules/reading_challenge/model/quiz_choice.dart';
@@ -28,7 +28,8 @@ class _SubmissionRepository extends LearningRepository {
   Completer<void>? submitGate;
 
   @override
-  Future<ReviewPage> getReviews({int? cursor, bool dueOnly = false}) async {
+  Future<ReviewPage> getReviews(
+      {int? cursor, bool dueOnly = false, bool reviewedOnly = false}) async {
     expect(cursor, isNull);
     expect(dueOnly, isFalse);
     reviewLoads++;
@@ -116,10 +117,7 @@ class _SubmissionRepository extends LearningRepository {
 Future<GoRouter> _pumpMap(
     WidgetTester tester, _SubmissionRepository repository) async {
   final router = GoRouter(routes: [
-    GoRoute(
-        path: '/',
-        builder: (_, __) =>
-            const Scaffold(body: SafeArea(child: ReadingGraphScreen()))),
+    GoRoute(path: '/', builder: (_, __) => const ReadingMapAllScreen()),
     GoRoute(
         path: '/quiz',
         builder: (_, __) =>
@@ -155,7 +153,7 @@ Future<void> _openAndSubmit(WidgetTester tester, GoRouter router) async {
   expect(visible.isEmpty, isFalse);
   await tester.tapAt(visible.center);
   await tester.pump();
-  await tester.tap(find.text('답 확인하기'));
+  await tester.tap(find.text('정답 확인하기'));
   await tester.pump();
 }
 
@@ -176,7 +174,7 @@ void main() {
 
     repository.submitGate!.complete();
     await tester.pumpAndSettle();
-    expect(find.text('잘 떠올렸어요'), findsOneWidget);
+    expect(find.text('왜 정답인가요?'), findsOneWidget);
     expect(repository.reviewLoads, 2);
     final refreshed = _renderedGraph(tester, skipOffstage: false);
     expect(refreshed.questionCount, 2);
@@ -186,7 +184,7 @@ void main() {
     expect(
         refreshed.nodes.firstWhere((node) => node.id == 'q20').parentId, 'c10');
 
-    await tester.tap(find.text('목차로 돌아가기'));
+    await tester.tap(find.byTooltip('뒤로'));
     await tester.pumpAndSettle();
     expect(_renderedGraph(tester).questionCount, 2);
     expect(repository.reviewRequests, isEmpty);
@@ -213,7 +211,7 @@ void main() {
           reviews);
       expect(refreshed.nodes.firstWhere((node) => node.id == 'q19').reviewCount,
           0);
-      await tester.tap(find.text('목차로 돌아가기'));
+      await tester.tap(find.byTooltip('뒤로'));
       await tester.pumpAndSettle();
       expect(_renderedGraph(tester).nodes.map((node) => node.id), ids);
     }

@@ -1,7 +1,10 @@
+import 'package:bookstar/modules/learning/data/learning_footprint.dart';
 import 'package:bookstar/modules/learning/data/learning_repository.dart';
 import 'package:bookstar/modules/learning/data/library_layout.dart';
+import 'package:bookstar/modules/learning/view/bs_ui.dart';
 import 'package:bookstar/modules/learning/view/learning_design.dart';
 import 'package:bookstar/modules/learning/view/learning_library_screen.dart';
+import 'package:bookstar/modules/learning/view/library_widgets.dart';
 import 'package:bookstar/modules/reading_challenge/model/challenge_response.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
@@ -11,126 +14,97 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _longTitle = '책을 덮은 뒤에도 다시 생각하고 싶은 아주 긴 제목의 독서와 기억에 관한 이야기';
-const _longAuthor = '이름이 긴 저자와 여러 공동 저자';
+const _longAuthor = '이름이 긴 작가와 여러 공동 작가';
 const _book = ChallengeResponse(
-    challengeId: 7, bookId: 17, bookTitle: _longTitle, bookAuthor: _longAuthor);
+    challengeId: 7,
+    bookId: 17,
+    bookTitle: _longTitle,
+    bookAuthor: _longAuthor,
+    progressRate: 40);
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  testWidgets('a freshly mounted library restores its saved layout',
+  testWidgets('a freshly mounted library restores its saved 2열 layout',
       (tester) async {
     SharedPreferences.setMockInitialValues({
-      LibraryLayoutStore.preferenceKey: LibraryLayout.threeColumns.name,
+      LibraryLayoutStore.preferenceKey: LibraryLayout.twoColumns.name,
     });
     await _Fixture.pump(tester);
 
-    expect(_columns(tester), 3);
-    expect(find.text('보기: 3열'), findsOneWidget);
+    expect(find.text('2열'), findsOneWidget);
+    expect(find.byType(LibraryBookCell), findsOneWidget);
+    expect(find.byType(LibraryBookRow), findsNothing);
   });
 
-  testWidgets('layout picker remains scrollable at 320px and triple text',
+  testWidgets('the 목록/2열 toggle switches the layout and persists it',
       (tester) async {
     final fixture = await _Fixture.pump(tester);
-    fixture.scale.value = 3;
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('보기: 목록'));
-    await tester.tap(find.text('보기: 목록'));
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('3열'));
-    await tester.tap(find.text('3열'));
-    await tester.pumpAndSettle();
+    expect(find.text('목록'), findsOneWidget);
+    expect(find.byType(LibraryBookRow), findsOneWidget);
 
-    expect(fixture.container.read(libraryLayoutProvider).preferred,
-        LibraryLayout.threeColumns);
-    expect(find.byType(SliverGrid), findsNothing);
-    expect(tester.takeException(), isNull);
+    await tester.tap(find.text('목록'));
+    await tester.pumpAndSettle();
+    expect(find.text('2열'), findsOneWidget);
+    expect(find.byType(LibraryBookCell), findsOneWidget);
+    expect(fixture.container.read(libraryLayoutProvider),
+        LibraryLayout.twoColumns);
+    expect(await LibraryLayoutStore().load(), LibraryLayout.twoColumns);
+
+    await tester.tap(find.text('2열'));
+    await tester.pumpAndSettle();
+    expect(find.byType(LibraryBookRow), findsOneWidget);
+    expect(await LibraryLayoutStore().load(), LibraryLayout.list);
   });
 
   testWidgets(
-      'default list has compact actions and the entire title in one semantic action',
+      'summary shows books, chapters and quizzes from the stored records',
       (tester) async {
-    final semantics = tester.ensureSemantics();
     await _Fixture.pump(tester);
-
-    expect(find.text('보기: 목록'), findsOneWidget);
-    expect(find.text('작은 기억 연습'), findsNothing);
-    final node =
-        tester.getSemantics(find.byKey(const ValueKey('library-book-7')));
-    expect(node.label, '$_longTitle, $_longAuthor, 읽고 있는 책, 목차 열기');
-    expect(node.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
-    final title = tester.widget<Text>(find.text(_longTitle));
-    expect(title.maxLines, isNull);
-    expect(tester.takeException(), isNull);
-    semantics.dispose();
+    expect(find.bySemanticsLabel('3권 4목차 5개 퀴즈'), findsOneWidget);
+    expect(find.text('읽고 떠올린 것이\n하나의 세계로'), findsOneWidget);
   });
 
-  testWidgets('layout choice persists and completed filter remains independent',
+  for (final grid in [false, true]) {
+    testWidgets(
+        '${grid ? 'grid' : 'list'} book is one button with title, author, status and progress',
+        (tester) async {
+      final semantics = tester.ensureSemantics();
+      SharedPreferences.setMockInitialValues({
+        LibraryLayoutStore.preferenceKey:
+            (grid ? LibraryLayout.twoColumns : LibraryLayout.list).name,
+      });
+      await _Fixture.pump(tester);
+
+      final node =
+          tester.getSemantics(find.byKey(const ValueKey('library-book-7')));
+      expect(node.label, '$_longTitle, $_longAuthor 저자, 읽는중 책, 40% 진행, 목차 열기');
+      expect(node.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
+      expect(find.text('40% 진행'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('library-book-7')));
+      await tester.pumpAndSettle();
+      expect(find.text('chapters 7'), findsOneWidget);
+      semantics.dispose();
+    });
+  }
+
+  testWidgets('완독한 책 shows finished books and keeps the chosen layout',
       (tester) async {
     final fixture = await _Fixture.pump(tester);
-    await _choose(tester, '3열');
-    expect(_columns(tester), 3);
-    expect(await LibraryLayoutStore().load(), LibraryLayout.threeColumns);
-
-    await tester.tap(find.text('퀴즈를 마친 책'));
+    await tester.tap(find.text('목록'));
     await tester.pumpAndSettle();
 
-    expect(_columns(tester), 3);
+    await tester.tap(find.text('완독한 책'));
+    await tester.pumpAndSettle();
+
     expect(find.byKey(const ValueKey('library-book-77')), findsOneWidget);
     expect(find.byKey(const ValueKey('library-book-7')), findsNothing);
-    expect(fixture.container.read(libraryLayoutProvider).preferred,
-        LibraryLayout.threeColumns);
-    await _choose(tester, '2열');
-    expect(_columns(tester), 2);
-    expect(
-        tester
-            .widget<ChoiceChip>(find.widgetWithText(ChoiceChip, '퀴즈를 마친 책'))
-            .selected,
-        isTrue);
+    expect(find.text('100% 진행'), findsOneWidget);
+    expect(fixture.container.read(libraryLayoutProvider),
+        LibraryLayout.twoColumns);
   });
 
-  testWidgets(
-      'large text falls back and then restores the saved three-column choice',
-      (tester) async {
-    final fixture = await _Fixture.pump(tester);
-    await _choose(tester, '3열');
-    fixture.scale.value = 1.5;
-    await tester.pumpAndSettle();
-    expect(_columns(tester), 2);
-    expect(find.textContaining('선택한 3열 보기는 유지돼요'), findsOneWidget);
-
-    fixture.scale.value = 3;
-    await tester.pumpAndSettle();
-    expect(find.byType(SliverGrid), findsNothing);
-    expect(find.text('보기: 목록'), findsOneWidget);
-    expect(await LibraryLayoutStore().load(), LibraryLayout.threeColumns);
-    expect(tester.takeException(), isNull);
-
-    fixture.scale.value = 1;
-    await tester.pumpAndSettle();
-    expect(_columns(tester), 3);
-    expect(find.textContaining('선택한 3열 보기는 유지돼요'), findsNothing);
-  });
-
-  testWidgets(
-      'grid retains full title author and action semantics while visual titles truncate',
-      (tester) async {
-    final semantics = tester.ensureSemantics();
-    await _Fixture.pump(tester);
-    await _choose(tester, '3열');
-
-    final node =
-        tester.getSemantics(find.byKey(const ValueKey('library-book-7')));
-    expect(node.label, '$_longTitle, $_longAuthor, 읽고 있는 책, 목차 열기');
-    expect(node.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
-    expect(tester.widget<Text>(find.text(_longTitle)).maxLines, 2);
-    await tester.tap(find.byKey(const ValueKey('library-book-7')));
-    await tester.pumpAndSettle();
-    expect(find.text('chapters 7'), findsOneWidget);
-    semantics.dispose();
-  });
-
-  testWidgets('many books use a lazy grid and preserve source order',
+  testWidgets('newest books come first and a long library stays lazy',
       (tester) async {
     final books = List.generate(
         200,
@@ -139,82 +113,87 @@ void main() {
             bookId: index + 100,
             bookTitle: '책 $index'));
     await _Fixture.pump(tester, books: books);
-    await _choose(tester, '3열');
 
-    expect(find.byType(LearningCard).evaluate().length, lessThan(40));
-    expect(find.byKey(const ValueKey('library-book-299')), findsNothing);
-    final first =
-        tester.getTopLeft(find.byKey(const ValueKey('library-book-100')));
-    final second =
-        tester.getTopLeft(find.byKey(const ValueKey('library-book-101')));
-    expect(first.dy, second.dy);
-    expect(first.dx, lessThan(second.dx));
-    await tester.drag(find.byType(CustomScrollView), const Offset(0, -1100));
-    await tester.pumpAndSettle();
+    expect(find.byType(LibraryBookRow).evaluate().length, lessThan(20));
+    expect(find.byKey(const ValueKey('library-book-299')), findsOneWidget);
     expect(find.byKey(const ValueKey('library-book-100')), findsNothing);
-    expect(find.byType(LearningCard).evaluate().length, lessThan(40));
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -1500));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('library-book-299')), findsNothing);
+    expect(find.byType(LibraryBookRow).evaluate().length, lessThan(20));
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets(
-      'empty books show no invented grid slots and blank title has a readable fallback',
+  testWidgets('empty library guides to the search and hides the layout toggle',
       (tester) async {
     final fixture = await _Fixture.pump(tester, books: []);
-    await _choose(tester, '3열');
-    expect(find.text('책을 담아 볼까요?'), findsOneWidget);
-    expect(find.byType(SliverGrid), findsNothing);
+    expect(find.text('우측 상단의 검색 탭에서\n읽고 싶은 책을 찾아보세요'), findsOneWidget);
+    expect(find.text('목록'), findsNothing);
+
     fixture.books = [const ChallengeResponse(challengeId: 8, bookTitle: '  ')];
     fixture.container.invalidate(learningBooksProvider);
     await tester.pumpAndSettle();
-    expect(find.text('제목 없는 책'), findsOneWidget);
+    expect(find.text('제목 없는 책'), findsWidgets);
   });
 
-  testWidgets(
-      'book error is not an empty library and retry keeps the chosen layout',
+  testWidgets('a load error offers retry instead of an empty library',
       (tester) async {
     final fixture = await _Fixture.pump(tester, fail: true);
-    await _choose(tester, '2열');
-    expect(find.text('첫 책을 담아 볼까요?'), findsNothing);
+    expect(find.text('우측 상단의 검색 탭에서\n읽고 싶은 책을 찾아보세요'), findsNothing);
     fixture.fail = false;
-    await tester.ensureVisible(find.text('다시 불러오기'));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('다시 불러오기'));
     await tester.pumpAndSettle();
-    expect(_columns(tester), 2);
-    expect(find.text(_longTitle), findsOneWidget);
+    expect(find.byKey(const ValueKey('library-book-7')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('personal footprint remains a secondary navigable action',
-      (tester) async {
+  testWidgets('add-book action opens the book search', (tester) async {
     await _Fixture.pump(tester);
-    await tester.tap(find.text('나의 독서 흔적'));
+    await tester.tap(find.byTooltip('책 찾아서 추가하기'));
     await tester.pumpAndSettle();
-    expect(find.text('private footprint'), findsOneWidget);
+    expect(find.text('book search'), findsOneWidget);
   });
-}
 
-int _columns(WidgetTester tester) =>
-    (tester.widget<SliverGrid>(find.byType(SliverGrid)).gridDelegate
-            as SliverGridDelegateWithFixedCrossAxisCount)
-        .crossAxisCount;
+  testWidgets('a book saved from the detail returns to 읽는중 책 at the top',
+      (tester) async {
+    final fixture = await _Fixture.pump(tester);
+    await tester.tap(find.text('완독한 책'));
+    await tester.pumpAndSettle();
 
-Future<void> _choose(WidgetTester tester, String label) async {
-  await tester.tap(find.textContaining('보기: '));
-  await tester.pumpAndSettle();
-  await tester.tap(find.text(label));
-  await tester.pumpAndSettle();
+    fixture.container.read(libraryAddedBookProvider.notifier).state = 7;
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<BsChip>(find.widgetWithText(BsChip, '읽는중 책')).selected,
+        isTrue);
+    expect(find.byKey(const ValueKey('library-book-7')), findsOneWidget);
+    expect(fixture.container.read(libraryAddedBookProvider), isNull);
+  });
+
+  for (final scale in [2.0, 3.0]) {
+    testWidgets('list and grid stay usable at ${scale}x text', (tester) async {
+      final fixture = await _Fixture.pump(tester, scale: scale);
+      expect(tester.takeException(), isNull);
+      await tester.ensureVisible(find.byType(LibraryToggle));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(LibraryToggle));
+      await tester.pumpAndSettle();
+      expect(fixture.container.read(libraryLayoutProvider),
+          LibraryLayout.twoColumns);
+      expect(tester.takeException(), isNull);
+    });
+  }
 }
 
 class _Fixture {
-  final scale = ValueNotifier<double>(1);
   late final ProviderContainer container;
   late final GoRouter router;
   List<ChallengeResponse> books = [_book];
   bool fail = false;
 
   static Future<_Fixture> pump(WidgetTester tester,
-      {List<ChallengeResponse>? books, bool fail = false}) async {
+      {List<ChallengeResponse>? books,
+      bool fail = false,
+      double scale = 1}) async {
     tester.view.physicalSize = const Size(320, 568);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -228,16 +207,25 @@ class _Fixture {
       }),
       finishedLearningBooksProvider.overrideWith((ref) async => [
             const ChallengeResponse(
-                challengeId: 77, bookId: 177, bookTitle: '다시 펼칠 책'),
+                challengeId: 77,
+                bookId: 177,
+                bookTitle: '다시 펼칠 책',
+                progressRate: 100),
           ]),
+      learningFootprintProvider.overrideWith((ref) async => LearningFootprint(
+          answeredQuizCount: 5,
+          reviewedQuizCount: 1,
+          bookCount: 3,
+          chapterCount: 4,
+          generatedAt: DateTime(2026, 10, 2))),
     ]);
     fixture.router = GoRouter(initialLocation: '/library', routes: [
       GoRoute(
           path: '/library',
           builder: (_, __) => const Scaffold(body: LearningLibraryScreen())),
       GoRoute(
-          path: '/library/footprint',
-          builder: (_, __) => const Scaffold(body: Text('private footprint'))),
+          path: '/library/search',
+          builder: (_, __) => const Scaffold(body: Text('book search'))),
       GoRoute(
           path: '/library/:id/chapters',
           builder: (_, state) =>
@@ -246,19 +234,16 @@ class _Fixture {
     addTearDown(() {
       fixture.router.dispose();
       fixture.container.dispose();
-      fixture.scale.dispose();
     });
     await tester.pumpWidget(UncontrolledProviderScope(
         container: fixture.container,
-        child: ValueListenableBuilder<double>(
-            valueListenable: fixture.scale,
-            builder: (_, scale, __) => MaterialApp.router(
-                theme: LearningColors.theme,
-                routerConfig: fixture.router,
-                builder: (context, child) => MediaQuery(
-                    data: MediaQuery.of(context)
-                        .copyWith(textScaler: TextScaler.linear(scale)),
-                    child: child!)))));
+        child: MaterialApp.router(
+            theme: LearningColors.theme,
+            routerConfig: fixture.router,
+            builder: (context, child) => MediaQuery(
+                data: MediaQuery.of(context)
+                    .copyWith(textScaler: TextScaler.linear(scale)),
+                child: child!))));
     await tester.pumpAndSettle();
     return fixture;
   }

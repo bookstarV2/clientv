@@ -9,6 +9,14 @@ import 'package:go_router/go_router.dart';
 
 final _account = StateProvider<int?>((ref) => 7);
 
+const _tabLabels = ['AI 퀴즈', '내 서재', '복습', '독서 지도'];
+
+Finder _tab(int index) => find.descendant(
+    of: find.byType(BsNavBar), matching: find.text(_tabLabels[index]));
+
+int _selectedTab(WidgetTester tester) =>
+    tester.widget<BsNavBar>(find.byType(BsNavBar)).currentIndex;
+
 void main() {
   testWidgets('all shell tabs remain reachable in short landscape with 2x text',
       (tester) async {
@@ -17,21 +25,17 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await _Fixture.pump(tester, scale: 2);
-    for (final index in [1, 2, 0]) {
-      final destination = find.byType(NavigationDestination).at(index);
+    for (final index in [1, 2, 3, 0]) {
+      final destination = _tab(index);
       expect(destination.hitTestable(), findsOneWidget);
       await tester.tap(destination);
       await tester.pumpAndSettle();
-      expect(
-          tester
-              .widget<NavigationBar>(find.byType(NavigationBar))
-              .selectedIndex,
-          index);
+      expect(_selectedTab(tester), index);
       expect(tester.takeException(), isNull);
     }
   });
 
-  testWidgets('all three shell tabs remain reachable at 320px with triple text',
+  testWidgets('all four shell tabs remain reachable at 320px with triple text',
       (tester) async {
     tester.view.physicalSize = const Size(320, 568);
     tester.view.devicePixelRatio = 1;
@@ -39,16 +43,12 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await _Fixture.pump(tester, scale: 3);
 
-    for (final index in [1, 2, 0]) {
-      final destination = find.byType(NavigationDestination).at(index);
+    for (final index in [1, 2, 3, 0]) {
+      final destination = _tab(index);
       expect(destination.hitTestable(), findsOneWidget);
       await tester.tap(destination);
       await tester.pumpAndSettle();
-      expect(
-          tester
-              .widget<NavigationBar>(find.byType(NavigationBar))
-              .selectedIndex,
-          index);
+      expect(_selectedTab(tester), index);
       expect(tester.takeException(), isNull);
     }
   });
@@ -61,24 +61,22 @@ void main() {
     await tester.tap(find.text('keep local state'));
     await tester.pump();
     expect(find.text('review local 1'), findsOneWidget);
-    expect(fixture.loads, [1, 1, 1]);
+    expect(fixture.loads, [1, 1, 1, 1]);
 
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await tester.pumpAndSettle();
-    expect(fixture.loads, [1, 1, 1]);
+    expect(fixture.loads, [1, 1, 1, 1]);
     await _backgroundAndResume(tester);
 
-    expect(fixture.loads, [2, 2, 2]);
-    expect(
-        tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
-        2);
+    expect(fixture.loads, [2, 2, 2, 2]);
+    expect(_selectedTab(tester), 2);
     expect(find.text('review local 1'), findsOneWidget);
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await tester.pumpAndSettle();
-    expect(fixture.loads, [2, 2, 2]);
+    expect(fixture.loads, [2, 2, 2, 2]);
 
     await _backgroundAndResume(tester);
-    expect(fixture.loads, [3, 3, 3]);
+    expect(fixture.loads, [3, 3, 3, 3]);
     expect(find.text('review local 1'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -92,7 +90,7 @@ void main() {
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await tester.pumpAndSettle();
 
-    expect(fixture.loads, [2, 2, 2]);
+    expect(fixture.loads, [2, 2, 2, 2]);
     expect(tester.takeException(), isNull);
   });
 
@@ -105,7 +103,7 @@ void main() {
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await tester.pumpAndSettle();
 
-    expect(fixture.loads, [1, 1, 1]);
+    expect(fixture.loads, [1, 1, 1, 1]);
     expect(tester.takeException(), isNull);
   });
 
@@ -116,7 +114,7 @@ void main() {
 
     await _backgroundAndResume(tester);
 
-    expect(fixture.loads, [1, 1, 1]);
+    expect(fixture.loads, [1, 1, 1, 1]);
     expect(tester.takeException(), isNull);
   });
 
@@ -130,7 +128,7 @@ void main() {
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await tester.pumpAndSettle();
 
-    expect(fixture.loads, [1, 1, 1]);
+    expect(fixture.loads, [1, 1, 1, 1]);
     expect(tester.takeException(), isNull);
   });
 
@@ -145,7 +143,7 @@ void main() {
 
     await _backgroundAndResume(tester);
 
-    expect(fixture.loads, [1, 1, 1]);
+    expect(fixture.loads, [1, 1, 1, 1]);
     expect(find.text('outside shell'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -166,7 +164,7 @@ Future<void> _backgroundAndResume(WidgetTester tester) async {
 }
 
 class _Fixture {
-  final loads = [0, 0, 0];
+  final loads = [0, 0, 0, 0];
   late final ProviderContainer container;
   late final GoRouter router;
 
@@ -194,12 +192,22 @@ class _Fixture {
             reviewedTodayCount: 0,
             hasNext: false);
       }),
+      reviewedQuizzesProvider.overrideWith((ref) async {
+        fixture.loads[3]++;
+        return const ReviewPage(
+            items: [],
+            totalCount: 0,
+            dueCount: 0,
+            reviewedTodayCount: 0,
+            hasNext: false);
+      }),
     ]);
     fixture.router = GoRouter(initialLocation: '/quiz', routes: [
       StatefulShellRoute.indexedStack(
         builder: (_, __, shell) => LearningShell(navigationShell: shell),
         branches: [
-          for (final (index, path) in ['quiz', 'library', 'review'].indexed)
+          for (final (index, path)
+              in ['quiz', 'library', 'review', 'map'].indexed)
             StatefulShellBranch(routes: [
               GoRoute(
                   path: '/$path',
@@ -231,8 +239,8 @@ class _Fixture {
   }
 
   Future<void> visitEveryTab(WidgetTester tester) async {
-    for (final index in [1, 2]) {
-      await tester.tap(find.byType(NavigationDestination).at(index));
+    for (final index in [3, 1, 2]) {
+      await tester.tap(_tab(index));
       await tester.pumpAndSettle();
     }
   }
@@ -259,6 +267,8 @@ class _BranchProbeState extends ConsumerState<_BranchProbe> {
         ref.watch(finishedLearningBooksProvider);
       case 2:
         ref.watch(reviewOverviewProvider);
+      case 3:
+        ref.watch(reviewedQuizzesProvider);
     }
     return Column(children: [
       Text('${widget.label} local $localCount'),

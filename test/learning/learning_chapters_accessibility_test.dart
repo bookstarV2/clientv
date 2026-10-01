@@ -64,8 +64,9 @@ void main() {
                         .copyWith(textScaler: TextScaler.linear(2)),
                     child: child!))));
         await tester.pumpAndSettle();
+        expect(find.text(completed ? '100% 진행' : '0% 진행'), findsOneWidget);
         final expectedLabel =
-            '$title, ${completed ? '퀴즈를 풀어본 목차, 다시 떠올리기' : '아직 풀지 않은 목차, 한 문제 풀기'}';
+            '$title, ${completed ? '완료한 목차, 다시풀기' : '진행 중인 목차, 퀴즈풀기'}';
         await tester.scrollUntilVisible(find.text(title), 140,
             scrollable: find.byType(Scrollable).first, maxScrolls: 50);
         await tester.pumpAndSettle();
@@ -87,6 +88,14 @@ void main() {
         await tester.pumpAndSettle();
         expect(loads, 2,
             reason: 'Returning from a quiz still refreshes completion state');
+        final button = find.text(completed ? '다시풀기' : '퀴즈풀기');
+        await tester.scrollUntilVisible(button, 140,
+            scrollable: find.byType(Scrollable).first, maxScrolls: 50);
+        await tester.pumpAndSettle();
+        await tester.tap(button);
+        await tester.pumpAndSettle();
+        expect(find.text('선택한 목차 10의 문제'), findsOneWidget,
+            reason: 'The small button opens the same quiz');
         expect(tester.takeException(), isNull);
       } finally {
         handle.dispose();

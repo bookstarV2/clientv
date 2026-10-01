@@ -1,66 +1,151 @@
-import 'package:bookstar/modules/learning/view/learning_design.dart';
+import 'package:bookstar/modules/learning/view/bs_ui.dart';
 import 'package:bookstar/modules/learning/view/learning_preview_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
+const _readingHeading = '가볍게 읽고\n한 문제 풀어볼까요?';
+const _questionHeading = '읽은 내용을\n얼마나 기억하고 있나요?';
+const _answerHeading = '이렇게 하나씩\n내 것으로 남겨요';
+const _wrong = '읽은 쪽수를 세었어요';
+const _correct = '기억할 내용을 자기 말로 떠올렸어요';
+
 void main() {
-  testWidgets(
-      'preview choices announce text once and expose accessible selection',
+  testWidgets('preview walks 0.2.1 → 0.2.2 → 0.2.3 with the design copy',
+      (tester) async {
+    await _pumpPreview(tester);
+    expect(find.text('한 문제 풀어보기'), findsOneWidget);
+    expect(find.text(_readingHeading), findsOneWidget);
+    expect(find.text('아래 문장을 읽고,\nAI가 만든 퀴즈를 풀어보세요.'), findsOneWidget);
+    expect(find.textContaining('민지는 책을 읽은 뒤'), findsOneWidget);
+
+    await tester.tap(find.text('퀴즈 풀어보기'));
+    await tester.pumpAndSettle();
+    expect(find.text(_questionHeading), findsOneWidget);
+    expect(find.text('민지가 다음 날 책을 펼치기 전에 한 행동은 무엇인가요?'), findsOneWidget);
+    expect(find.textContaining('민지는 책을 읽은 뒤'), findsNothing);
+    expect(_cta(tester, '정답 확인하기').onPressed, isNull);
+
+    await tester.tap(find.text(_correct));
+    await tester.pumpAndSettle();
+    expect(_tile(tester, _correct).state, BsOptionState.selected);
+    expect(_cta(tester, '정답 확인하기').onPressed, isNotNull);
+
+    await tester.tap(find.text('정답 확인하기'));
+    await tester.pumpAndSettle();
+    expect(find.text(_answerHeading), findsOneWidget);
+    expect(_tile(tester, _correct).state, BsOptionState.answer);
+    expect(_tile(tester, _wrong).state, BsOptionState.dimmed);
+    expect(find.text('왜 정답인가요?'), findsOneWidget);
+    expect(find.textContaining('기억이 흐릿한 부분은 책으로 돌아가'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('preview choices announce a numbered label and selection',
       (tester) async {
     final semantics = tester.ensureSemantics();
     try {
       await _pumpPreview(tester);
-      await tester.tap(find.text('글을 가리고 퀴즈 풀기'));
+      await tester.tap(find.text('퀴즈 풀어보기'));
       await tester.pumpAndSettle();
-      await _reveal(tester, find.text('읽은 쪽수를 세었어요'));
 
-      SemanticsNode choice(String label) => tester.getSemantics(
-          find.bySemanticsLabel(RegExp('^${RegExp.escape(label)}\$')));
-      final first = choice('1번 읽은 쪽수를 세었어요');
-      expect(first.getSemanticsData().label, '1번 읽은 쪽수를 세었어요');
-      expect(first.getSemanticsData().hasFlag(SemanticsFlag.isButton), isTrue);
-      expect(first.getSemanticsData().hasFlag(SemanticsFlag.isEnabled), isTrue);
-      expect(first.getSemanticsData().hasFlag(SemanticsFlag.hasSelectedState),
-          isTrue);
+      SemanticsData choice(String label) => tester
+          .getSemantics(
+              find.bySemanticsLabel(RegExp('^${RegExp.escape(label)}\$')))
+          .getSemanticsData();
+      expect(choice('1번 $_wrong').hasFlag(SemanticsFlag.isButton), isTrue);
       expect(
-          first.getSemanticsData().hasFlag(SemanticsFlag.isSelected), isFalse);
-      expect(first.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
-      first.owner!.performAction(first.id, SemanticsAction.tap);
-      await tester.pumpAndSettle();
-      expect(
-          choice('1번 읽은 쪽수를 세었어요')
-              .getSemanticsData()
-              .hasFlag(SemanticsFlag.isSelected),
-          isTrue);
-      expect(tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
-          isNotNull);
+          choice('1번 $_wrong').hasFlag(SemanticsFlag.hasSelectedState), isTrue);
+      expect(choice('1번 $_wrong').hasFlag(SemanticsFlag.isSelected), isFalse);
 
-      await _reveal(tester, find.text('기억할 내용을 자기 말로 떠올렸어요'));
-      final second = choice('2번 기억할 내용을 자기 말로 떠올렸어요');
-      expect(second.getSemanticsData().label, '2번 기억할 내용을 자기 말로 떠올렸어요');
-      second.owner!.performAction(second.id, SemanticsAction.tap);
+      await tester.tap(find.text(_wrong));
       await tester.pumpAndSettle();
-      expect(
-          choice('2번 기억할 내용을 자기 말로 떠올렸어요')
-              .getSemanticsData()
-              .hasFlag(SemanticsFlag.isSelected),
-          isTrue);
-      await _reveal(tester, find.text('읽은 쪽수를 세었어요'));
-      expect(
-          choice('1번 읽은 쪽수를 세었어요')
-              .getSemanticsData()
-              .hasFlag(SemanticsFlag.isSelected),
-          isFalse);
-      await tester.tap(find.text('답 확인하기'));
+      expect(choice('1번 $_wrong').hasFlag(SemanticsFlag.isSelected), isTrue);
+
+      await tester.tap(find.text(_correct));
       await tester.pumpAndSettle();
-      await _reveal(tester, find.text('잘 떠올렸어요'));
-      expect(find.text('잘 떠올렸어요'), findsOneWidget);
+      expect(choice('2번 $_correct').hasFlag(SemanticsFlag.isSelected), isTrue);
+      expect(choice('1번 $_wrong').hasFlag(SemanticsFlag.isSelected), isFalse);
+
+      await tester.tap(find.text('정답 확인하기'));
+      await tester.pumpAndSettle();
+      expect(choice('정답, $_correct').hasFlag(SemanticsFlag.isButton), isFalse);
       expect(tester.takeException(), isNull);
     } finally {
       semantics.dispose();
     }
+  });
+
+  for (final pick in [_correct, _wrong]) {
+    testWidgets(
+        'answering "$pick" marks the correct answer and opens the 0.2.4 guide',
+        (tester) async {
+      await _pumpPreview(tester);
+      await tester.tap(find.text('퀴즈 풀어보기'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(pick));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('정답 확인하기'));
+      await tester.pumpAndSettle();
+
+      expect(_tile(tester, _correct).state, BsOptionState.answer);
+      expect(_tile(tester, _wrong).state, BsOptionState.dimmed);
+
+      await tester.tap(find.text('내 책으로 시작하기'));
+      await tester.pumpAndSettle();
+      expect(find.text('내 책으로도 이어서 해볼 수 있어요'), findsOneWidget);
+      for (final step in [
+        '읽을 목차를 골라요',
+        '퀴즈를 확인해요',
+        '퀴즈를 풀고 해설을 확인해요',
+        '저장한 문제로 다시 복습해요',
+      ]) {
+        expect(find.text(step), findsOneWidget);
+      }
+
+      await tester.tap(find.text('내 책으로 시작하기').last);
+      await tester.pumpAndSettle();
+      expect(find.text('책 검색 목적지'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets('closing the guide keeps the answer on screen', (tester) async {
+    await _pumpPreview(tester);
+    await _answer(tester);
+    await tester.tap(find.text('내 책으로 시작하기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('닫기'));
+    await tester.pumpAndSettle();
+    expect(find.text('내 책으로도 이어서 해볼 수 있어요'), findsNothing);
+    expect(find.text(_answerHeading), findsOneWidget);
+  });
+
+  testWidgets('preview allows rereading before confirming an answer',
+      (tester) async {
+    await _pumpPreview(tester);
+    await tester.tap(find.text('퀴즈 풀어보기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('문장 다시 읽기'));
+    await tester.pumpAndSettle();
+    expect(find.text(_readingHeading), findsOneWidget);
+    expect(find.textContaining('민지는 책을 읽은 뒤'), findsOneWidget);
+    expect(find.text('퀴즈 풀어보기'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('back steps through the preview before leaving it',
+      (tester) async {
+    await _pumpPreview(tester, from: '/login');
+    await tester.tap(find.text('퀴즈 풀어보기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('뒤로'));
+    await tester.pumpAndSettle();
+    expect(find.text(_readingHeading), findsOneWidget);
+    await tester.tap(find.byTooltip('뒤로'));
+    await tester.pumpAndSettle();
+    expect(find.text('로그인 화면'), findsOneWidget);
   });
 
   for (final scale in [2.0, 3.0]) {
@@ -83,20 +168,19 @@ void main() {
       position().jumpTo(position().maxScrollExtent);
       await tester.pumpAndSettle();
       expect(position().pixels, greaterThan(0));
-      await tester.tap(find.text('글을 가리고 퀴즈 풀기'));
+      await tester.tap(find.text('퀴즈 풀어보기'));
       await tester.pumpAndSettle();
-      expectStepTop('읽은 내용을\n꺼내 볼 시간');
+      expectStepTop(_questionHeading);
 
-      await tester.scrollUntilVisible(find.text('글 다시 읽기'), 150,
-          scrollable: find.byType(Scrollable).first, maxScrolls: 60);
-      expect(position().pixels, greaterThan(0));
-      await tester.tap(find.text('글 다시 읽기'));
+      position().jumpTo(position().maxScrollExtent);
       await tester.pumpAndSettle();
-      expectStepTop('짧게 읽고,\n한 번 떠올려 볼까요?');
+      await tester.tap(find.text('문장 다시 읽기'));
+      await tester.pumpAndSettle();
+      expectStepTop(_readingHeading);
 
-      await tester.tap(find.text('글을 가리고 퀴즈 풀기'));
+      await tester.tap(find.text('퀴즈 풀어보기'));
       await tester.pumpAndSettle();
-      final choice = find.text('기억할 내용을 자기 말로 떠올렸어요');
+      final choice = find.text(_correct);
       await tester.scrollUntilVisible(choice, 150,
           scrollable: find.byType(Scrollable).first, maxScrolls: 60);
       await tester.pumpAndSettle();
@@ -106,93 +190,66 @@ void main() {
       expect(visibleChoice.height, greaterThan(0));
       await tester.tapAt(visibleChoice.center);
       await tester.pumpAndSettle();
-      expect(tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
-          isNotNull);
+      expect(_cta(tester, '정답 확인하기').onPressed, isNotNull);
       expect(position().pixels, greaterThan(0));
-      await tester.tap(find.text('답 확인하기'));
+      await tester.tap(find.text('정답 확인하기'));
       await tester.pumpAndSettle();
-      expectStepTop('이렇게, 한 가지를\n내 것으로 남겨요');
+      expectStepTop(_answerHeading);
     });
   }
-
-  for (final correct in [true, false]) {
-    testWidgets(
-        'preview ${correct ? 'correct' : 'wrong'} answer explains the '
-        'result without claiming to save reading progress', (tester) async {
-      await _pumpPreview(tester);
-
-      expect(find.text('작은 독서 습관'), findsOneWidget);
-      expect(find.text('체험용 예시 · 실제 책의 문제가 아니에요'), findsOneWidget);
-      await tester.tap(find.text('글을 가리고 퀴즈 풀기'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('작은 독서 습관'), findsNothing);
-      expect(tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
-          isNull);
-      final choice = find.text(correct ? '기억할 내용을 자기 말로 떠올렸어요' : '읽은 쪽수를 세었어요');
-      await _reveal(tester, choice);
-      await tester.tap(choice);
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('답 확인하기'));
-      await tester.pumpAndSettle();
-
-      await _reveal(tester, find.text(correct ? '잘 떠올렸어요' : '함께 다시 짚어봐요'));
-      expect(find.text('자기 말로 떠올려 보기'), findsOneWidget);
-      await _reveal(tester, find.text('체험 결과는 독서·복습 기록에 저장되지 않아요.'));
-      expect(find.text('체험 결과는 독서·복습 기록에 저장되지 않아요.'), findsOneWidget);
-
-      await tester.tap(find.text('내 책으로 시작하기'));
-      await tester.pumpAndSettle();
-      expect(find.text('책 검색 목적지'), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    });
-  }
-
-  testWidgets('preview allows rereading before confirming an answer',
-      (tester) async {
-    await _pumpPreview(tester);
-    await tester.tap(find.text('글을 가리고 퀴즈 풀기'));
-    await tester.pumpAndSettle();
-    await _reveal(tester, find.text('글 다시 읽기'));
-    await tester.tap(find.text('글 다시 읽기'));
-    await tester.pumpAndSettle();
-    await _reveal(tester, find.text('작은 독서 습관'));
-    expect(find.text('작은 독서 습관'), findsOneWidget);
-    expect(find.text('글을 가리고 퀴즈 풀기'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
 
   testWidgets('preview remains operable at 320px with double-size text',
       (tester) async {
     await _pumpPreview(tester, width: 320, height: 568, textScale: 2);
     expect(tester.takeException(), isNull);
-    await tester.tap(find.text('글을 가리고 퀴즈 풀기'));
-    await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
-
-    final choice = find.text('기억할 내용을 자기 말로 떠올렸어요');
-    await _reveal(tester, choice);
-    await tester.tap(choice);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('답 확인하기'));
-    await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
-
-    await _reveal(tester, find.text('체험 결과는 독서·복습 기록에 저장되지 않아요.'));
+    await _answer(tester);
     expect(tester.takeException(), isNull);
     await tester.tap(find.text('내 책으로 시작하기'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await tester.scrollUntilVisible(find.text('내 책으로 시작하기').last, 150,
+        scrollable: find.byType(Scrollable).last, maxScrolls: 30);
+    await tester.tap(find.text('내 책으로 시작하기').last);
     await tester.pumpAndSettle();
     expect(find.text('책 검색 목적지'), findsOneWidget);
   });
 }
 
+BsOptionTile _tile(WidgetTester tester, String text) => tester.widget(
+    find.ancestor(of: find.text(text), matching: find.byType(BsOptionTile)));
+
+BsPrimaryButton _cta(WidgetTester tester, String label) => tester.widget(find
+    .ancestor(of: find.text(label), matching: find.byType(BsPrimaryButton)));
+
+Future<void> _answer(WidgetTester tester) async {
+  await tester.tap(find.text('퀴즈 풀어보기'));
+  await tester.pumpAndSettle();
+  final choice = find.text(_correct);
+  await tester.scrollUntilVisible(choice, 150,
+      scrollable: find.byType(Scrollable).first, maxScrolls: 60);
+  await tester.pumpAndSettle();
+  await tester.tap(choice);
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('정답 확인하기'));
+  await tester.pumpAndSettle();
+}
+
 Future<void> _pumpPreview(WidgetTester tester,
-    {double width = 390, double height = 844, double textScale = 1}) async {
+    {double width = 390,
+    double height = 844,
+    double textScale = 1,
+    String? from}) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = Size(width, height);
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-  final router = GoRouter(initialLocation: '/preview', routes: [
+  final router = GoRouter(initialLocation: from ?? '/preview', routes: [
+    GoRoute(
+        path: '/login',
+        builder: (context, __) => Scaffold(
+            body: TextButton(
+                onPressed: () => context.push('/preview'),
+                child: const Text('로그인 화면')))),
     GoRoute(
         path: '/preview', builder: (_, __) => const LearningPreviewScreen()),
     GoRoute(
@@ -201,7 +258,6 @@ Future<void> _pumpPreview(WidgetTester tester,
   ]);
   addTearDown(router.dispose);
   await tester.pumpWidget(MaterialApp.router(
-    theme: LearningColors.theme,
     routerConfig: router,
     builder: (context, child) => MediaQuery(
       data: MediaQuery.of(context)
@@ -210,13 +266,8 @@ Future<void> _pumpPreview(WidgetTester tester,
     ),
   ));
   await tester.pumpAndSettle();
-}
-
-Future<void> _reveal(WidgetTester tester, Finder finder) async {
-  final scrollable = find.byType(Scrollable).first;
-  tester.state<ScrollableState>(scrollable).position.jumpTo(0);
-  await tester.pump();
-  await tester.scrollUntilVisible(finder, 180,
-      scrollable: scrollable, maxScrolls: 40);
-  await tester.pumpAndSettle();
+  if (from != null) {
+    await tester.tap(find.text('로그인 화면'));
+    await tester.pumpAndSettle();
+  }
 }

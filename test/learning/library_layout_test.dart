@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:bookstar/modules/learning/data/library_layout.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -10,12 +9,18 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   test('missing or invalid stored layout defaults to list', () async {
-    for (final value in [null, '', 'unknown', 'threeColumns ']) {
+    for (final value in [null, '', 'unknown', 'twoColumns ']) {
       SharedPreferences.setMockInitialValues({
         if (value != null) LibraryLayoutStore.preferenceKey: value,
       });
       expect(await LibraryLayoutStore().load(), LibraryLayout.list);
     }
+  });
+
+  test('the removed three-column choice restores as the 2열 grid', () async {
+    SharedPreferences.setMockInitialValues(
+        {LibraryLayoutStore.preferenceKey: 'threeColumns'});
+    expect(await LibraryLayoutStore().load(), LibraryLayout.twoColumns);
   });
 
   test('only a layout name is persisted and restored by a new store', () async {
@@ -29,18 +34,30 @@ void main() {
     }
   });
 
+  test('toggle switches between 목록 and 2열 and saves each choice', () async {
+    final store = _Store();
+    final controller = LibraryLayoutController(store);
+    addTearDown(controller.dispose);
+
+    await controller.toggle();
+    expect(controller.state, LibraryLayout.twoColumns);
+    await controller.toggle();
+    expect(controller.state, LibraryLayout.list);
+    expect(store.saved, [LibraryLayout.twoColumns, LibraryLayout.list]);
+  });
+
   test('late preference restoration never overwrites a newer explicit choice',
       () async {
     final store = _Store()..pendingLoad = Completer<LibraryLayout>();
     final controller = LibraryLayoutController(store);
     addTearDown(controller.dispose);
-    await controller.select(LibraryLayout.threeColumns);
+    await controller.select(LibraryLayout.twoColumns);
 
-    store.pendingLoad!.complete(LibraryLayout.twoColumns);
+    store.pendingLoad!.complete(LibraryLayout.list);
     await Future<void>.delayed(Duration.zero);
 
-    expect(controller.state.preferred, LibraryLayout.threeColumns);
-    expect(store.saved, [LibraryLayout.threeColumns]);
+    expect(controller.state, LibraryLayout.twoColumns);
+    expect(store.saved, [LibraryLayout.twoColumns]);
   });
 
   test('rapid choices are saved in order with the last selection winning',
@@ -49,52 +66,24 @@ void main() {
     final controller = LibraryLayoutController(store);
     addTearDown(controller.dispose);
     final first = controller.select(LibraryLayout.twoColumns);
-    final last = controller.select(LibraryLayout.threeColumns);
+    final last = controller.select(LibraryLayout.list);
     store.saveGate!.complete();
     await Future.wait([first, last]);
 
-    expect(controller.state.preferred, LibraryLayout.threeColumns);
-    expect(store.saved, [LibraryLayout.twoColumns, LibraryLayout.threeColumns]);
+    expect(controller.state, LibraryLayout.list);
+    expect(store.saved, [LibraryLayout.twoColumns, LibraryLayout.list]);
   });
 
-  test('read failure keeps list usable and reports the setting failure',
-      () async {
-    final controller = LibraryLayoutController(_Store()..failLoad = true);
+  test('read and write failures keep the library usable', () async {
+    final controller = LibraryLayoutController(_Store()
+      ..failLoad = true
+      ..failSave = true);
     addTearDown(controller.dispose);
     await Future<void>.delayed(Duration.zero);
+    expect(controller.state, LibraryLayout.list);
 
-    expect(controller.state.preferred, LibraryLayout.list);
-    expect(controller.state.notice, contains('읽지 못했어요'));
     await controller.select(LibraryLayout.twoColumns);
-    expect(controller.state.preferred, LibraryLayout.twoColumns);
-    expect(controller.state.notice, isNull);
-  });
-
-  test('failed save keeps current selection without claiming persistence',
-      () async {
-    final controller = LibraryLayoutController(_Store()..failSave = true);
-    addTearDown(controller.dispose);
-
-    await controller.select(LibraryLayout.threeColumns);
-
-    expect(controller.state.preferred, LibraryLayout.threeColumns);
-    expect(controller.state.notice, contains('저장하지 못했어요'));
-  });
-
-  test(
-      'effective layout follows measured width and scaling without changing preference',
-      () {
-    LibraryLayout layout(double width, double scale) =>
-        effectiveLibraryLayout(LibraryLayout.threeColumns,
-            availableWidth: width,
-            textScaler: TextScaler.linear(scale),
-            textDirection: TextDirection.ltr);
-
-    expect(layout(280, 1), LibraryLayout.threeColumns);
-    expect(layout(280, 1.5), LibraryLayout.twoColumns);
-    expect(layout(280, 3), LibraryLayout.list);
-    expect(layout(280, 1), LibraryLayout.threeColumns);
-    expect(layout(600, 1.5), LibraryLayout.threeColumns);
+    expect(controller.state, LibraryLayout.twoColumns);
   });
 }
 

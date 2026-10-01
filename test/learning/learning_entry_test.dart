@@ -5,27 +5,27 @@ import 'package:bookstar/common/models/status_response.dart';
 import 'package:bookstar/modules/auth/model/policy.dart';
 import 'package:bookstar/modules/auth/repository/policy_repository.dart';
 import 'package:bookstar/modules/learning/data/learning_access.dart';
-import 'package:bookstar/modules/learning/view/learning_design.dart';
+import 'package:bookstar/modules/learning/view/bs_ui.dart';
 import 'package:bookstar/modules/learning/view/learning_entry_screen.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+const _cta = '동의하고 계속하기';
+
 void main() {
   testWidgets('required agreements start unchecked and need separate choices',
       (tester) async {
     await _pumpEntry(tester, _PolicyRepository());
+    expect(find.text('내 기록을 저장하기 위한\n이용 동의를 확인해요'), findsOneWidget);
     expect(_checkboxes(tester), [false, false]);
-    await _reveal(tester, find.text('동의하고 계속하기'));
-    expect(_saveButton(tester).onPressed, isNull);
+    expect(_saveEnabled(tester), isFalse);
     await _check(tester, 0);
     expect(_checkboxes(tester), [true, false]);
-    await _reveal(tester, find.text('동의하고 계속하기'));
-    expect(_saveButton(tester).onPressed, isNull);
+    expect(_saveEnabled(tester), isFalse);
     await _check(tester, 1);
-    await _reveal(tester, find.text('동의하고 계속하기'));
-    expect(_saveButton(tester).onPressed, isNotNull);
+    expect(_saveEnabled(tester), isTrue);
   });
 
   for (final marketing in PolicyAgree.values) {
@@ -36,8 +36,7 @@ void main() {
       await _pumpEntry(tester, repository);
       await _check(tester, 0);
       await _check(tester, 1);
-      await _reveal(tester, find.text('동의하고 계속하기'));
-      await tester.tap(find.text('동의하고 계속하기'));
+      await tester.tap(find.text(_cta));
       await tester.pumpAndSettle();
       expect(repository.saved, hasLength(1));
       expect(
@@ -58,13 +57,11 @@ void main() {
     await _pumpEntry(tester, repository);
     await _check(tester, 0);
     await _check(tester, 1);
-    await _reveal(tester, find.text('동의하고 계속하기'));
-    await tester.tap(find.text('동의하고 계속하기'));
+    await tester.tap(find.text(_cta));
     await tester.pumpAndSettle();
     expect(_checkboxes(tester), [true, true]);
     expect(find.text('동의 저장 확인'), findsNothing);
-    await _reveal(tester, find.text('동의하고 계속하기'));
-    await tester.tap(find.text('동의하고 계속하기'));
+    await tester.tap(find.text(_cta));
     await tester.pumpAndSettle();
     expect(repository.saved, hasLength(2));
     expect(repository.saved.first, repository.saved.last);
@@ -78,14 +75,13 @@ void main() {
     await _pumpEntry(tester, repository);
     await _check(tester, 0);
     await _check(tester, 1);
-    await _reveal(tester, find.text('동의하고 계속하기'));
-    await tester.tap(find.text('동의하고 계속하기'));
+    await tester.tap(find.text(_cta));
     await tester.pump();
-    expect(_saveButton(tester).onPressed, isNull);
+    expect(_saveEnabled(tester), isFalse);
     expect(
         tester
-            .widgetList<CheckboxListTile>(find.byType(CheckboxListTile))
-            .every((tile) => tile.onChanged == null),
+            .widgetList<Checkbox>(find.byType(Checkbox))
+            .every((box) => box.onChanged == null),
         isTrue);
     expect(repository.saved, hasLength(1));
     repository.saveGate!.complete();
@@ -97,8 +93,8 @@ void main() {
       (tester) async {
     final repository = _PolicyRepository()..failLoads = 1;
     await _pumpEntry(tester, repository);
-    expect(find.text('불러오지 못했어요'), findsOneWidget);
-    expect(find.byType(CheckboxListTile), findsNothing);
+    expect(find.textContaining('불러오지 못했어요'), findsOneWidget);
+    expect(find.byType(Checkbox), findsNothing);
     await tester.tap(find.text('다시 불러오기'));
     await tester.pumpAndSettle();
     expect(repository.loads, 2);
@@ -113,9 +109,8 @@ void main() {
     expect(tester.takeException(), isNull);
     await _check(tester, 0);
     await _check(tester, 1);
-    await _reveal(tester, find.text('동의하고 계속하기'));
     expect(tester.takeException(), isNull);
-    await tester.tap(find.text('동의하고 계속하기'));
+    await tester.tap(find.text(_cta));
     await tester.pumpAndSettle();
     expect(find.text('동의 저장 확인'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -158,17 +153,24 @@ class _PolicyRepository implements PolicyRepository {
 }
 
 List<bool?> _checkboxes(WidgetTester tester) => tester
-    .widgetList<CheckboxListTile>(find.byType(CheckboxListTile))
-    .map((tile) => tile.value)
+    .widgetList<Checkbox>(find.byType(Checkbox))
+    .map((box) => box.value)
     .toList();
 
-FilledButton _saveButton(WidgetTester tester) =>
-    tester.widget<FilledButton>(find.byType(FilledButton));
+bool _saveEnabled(WidgetTester tester) =>
+    tester
+        .widget<TextButton>(find.descendant(
+            of: find.byType(BsPrimaryButton),
+            matching: find.byType(TextButton)))
+        .onPressed !=
+    null;
 
 Future<void> _check(WidgetTester tester, int index) async {
   final label =
       index == 0 ? find.text('서비스 이용약관 (필수)') : find.text('개인정보 수집 및 이용 (필수)');
-  await _reveal(tester, label);
+  await tester.scrollUntilVisible(label, 130,
+      scrollable: find.byType(Scrollable).first, maxScrolls: 40);
+  await tester.pumpAndSettle();
   await tester.tap(label);
   await tester.pumpAndSettle();
 }
@@ -185,7 +187,6 @@ Future<void> _pumpEntry(WidgetTester tester, _PolicyRepository repository,
       policyRepositoryProvider.overrideWithValue(repository),
     ],
     child: MaterialApp(
-      theme: LearningColors.theme,
       builder: (context, child) => MediaQuery(
         data: MediaQuery.of(context)
             .copyWith(textScaler: TextScaler.linear(scale)),
@@ -199,14 +200,5 @@ Future<void> _pumpEntry(WidgetTester tester, _PolicyRepository repository,
       }),
     ),
   ));
-  await tester.pumpAndSettle();
-}
-
-Future<void> _reveal(WidgetTester tester, Finder finder) async {
-  final scrollable = find.byType(Scrollable).first;
-  tester.state<ScrollableState>(scrollable).position.jumpTo(0);
-  await tester.pump();
-  await tester.scrollUntilVisible(finder, 130,
-      scrollable: scrollable, maxScrolls: 40);
   await tester.pumpAndSettle();
 }

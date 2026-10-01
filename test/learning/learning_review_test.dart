@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:bookstar/modules/learning/data/learning_access.dart';
 import 'package:bookstar/modules/learning/data/learning_repository.dart';
 import 'package:bookstar/modules/learning/view/learning_design.dart';
 import 'package:bookstar/modules/learning/view/learning_review_screen.dart';
@@ -9,29 +10,42 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
+ReviewItem _item(int id) => ReviewItem(
+    quizId: id,
+    chapterId: id + 100,
+    chapterTitle: '목차 $id',
+    bookTitle: '책 $id',
+    bookCover: '',
+    question: '질문 $id',
+    reviewCount: 1,
+    due: true,
+    nextReviewAt: DateTime(2026, 9, 12, 9));
+
 void main() {
-  testWidgets('overview refresh reloads the page only after fresh data arrives',
+  testWidgets('overview refresh shows fresh due quizzes once they arrive',
       (tester) async {
-    final repository = _ReviewRepository(_page(total: 3));
+    final repository = _ReviewRepository(_page(total: 3, items: [_item(1)]));
     final pending = Completer<ReviewPage>();
     var overviewLoads = 0;
     await _pumpReview(tester, repository, overview: () async {
       if (overviewLoads++ == 0) return repository.page;
       return pending.future;
     });
+    expect(find.text('질문 1'), findsOneWidget);
     final container = ProviderScope.containerOf(
         tester.element(find.byType(LearningReviewScreen)));
-    final before = repository.requestedDueOnly.length;
 
     container.invalidate(reviewOverviewProvider);
     await tester.pump();
+    await tester.pump();
     expect(container.read(reviewOverviewProvider).isLoading, isTrue);
-    expect(repository.requestedDueOnly.length, before,
-        reason: 'AsyncData can retain old data while isLoading is true');
+    expect(find.text('퀴즈 다시 풀기'), findsNothing,
+        reason: 'A stale quiz must not stay actionable while refreshing');
 
-    pending.complete(repository.page);
+    pending.complete(_page(total: 3, items: [_item(2)]));
     await tester.pumpAndSettle();
-    expect(repository.requestedDueOnly.length, before + 1);
+    expect(find.text('질문 2'), findsOneWidget);
+    expect(find.text('질문 1'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -58,11 +72,9 @@ void main() {
     await _pumpReview(
         tester, _ReviewRepository(_page(total: 3, reviewed: 1, unavailable: 3)),
         width: 320, height: 568, textScale: 2);
-    await _reveal(tester, find.text('지금 다시 풀 수 있는 문제가 없어요'));
-    expect(find.text('첫 퀴즈가 복습의 시작이에요'), findsNothing);
-    expect(find.text('오늘 예정된 복습을 마쳤어요'), findsNothing);
-    await _reveal(
-        tester, find.text('기존 3개 풀이 기록은 보관돼요.\n내 서재에서 다른 퀴즈를 만나보세요.'));
+    await _reveal(tester, find.text('지금 복습할 수 있는 퀴즈가 없어요.\n기존 풀이 기록은 보관돼요.'));
+    expect(find.textContaining('아직 푼 퀴즈가 없어요'), findsNothing);
+    expect(find.text('오늘 복습할 퀴즈를 모두 풀었어요.'), findsNothing);
     await _reveal(tester, find.text('다른 퀴즈 찾기'));
     await tester.tap(find.text('다른 퀴즈 찾기'));
     await tester.pumpAndSettle();
@@ -71,30 +83,31 @@ void main() {
   });
 
   testWidgets(
-      'partially unavailable history explains hidden items without deleting the rest',
+      'partially unavailable quizzes are explained without hiding the rest',
       (tester) async {
-    final repository = _ReviewRepository(_page(total: 3, unavailable: 1));
+    final repository = _ReviewRepository(
+        _page(total: 3, unavailable: 1, items: [_item(1), _item(2)]));
     await _pumpReview(tester, repository,
         width: 320, height: 568, textScale: 2);
     await _reveal(
         tester, find.text('지금 제공할 수 없는 퀴즈 1개는 목록에서 제외했어요.\n기존 풀이 기록은 보관돼요.'));
-    await _reveal(tester, find.text('이전에 푼 문제 모두 보기'));
-    await tester.tap(find.text('이전에 푼 문제 모두 보기'));
+    expect(find.text('질문 2'), findsOneWidget);
+    await _reveal(tester, find.text('복습한 퀴즈'));
+    await tester.tap(find.text('복습한 퀴즈'));
     await tester.pumpAndSettle();
-    expect(repository.requestedDueOnly.last, isFalse);
-    expect(find.text('지금 다시 풀 수 있는 문제가 없어요'), findsNothing);
+    expect(repository.requests.last.reviewedOnly, isTrue);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets(
       'no quiz history invites a first quiz instead of claiming success',
       (tester) async {
-    final repository = _ReviewRepository(_page(total: 0));
-    await _pumpReview(tester, repository);
-    await _reveal(tester, find.text('첫 퀴즈가 복습의 시작이에요'));
-    expect(find.text('오늘 예정된 복습을 마쳤어요'), findsNothing);
-    await _reveal(tester, find.text('내 서재에서 시작하기'));
-    await tester.tap(find.text('내 서재에서 시작하기'));
+    await _pumpReview(tester, _ReviewRepository(_page(total: 0)));
+    await _reveal(
+        tester, find.text('아직 푼 퀴즈가 없어요.\n내 서재에서 퀴즈를 풀면 이곳에서 복습할 수 있어요.'));
+    expect(find.text('오늘 복습할 퀴즈를 모두 풀었어요.'), findsNothing);
+    await _reveal(tester, find.text('퀴즈 풀러 가기'));
+    await tester.tap(find.text('퀴즈 풀러 가기'));
     await tester.pumpAndSettle();
     expect(find.text('내 서재 목적지'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -103,32 +116,38 @@ void main() {
   testWidgets(
       'future reviews without activity do not claim today was completed',
       (tester) async {
-    final repository = _ReviewRepository(_page(total: 3));
-    await _pumpReview(tester, repository);
-    await _reveal(tester, find.text('지금 예정된 복습은 없어요'));
-    expect(find.text('오늘 예정된 복습을 마쳤어요'), findsNothing);
-    expect(find.text('첫 퀴즈가 복습의 시작이에요'), findsNothing);
-
-    await _reveal(tester, find.text('이전에 푼 문제 모두 보기'));
-    await tester.tap(find.text('이전에 푼 문제 모두 보기'));
-    await tester.pumpAndSettle();
-    expect(repository.requestedDueOnly.last, isFalse);
-    expect(tester.takeException(), isNull);
+    await _pumpReview(tester, _ReviewRepository(_page(total: 3)));
+    await _reveal(tester, find.text('오늘 복습할 퀴즈가 없어요.'));
+    expect(find.text('오늘 복습할 퀴즈를 모두 풀었어요.'), findsNothing);
+    expect(find.textContaining('아직 푼 퀴즈가 없어요'), findsNothing);
+    expect(find.text('복습한 퀴즈'), findsOneWidget,
+        reason: 'History stays reachable from the header');
   });
 
   testWidgets('completion copy is shown after today has actual review activity',
       (tester) async {
     await _pumpReview(tester, _ReviewRepository(_page(total: 3, reviewed: 2)));
-    await _reveal(tester, find.text('오늘 2개를 다시 풀었어요'));
-    expect(find.text('지금 예정된 복습은 없어요'), findsNothing);
-    expect(find.text('첫 퀴즈가 복습의 시작이에요'), findsNothing);
+    await _reveal(tester, find.text('오늘 복습할 퀴즈를 모두 풀었어요.'));
+    expect(find.text('오늘 복습할 퀴즈가 없어요.'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('positive due count without items offers retry, never success',
+      (tester) async {
+    await _pumpReview(
+        tester, _ReviewRepository(_page(total: 3, due: 2, reviewed: 1)));
+    expect(find.text('다시 불러오기'), findsOneWidget);
+    expect(find.text('오늘 복습할 퀴즈를 모두 풀었어요.'), findsNothing);
+  });
+
   for (final state in [
-    (total: 0, reviewed: 0, title: '첫 퀴즈가 복습의 시작이에요'),
-    (total: 3, reviewed: 0, title: '지금 예정된 복습은 없어요'),
-    (total: 3, reviewed: 2, title: '오늘 2개를 다시 풀었어요'),
+    (
+      total: 0,
+      reviewed: 0,
+      title: '아직 푼 퀴즈가 없어요.\n내 서재에서 퀴즈를 풀면 이곳에서 복습할 수 있어요.'
+    ),
+    (total: 3, reviewed: 0, title: '오늘 복습할 퀴즈가 없어요.'),
+    (total: 3, reviewed: 2, title: '오늘 복습할 퀴즈를 모두 풀었어요.'),
   ]) {
     testWidgets('320px double-size text supports review state: ${state.title}',
         (tester) async {
@@ -147,11 +166,16 @@ void main() {
   }
 }
 
-ReviewPage _page({required int total, int reviewed = 0, int unavailable = 0}) =>
+ReviewPage _page(
+        {required int total,
+        int reviewed = 0,
+        int unavailable = 0,
+        int? due,
+        List<ReviewItem> items = const []}) =>
     ReviewPage(
-      items: const [],
+      items: items,
       totalCount: total,
-      dueCount: 0,
+      dueCount: due ?? items.length,
       reviewedTodayCount: reviewed,
       unavailableCount: unavailable,
       hasNext: false,
@@ -160,11 +184,13 @@ ReviewPage _page({required int total, int reviewed = 0, int unavailable = 0}) =>
 class _ReviewRepository extends LearningRepository {
   _ReviewRepository(this.page) : super(Dio());
   final ReviewPage page;
-  final List<bool> requestedDueOnly = [];
+  final requests = <({int? cursor, bool dueOnly, bool reviewedOnly})>[];
 
   @override
-  Future<ReviewPage> getReviews({int? cursor, bool dueOnly = false}) async {
-    requestedDueOnly.add(dueOnly);
+  Future<ReviewPage> getReviews(
+      {int? cursor, bool dueOnly = false, bool reviewedOnly = false}) async {
+    requests
+        .add((cursor: cursor, dueOnly: dueOnly, reviewedOnly: reviewedOnly));
     return page;
   }
 }
@@ -192,6 +218,7 @@ Future<void> _pumpReview(WidgetTester tester, _ReviewRepository repository,
   addTearDown(router.dispose);
   await tester.pumpWidget(ProviderScope(
     overrides: [
+      learningAccountProvider.overrideWithValue(null),
       learningRepositoryProvider.overrideWithValue(repository),
       reviewOverviewProvider.overrideWith(
           (ref) async => overview == null ? repository.page : await overview()),

@@ -7,11 +7,11 @@ import 'package:bookstar/modules/learning/view/learning_notification_settings_sc
 import 'package:bookstar/modules/learning/view/learning_archive_screen.dart';
 import 'package:bookstar/modules/auth/view_model/auth_state.dart';
 import 'package:bookstar/modules/auth/view_model/auth_view_model.dart';
+import 'package:bookstar/modules/learning/view/bs_ui.dart';
+import 'package:bookstar/modules/learning/view/learning_book_detail_screen.dart';
 import 'package:bookstar/modules/learning/view/learning_chapters_screen.dart';
-import 'package:bookstar/modules/learning/view/learning_design.dart';
 import 'package:bookstar/modules/learning/view/learning_home_screen.dart';
 import 'package:bookstar/modules/learning/view/learning_library_screen.dart';
-import 'package:bookstar/modules/learning/view/learning_footprint_screen.dart';
 import 'package:bookstar/modules/learning/view/learning_preview_screen.dart';
 import 'package:bookstar/modules/learning/view/learning_quiz_screen.dart';
 import 'package:bookstar/modules/learning/view/learning_report_screen.dart';
@@ -19,6 +19,7 @@ import 'package:bookstar/modules/learning/view/learning_review_screen.dart';
 import 'package:bookstar/modules/learning/view/learning_search_screen.dart';
 import 'package:bookstar/modules/learning/view/learning_settings_screen.dart';
 import 'package:bookstar/modules/learning/view/learning_shell.dart';
+import 'package:bookstar/modules/learning/view/reading_map_screen.dart';
 import 'package:bookstar/modules/my_page/view/screens/delete_account_screen.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
@@ -85,22 +86,25 @@ GoRouter router(Ref ref) {
       if (path.startsWith('/book-pick')) return '/quiz';
       if (path.startsWith('/reading-challenge')) return '/library';
       if (path.startsWith('/reading-data')) return '/review';
+      if (path == '/library/footprint') return '/map';
       if (state.pathParameters.values.any(
           (value) => int.tryParse(value) == null || int.parse(value) <= 0)) {
         return '/library';
       }
       return null;
     },
-    errorBuilder: (context, state) => LearningPage(
+    errorBuilder: (context, state) => BsScaffold(
       title: '북스타',
-      child: SingleChildScrollView(
-          child: LearningEmpty(
-        title: '이 화면은 새로 정리됐어요',
-        message: '퀴즈와 복습을 중심으로 다시 만나 보세요.',
-        action: FilledButton(
-            onPressed: () => context.go('/quiz'),
-            child: const Text('오늘 퀴즈로 가기')),
-      )),
+      body: Center(
+        child: Padding(
+          padding: Bs.pagePadding,
+          child: BsEmptyState(
+            message: '이 화면은 새로 정리됐어요.\n퀴즈와 복습을 중심으로 다시 만나 보세요.',
+            action: BsPrimaryButton(
+                label: '독서 퀴즈로 가기', onPressed: () => context.go('/quiz')),
+          ),
+        ),
+      ),
     ),
     routes: [
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
@@ -171,9 +175,10 @@ GoRouter router(Ref ref) {
                   builder: (_, __) => const LearningSearchScreen(),
                 ),
                 GoRoute(
-                  path: 'footprint',
+                  path: 'book/:bookId',
                   parentNavigatorKey: rootNavigatorKey,
-                  builder: (_, __) => const LearningFootprintScreen(),
+                  builder: (_, state) => LearningBookDetailScreen(
+                      bookId: int.parse(state.pathParameters['bookId']!)),
                 ),
                 GoRoute(
                   path: ':challengeId/chapters',
@@ -210,6 +215,19 @@ GoRouter router(Ref ref) {
                   parentNavigatorKey: rootNavigatorKey,
                   builder: (_, state) => LearningQuizScreen(
                       chapterId: int.parse(state.pathParameters['chapterId']!)),
+                ),
+              ],
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '/map',
+              builder: (_, __) => const ReadingMapScreen(),
+              routes: [
+                GoRoute(
+                  path: 'all',
+                  parentNavigatorKey: rootNavigatorKey,
+                  builder: (_, __) => const ReadingMapAllScreen(),
                 ),
               ],
             ),

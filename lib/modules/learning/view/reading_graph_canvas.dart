@@ -5,76 +5,78 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../data/reading_graph.dart';
+import 'bs_ui.dart';
 
+/// Book colors of the v2 reading map (Figma 4.2 "지도 속 책" dots).
 const readingGraphPalette = [
-  Color(0xFF527E72),
-  Color(0xFFB96C48),
-  Color(0xFF667DB0),
-  Color(0xFF8B739F),
-  Color(0xFFAA873D),
+  Color(0xFF7ACC97),
+  Color(0xFFFFC87D),
+  Color(0xFFA2EBFF),
+  Color(0xFFB9A8FF),
+  Color(0xFFFFA8C2),
+  Color(0xFFF2D46B),
 ];
 
+const _mutedNode = Color(0xFFE3E6E9);
+const _mutedEdge = Bs.surface;
+
+Color readingBookColor(ReadingGraph graph, int bookId) {
+  final index = graph.books.indexWhere((book) => book.bookId == bookId);
+  return readingGraphPalette[max(0, index) % readingGraphPalette.length];
+}
+
+/// Share image (1080×1350) of the whole map with its title and counts.
 Future<Uint8List> renderReadingGraphImage(ReadingGraph graph) async {
   final recorder = ui.PictureRecorder();
   final canvas = Canvas(recorder)..scale(3);
-  canvas.drawColor(Colors.white, BlendMode.src);
-  void text(
-    String value,
-    double top,
-    double fontSize,
-    Color color, {
-    FontWeight weight = FontWeight.w400,
-  }) {
-    final painter = TextPainter(
-      text: TextSpan(
-        text: value,
-        style: TextStyle(
-          fontFamily: 'Pretendard',
-          fontSize: fontSize,
-          fontWeight: weight,
-          color: color,
-          height: 1.4,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-      maxLines: 2,
-      ellipsis: '…',
-    )..layout(maxWidth: 312);
-    painter.paint(canvas, Offset(24, top));
-  }
+  canvas.drawColor(Bs.bg, BlendMode.src);
+  void text(InlineSpan span, Offset offset) => (TextPainter(
+        text: span,
+        textDirection: TextDirection.ltr,
+        maxLines: 2,
+        ellipsis: '…',
+      )..layout(maxWidth: 312))
+          .paint(canvas, offset);
 
-  text('MY READING MAP', 24, 9, const Color(0xFF737D77));
   text(
-    '읽고 떠올린 것들이\n하나의 세계로.',
-    48,
-    23,
-    const Color(0xFF252D29),
-    weight: FontWeight.w600,
+    TextSpan(
+        text: '읽고 떠올린 것이\n하나의 세계로',
+        style: Bs.text(22, weight: FontWeight.w700, height: 1.4)),
+    const Offset(24, 28),
   );
   text(
-    '책 ${graph.books.length}  ·  목차 ${graph.chapterCount}  ·  풀어본 질문 ${graph.questionCount}',
-    124,
-    10,
-    const Color(0xFF527E72),
+    TextSpan(children: [
+      for (final (count, label) in [
+        (graph.books.length, '권  '),
+        (graph.chapterCount, '목차  '),
+        (graph.questionCount, '개 퀴즈'),
+      ]) ...[
+        TextSpan(text: '$count', style: Bs.text(14, weight: FontWeight.w700)),
+        TextSpan(text: label, style: Bs.text(14, color: Bs.g3)),
+      ],
+    ]),
+    const Offset(24, 98),
   );
+  const card = Rect.fromLTWH(16, 132, 328, 252);
+  canvas.drawRRect(RRect.fromRectAndRadius(card, const Radius.circular(18)),
+      Paint()..color = Bs.white);
   canvas.save();
-  canvas.translate(0, 142);
-  ReadingGraphPainter(
-    ReadingGraphLayout(graph, const Size(360, 252)),
-  ).paint(canvas, const Size(360, 252));
+  canvas.translate(card.left + 8, card.top + 8);
+  final mapSize = Size(card.width - 16, card.height - 16);
+  ReadingGraphPainter(ReadingGraphLayout(graph, mapSize))
+      .paint(canvas, mapSize);
   canvas.restore();
   text(
-    '북스타  /  나만의 독서 지도',
-    397,
-    11,
-    const Color(0xFF35463C),
-    weight: FontWeight.w600,
+    TextSpan(
+        text: '북스타 · 나의 독서 지도',
+        style: Bs.text(12, weight: FontWeight.w600, color: Bs.g5)),
+    const Offset(24, 400),
   );
   text(
-    '표시된 풀이 기록 · 완독 인증 아님${graph.truncated ? ' · 일부 기록' : ''}',
-    421,
-    8,
-    const Color(0xFF737D77),
+    TextSpan(
+        text: '풀어본 퀴즈 기록으로 만든 지도예요${graph.truncated ? ' · 일부 기록' : ''}',
+        style: Bs.text(10, color: Bs.g3)),
+    const Offset(24, 420),
   );
   final picture = recorder.endRecording();
   ui.Image? image;
@@ -89,24 +91,24 @@ Future<Uint8List> renderReadingGraphImage(ReadingGraph graph) async {
   }
 }
 
+/// Map of books (large dots), chapters and answered quizzes (small dots).
+/// Tapping a dot reports the nearest node through [onSelected]; with
+/// [zoomable] the map can be pinched (and panned sideways once zoomed) while
+/// vertical drags keep scrolling the page.
 class ReadingGraphCanvas extends StatefulWidget {
   const ReadingGraphCanvas({
     super.key,
     required this.graph,
     this.selectedId,
     this.onSelected,
-    this.onExplorationChanged,
-    this.onFullscreen,
-    this.exploring,
     this.interactive = true,
+    this.zoomable = false,
   });
   final ReadingGraph graph;
   final String? selectedId;
   final ValueChanged<ReadingNode>? onSelected;
-  final ValueChanged<bool>? onExplorationChanged;
-  final VoidCallback? onFullscreen;
-  final bool? exploring;
   final bool interactive;
+  final bool zoomable;
 
   @override
   State<ReadingGraphCanvas> createState() => _ReadingGraphCanvasState();
@@ -114,7 +116,24 @@ class ReadingGraphCanvas extends StatefulWidget {
 
 class _ReadingGraphCanvasState extends State<ReadingGraphCanvas> {
   final _transform = TransformationController();
-  bool _exploring = false;
+  bool _zoomed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _transform.addListener(() {
+      final zoomed = _transform.value.getMaxScaleOnAxis() > 1.01;
+      if (zoomed != _zoomed) setState(() => _zoomed = zoomed);
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant ReadingGraphCanvas oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.graph, widget.graph)) {
+      _transform.value = Matrix4.identity();
+    }
+  }
 
   @override
   void dispose() {
@@ -123,134 +142,38 @@ class _ReadingGraphCanvasState extends State<ReadingGraphCanvas> {
   }
 
   @override
-  void didUpdateWidget(covariant ReadingGraphCanvas oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (!identical(oldWidget.graph, widget.graph) ||
-        (oldWidget.exploring == true && widget.exploring == false)) {
-      _transform.value = Matrix4.identity();
-      _exploring = false;
-    }
-  }
-
-  @override
   Widget build(BuildContext context) => LayoutBuilder(
         builder: (context, box) {
+          final graph = widget.graph;
           final size = Size(box.maxWidth, box.maxHeight);
-          final layout = ReadingGraphLayout(widget.graph, size);
-          final picture = GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTapUp: widget.interactive
-                ? (details) {
-                    final hit = layout.hitTest(details.localPosition);
-                    if (hit != null) {
-                      widget.onSelected?.call(hit);
-                    }
-                  }
-                : null,
-            child: CustomPaint(
-              size: size,
-              painter:
-                  ReadingGraphPainter(layout, selectedId: widget.selectedId),
-            ),
+          final layout = ReadingGraphLayout(graph, size);
+          Widget picture = CustomPaint(
+            size: size,
+            painter: ReadingGraphPainter(layout, selectedId: widget.selectedId),
           );
-          if (!widget.interactive) return picture;
-          return Stack(
-            children: [
-              Positioned.fill(
-                child: Semantics(
-                  label:
-                      '독서 지도. 책 ${widget.graph.books.length}권, 풀어본 질문 ${widget.graph.questionCount}개. 확대하거나 아래 목록에서 기록을 선택할 수 있어요.',
-                  child: (widget.exploring ?? _exploring)
-                      ? InteractiveViewer(
-                          transformationController: _transform,
-                          minScale: .75,
-                          maxScale: 5,
-                          boundaryMargin: const EdgeInsets.all(180),
-                          child: picture,
-                        )
-                      : picture,
-                ),
-              ),
-              if (widget.exploring ?? _exploring)
-                const Positioned(
-                  top: 4,
-                  left: 24,
-                  right: 24,
-                  child: IgnorePointer(
-                    child: Text(
-                      '이동·핀치 확대 중 · 전체 보기로 돌아갈 수 있어요',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 10, color: Color(0xFF737D77)),
-                    ),
-                  ),
-                ),
-              Positioned(
-                right: 8,
-                bottom: 8,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: .94),
-                    border: Border.all(color: const Color(0xFFE7E9E7)),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (widget.onFullscreen != null)
-                        IconButton(
-                          tooltip: '지도 전체 화면 · 점 끌기',
-                          onPressed: widget.onFullscreen,
-                          icon: const Icon(Icons.open_in_full, size: 19),
-                        ),
-                      IconButton(
-                        tooltip: '지도 축소',
-                        iconSize: 19,
-                        onPressed: () {
-                          setState(() => _exploring = true);
-                          widget.onExplorationChanged?.call(true);
-                          final scale = _transform.value.getMaxScaleOnAxis();
-                          final next = Matrix4.identity()
-                            ..translate(size.width / 2, size.height / 2)
-                            ..scale(max(.75 / scale, 1 / 1.4))
-                            ..translate(-size.width / 2, -size.height / 2)
-                            ..multiply(_transform.value);
-                          _transform.value = next;
-                        },
-                        icon: const Icon(Icons.remove),
-                      ),
-                      IconButton(
-                        tooltip: '지도 확대',
-                        iconSize: 19,
-                        onPressed: () {
-                          setState(() => _exploring = true);
-                          widget.onExplorationChanged?.call(true);
-                          final scale = _transform.value.getMaxScaleOnAxis();
-                          if (scale < 5) {
-                            final next = Matrix4.identity()
-                              ..translate(size.width / 2, size.height / 2)
-                              ..scale(min(1.4, 5 / scale))
-                              ..translate(-size.width / 2, -size.height / 2)
-                              ..multiply(_transform.value);
-                            _transform.value = next;
-                          }
-                        },
-                        icon: const Icon(Icons.add),
-                      ),
-                      IconButton(
-                        tooltip: '지도 전체 보기',
-                        iconSize: 19,
-                        onPressed: () => setState(() {
-                          _transform.value = Matrix4.identity();
-                          _exploring = false;
-                          widget.onExplorationChanged?.call(false);
-                        }),
-                        icon: const Icon(Icons.center_focus_weak_rounded),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+          final onSelected = widget.onSelected;
+          if (widget.interactive && onSelected != null) {
+            picture = GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTapUp: (details) {
+                final hit = layout.hitTest(details.localPosition);
+                if (hit != null) onSelected(hit);
+              },
+              child: picture,
+            );
+          }
+          if (widget.interactive && widget.zoomable) {
+            picture = InteractiveViewer(
+              transformationController: _transform,
+              maxScale: 4,
+              panEnabled: _zoomed,
+              child: picture,
+            );
+          }
+          return Semantics(
+            label:
+                '독서 지도. 책 ${graph.books.length}권, 목차 ${graph.chapterCount}개, 풀어본 퀴즈 ${graph.questionCount}개.',
+            child: picture,
           );
         },
       );
@@ -271,15 +194,16 @@ class ReadingGraphLayout {
     }
     final spanX = max(230.0, maxX - minX);
     final spanY = max(230.0, maxY - minY);
-    final scale = min(
-      max(1.0, size.width - 80) / spanX,
-      max(1.0, size.height - (size.height < 240 ? 32 : 110)) / spanY,
-    );
-    nodeScale = (scale / .8).clamp(.3, 1.0);
+    final fitX = max(1.0, size.width - 80) / spanX;
+    final fitY = max(1.0, size.height - (size.height < 240 ? 40 : 96)) / spanY;
+    final scale = min(fitX, fitY);
+    // Tall cards (4.1/4.2) stretch the map vertically a little to fill them.
+    final scaleY = min(fitY, scale * 1.4);
+    nodeScale = (scale / .7).clamp(.5, 1.0);
     for (final node in graph.nodes) {
       positions[node.id] = Offset(
         size.width / 2 + (node.x - (minX + maxX) / 2) * scale,
-        size.height / 2 - 12 + (node.y - (minY + maxY) / 2) * scale,
+        size.height / 2 - 8 + (node.y - (minY + maxY) / 2) * scaleY,
       );
     }
   }
@@ -309,101 +233,151 @@ class ReadingGraphPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.drawRect(Offset.zero & size, Paint()..color = Colors.white);
-    final nodes = layout.graph.nodes;
-    if (nodes.isEmpty) return;
-    ReadingNode? selected;
-    for (final node in nodes) {
-      if (node.id == selectedId) selected = node;
+    final graph = layout.graph;
+    final dot = Paint()..color = Bs.surface;
+    for (var y = 9.0; y < size.height; y += 18) {
+      for (var x = 9.0; x < size.width; x += 18) {
+        canvas.drawCircle(Offset(x, y), 1, dot);
+      }
     }
-    final books = layout.graph.books;
-    final colors = {
-      for (var i = 0; i < books.length; i++)
-        books[i].bookId: readingGraphPalette[i % readingGraphPalette.length],
+    if (graph.nodes.isEmpty) return;
+    final selected = graph.nodeById(selectedId);
+    final focusChapter = switch (selected?.kind) {
+      ReadingNodeKind.chapter => selected!.id,
+      ReadingNodeKind.question => selected!.parentId,
+      _ => null,
     };
-    for (final node in nodes) {
+    final colors = {
+      for (final (index, book) in graph.books.indexed)
+        book.bookId: readingGraphPalette[index % readingGraphPalette.length],
+    };
+    bool active(ReadingNode node) =>
+        selected == null || selected.bookId == node.bookId;
+    final scale = layout.nodeScale;
+
+    for (final node in graph.nodes) {
       final parent = layout.positions[node.parentId];
       if (parent == null) continue;
-      final active = selected == null || selected.bookId == node.bookId;
+      final on = active(node);
+      final chapter = node.kind == ReadingNodeKind.chapter;
       canvas.drawLine(
         parent,
         layout.positions[node.id]!,
         Paint()
-          ..color = active
-              ? colors[node.bookId]!.withValues(alpha: .38)
-              : const Color(0xFFEDEFEF)
-          ..strokeWidth = node.kind == ReadingNodeKind.chapter ? .9 : .65,
+          ..color = on
+              ? colors[node.bookId]!.withValues(alpha: chapter ? .8 : .55)
+              : _mutedEdge
+          ..strokeWidth = (chapter ? 1.6 : 1.1) * scale
+          ..strokeCap = StrokeCap.round,
       );
     }
-    final occupiedLabels = <Rect>[];
-    for (final node in nodes) {
-      final point = layout.positions[node.id]!;
-      final active = selected == null || selected.bookId == node.bookId;
-      final color = active ? colors[node.bookId]! : const Color(0xFFDCDDDE);
-      final radius = (switch (node.kind) {
-            ReadingNodeKind.book => 6.5,
-            ReadingNodeKind.chapter => 3.3,
-            ReadingNodeKind.question => node.reviewCount > 0 ? 2.9 : 2.2,
-          }) *
-          layout.nodeScale;
-      if (node.kind == ReadingNodeKind.book || node.id == selectedId) {
-        canvas.drawCircle(
-          point,
-          radius + (node.id == selectedId ? 9 : 4 * layout.nodeScale),
-          Paint()..color = color.withValues(alpha: .09),
-        );
-      }
-      canvas.drawCircle(point, radius, Paint()..color = color);
-      if (node.id == selectedId) {
-        canvas.drawCircle(
-          point,
-          radius + 4,
-          Paint()
-            ..color = color
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 1,
-        );
-      }
-      if (node.kind == ReadingNodeKind.book &&
-          (books.length <= 14 || node.id == selectedId)) {
-        final label = TextPainter(
-          text: TextSpan(
-            text: node.label,
-            style: TextStyle(
-              fontFamily: 'Pretendard',
-              fontSize: 9,
-              fontWeight: FontWeight.w500,
-              color: active ? const Color(0xFF595E5B) : const Color(0xFFAFB2B0),
-            ),
-          ),
-          textDirection: TextDirection.ltr,
-          maxLines: 1,
-          ellipsis: '…',
-        )..layout(maxWidth: min(108.0, size.width - 24));
-        final x = (point.dx - label.width / 2).clamp(
-          8.0,
-          max(8.0, size.width - label.width - 8),
-        );
-        for (final y in [
-          point.dy + 12,
-          point.dy - label.height - 10,
-          point.dy + 30,
-        ]) {
-          final rect = Rect.fromLTWH(
-            x.toDouble(),
-            y,
-            label.width,
-            label.height,
-          );
-          if (rect.top < 0 ||
-              rect.bottom > size.height - 8 ||
-              occupiedLabels.any((other) => other.overlaps(rect.inflate(3)))) {
-            continue;
-          }
-          label.paint(canvas, rect.topLeft);
-          occupiedLabels.add(rect);
-          break;
+
+    for (final kind in const [
+      ReadingNodeKind.question,
+      ReadingNodeKind.chapter,
+      ReadingNodeKind.book,
+    ]) {
+      for (final node in graph.nodes.where((node) => node.kind == kind)) {
+        final point = layout.positions[node.id]!;
+        final base = colors[node.bookId]!;
+        final color = active(node) ? base : _mutedNode;
+        final radius = scale *
+            switch (kind) {
+              ReadingNodeKind.book => 12.0,
+              ReadingNodeKind.chapter => 6.5,
+              ReadingNodeKind.question => node.reviewCount > 0 ? 4.4 : 3.6,
+            };
+        if (kind == ReadingNodeKind.book) {
+          canvas.drawCircle(point, radius + 6 * scale,
+              Paint()..color = color.withValues(alpha: .25));
         }
+        canvas.drawCircle(point, radius, Paint()..color = color);
+        if (kind == ReadingNodeKind.chapter) {
+          canvas.drawCircle(point, radius * .42, Paint()..color = Bs.white);
+        }
+        if (node.id == selectedId || node.id == focusChapter) {
+          canvas.drawCircle(
+            point,
+            radius + 3.5,
+            Paint()
+              ..color = Color.lerp(base, Bs.black, .35)!
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 1.6,
+          );
+        }
+      }
+    }
+
+    final occupied = [
+      for (final node in graph.nodes)
+        Rect.fromCircle(
+            center: layout.positions[node.id]!,
+            radius: (node.kind == ReadingNodeKind.question ? 4 : 7) * scale),
+    ];
+    void label(ReadingNode node, TextStyle style, double gap,
+        {bool always = false}) {
+      final point = layout.positions[node.id]!;
+      final painter = TextPainter(
+        text: TextSpan(text: node.label, style: style),
+        textDirection: TextDirection.ltr,
+        maxLines: 1,
+        ellipsis: '…',
+      )..layout(maxWidth: min(112.0, size.width - 16));
+      final x = (point.dx - painter.width / 2)
+          .clamp(8.0, max(8.0, size.width - painter.width - 8))
+          .toDouble();
+      final candidates = [
+        for (final y in [
+          point.dy + gap,
+          point.dy - painter.height - gap,
+          point.dy + gap + 18,
+        ])
+          Rect.fromLTWH(x, y, painter.width, painter.height),
+      ];
+      final rect = candidates
+              .where((rect) =>
+                  rect.top >= 0 &&
+                  rect.bottom <= size.height &&
+                  !occupied.any((other) => other.overlaps(rect.inflate(2))))
+              .firstOrNull ??
+          (always ? candidates.first : null);
+      if (rect == null) return;
+      canvas.drawRRect(
+          RRect.fromRectAndRadius(rect.inflate(2), const Radius.circular(4)),
+          Paint()..color = Bs.white.withValues(alpha: .85));
+      painter.paint(canvas, rect.topLeft);
+      occupied.add(rect);
+    }
+
+    final books = graph.books;
+    final focusBook = selected?.bookId;
+    for (final book in [
+      ...books.where((book) => book.bookId == focusBook),
+      ...books.where((book) => book.bookId != focusBook),
+    ]) {
+      if (books.length > 14 && book.bookId != focusBook) continue;
+      label(
+        book,
+        Bs.text(11,
+            weight: FontWeight.w600,
+            color: active(book) ? Bs.g6 : Bs.g2,
+            height: 1.3),
+        13 * scale + 6,
+        always: books.length <= 6 || book.bookId == focusBook,
+      );
+    }
+    if (focusBook != null) {
+      for (final chapter in graph.chaptersOf(focusBook)) {
+        label(
+          chapter,
+          Bs.text(10,
+              weight: chapter.id == focusChapter
+                  ? FontWeight.w600
+                  : FontWeight.w400,
+              color: chapter.id == focusChapter ? Bs.g6 : Bs.g3,
+              height: 1.3),
+          7 * scale + 4,
+        );
       }
     }
   }

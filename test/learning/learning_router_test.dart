@@ -41,22 +41,24 @@ void main() {
     final fixture = await _pumpRouter(tester);
     fixture.router.go('/preview');
     await tester.pumpAndSettle();
-    await tester.tap(find.text('글을 가리고 퀴즈 풀기'));
+    await tester.tap(find.text('퀴즈 풀어보기'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('기억할 내용을 자기 말로 떠올렸어요'), 140,
         scrollable: find.byType(Scrollable).first);
     await tester.tap(find.text('기억할 내용을 자기 말로 떠올렸어요'));
     await tester.pump();
-    await tester.tap(find.text('답 확인하기'));
+    await tester.tap(find.text('정답 확인하기'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('내 책으로 시작하기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('내 책으로 시작하기').last);
     await tester.pumpAndSettle();
     expect(fixture.uri.path, '/login');
     expect(fixture.uri.queryParameters['next'], '/library/search');
     fixture.auth.signIn();
     await tester.pumpAndSettle();
     expect(fixture.uri.path, '/library/search');
-    expect(find.text('기억하고 싶은 책 찾기'), findsOneWidget);
+    expect(find.text('책 제목이나 저자를 검색해 보세요'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -69,7 +71,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(fixture.uri.path, '/start');
     expect(fixture.uri.queryParameters['next'], '/library/search');
-    expect(find.byType(CheckboxListTile), findsWidgets);
+    expect(find.byType(Checkbox), findsWidgets);
     fixture.container.read(_testPolicy.notifier).state = const Policy(
         serviceUsingAgree: PolicyAgree.Y,
         personalInformationAgree: PolicyAgree.Y);
@@ -104,13 +106,26 @@ void main() {
       '/library/1/quiz/-1',
       '/review/quiz/0',
       '/settings/archive/nope',
-      '/quiz/nope/report'
+      '/quiz/nope/report',
+      '/library/book/0',
+      '/library/book/nope'
     ]) {
       fixture.router.go(path);
       await tester.pumpAndSettle();
       expect(fixture.uri.path, '/library', reason: path);
       expect(tester.takeException(), isNull);
     }
+  });
+
+  testWidgets('the removed footprint tab now opens the reading map',
+      (tester) async {
+    final fixture = await _pumpRouter(tester);
+    fixture.auth.signIn();
+    await tester.pumpAndSettle();
+    fixture.router.go('/library/footprint');
+    await tester.pumpAndSettle();
+    expect(fixture.uri.path, '/map');
+    expect(tester.takeException(), isNull);
   });
 }
 

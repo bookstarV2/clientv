@@ -17,7 +17,7 @@ const _book = ChallengeResponse(
     challengeId: 7, bookTitle: _title, bookAuthor: '여러 명의 작가와 긴 이름을 가진 공동 저자들');
 
 void main() {
-  testWidgets('empty home exposes book search above bottom navigation on SE',
+  testWidgets('empty home keeps its CTA above bottom navigation on SE',
       (tester) async {
     tester.view.physicalSize = const Size(375, 667);
     tester.view.devicePixelRatio = 1;
@@ -25,28 +25,32 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(ProviderScope(
         overrides: [
+          learningBooksProvider.overrideWith((ref) async => []),
           readingGraphProvider
               .overrideWith((ref) async => const ReadingGraph([])),
         ],
         child: MaterialApp(
             theme: LearningColors.theme,
-            home: Scaffold(
-                appBar: AppBar(title: const Text('북스타')),
-                body: const SafeArea(child: LearningHomeScreen()),
-                bottomNavigationBar: const SizedBox(height: 90)))));
+            home: const Scaffold(
+                extendBody: true,
+                body: LearningHomeScreen(),
+                bottomNavigationBar: SizedBox(height: 90)))));
     await tester.pumpAndSettle();
-    final button = tester.getRect(find.text('퀴즈 풀 책 찾기'));
+    final button = tester.getRect(find.text('내 책으로 퀴즈 풀기'));
     expect(button.bottom, lessThan(577));
-    expect(find.text('퀴즈 풀 책 찾기').hitTestable(), findsOneWidget);
     expect(find.text('내 책으로 퀴즈 풀기').hitTestable(), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
-  for (final populated in [false, true]) {
-    testWidgets('home ${populated ? 'long book' : 'empty'} fits 320px 2x',
-        (tester) async {
+  for (final (name, books, map) in [
+    ('empty', <ChallengeResponse>[], false),
+    ('long book with map', [_book], true),
+    ('long book before map', [_book], false),
+  ]) {
+    testWidgets('home $name fits 320px 2x', (tester) async {
       await _pump(tester, const LearningHomeScreen(), overrides: [
+        learningBooksProvider.overrideWith((ref) async => books),
         readingGraphProvider
-            .overrideWith((ref) async => ReadingGraph.fromReviews(populated
+            .overrideWith((ref) async => ReadingGraph.fromReviews(map
                 ? [
                     ReviewItem(
                         bookId: 5,
@@ -63,6 +67,8 @@ void main() {
                 : [])),
       ]);
       await _scan(tester);
+      await _reveal(tester, find.text('내 책으로 퀴즈 풀기'));
+      expect(find.text('내 책으로 퀴즈 풀기').hitTestable(), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   }
@@ -72,20 +78,31 @@ void main() {
       (tester) async {
     var calls = 0;
     await _pump(tester, const LearningHomeScreen(), overrides: [
+      learningBooksProvider.overrideWith((ref) async => [_book]),
       readingGraphProvider.overrideWith((ref) async {
         if (++calls == 1) throw StateError('map unavailable');
-        return const ReadingGraph([]);
+        return ReadingGraph.fromReviews([
+          ReviewItem(
+              bookId: 5,
+              quizId: 1,
+              chapterId: 2,
+              chapterTitle: '목차',
+              bookTitle: _title,
+              bookCover: '',
+              question: '질문',
+              reviewCount: 0,
+              due: false,
+              nextReviewAt: DateTime.utc(2030))
+        ]);
       }),
     ]);
     await _reveal(tester, find.text('내 책으로 퀴즈 풀기'));
     expect(find.text('내 책으로 퀴즈 풀기').hitTestable(), findsOneWidget);
-    await _reveal(tester, find.text('퀴즈 풀 책 찾기'));
-    expect(find.text('퀴즈 풀 책 찾기').hitTestable(), findsOneWidget);
-    await _reveal(tester, find.text('지도 다시 불러오기'));
-    await tester.tap(find.text('지도 다시 불러오기'));
+    await _reveal(tester, find.text('다시 불러오기'));
+    await tester.tap(find.text('다시 불러오기'));
     await tester.pumpAndSettle();
     expect(calls, 2);
-    await _reveal(tester, find.text('한 문제를 풀면 책과 목차, 질문의 첫 점들이 연결돼요.'));
+    await _reveal(tester, find.text('1권에서 쌓인 1개의 생각'));
     expect(tester.takeException(), isNull);
   });
 
@@ -95,11 +112,11 @@ void main() {
       learningBooksProvider.overrideWith((ref) async => []),
       finishedLearningBooksProvider.overrideWith((ref) async => []),
     ]);
-    await _reveal(tester, find.text('책을 담아 볼까요?'));
-    await _reveal(tester, find.text('퀴즈를 마친 책'));
-    await tester.tap(find.text('퀴즈를 마친 책'));
+    await _reveal(tester, find.text('우측 상단의 검색 탭에서\n읽고 싶은 책을 찾아보세요'));
+    await _reveal(tester, find.text('완독한 책'));
+    await tester.tap(find.text('완독한 책'));
     await tester.pumpAndSettle();
-    await _reveal(tester, find.text('아직 퀴즈를 마친 책이 없어요'));
+    await _reveal(tester, find.text('아직 완독한 책이 없어요\n모든 목차의 퀴즈를 풀면 여기에 모여요'));
     expect(tester.takeException(), isNull);
   });
 
@@ -122,7 +139,7 @@ void main() {
     await _reveal(tester, find.text('다시 불러오기'));
     await tester.tap(find.text('다시 불러오기'));
     await tester.pumpAndSettle();
-    await _reveal(tester, find.text('책을 담아 볼까요?'));
+    await _reveal(tester, find.text('우측 상단의 검색 탭에서\n읽고 싶은 책을 찾아보세요'));
     expect(calls, 2);
     expect(tester.takeException(), isNull);
   });
@@ -152,7 +169,8 @@ void main() {
       await _scan(tester);
       expect(tester.takeException(), isNull);
       if (!populated) {
-        await _reveal(tester, find.text('지금 풀 수 있는 퀴즈가 없어요'));
+        await _reveal(
+            tester, find.text('지금 풀 수 있는 퀴즈가 없어요\n내 서재에서 다른 책을 선택해 주세요'));
       }
     });
   }
@@ -171,7 +189,7 @@ void main() {
     await tester.tap(find.text('다시 불러오기'));
     await tester.pumpAndSettle();
     expect(calls, 2);
-    await _reveal(tester, find.text('지금 풀 수 있는 퀴즈가 없어요'));
+    await _reveal(tester, find.text('지금 풀 수 있는 퀴즈가 없어요\n내 서재에서 다른 책을 선택해 주세요'));
   });
 }
 

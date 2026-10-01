@@ -1,21 +1,23 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// 2.1 내 서재 보기 방식: 목록 / 2열 토글.
 enum LibraryLayout {
-  list('목록', '제목과 저자를 편하게', 1),
-  twoColumns('2열', '표지를 크게', 2),
-  threeColumns('3열', '더 많은 책을 한눈에', 3);
+  list('목록'),
+  twoColumns('2열');
 
-  const LibraryLayout(this.label, this.description, this.columns);
+  const LibraryLayout(this.label);
   final String label;
-  final String description;
-  final int columns;
 
-  static LibraryLayout parse(String? value) =>
-      values.firstWhere((layout) => layout.name == value, orElse: () => list);
+  LibraryLayout get toggled => this == list ? twoColumns : list;
+
+  /// Unknown values fall back to the list; the removed 3열 keeps a grid.
+  static LibraryLayout parse(String? value) => switch (value) {
+        'twoColumns' || 'threeColumns' => twoColumns,
+        _ => list,
+      };
 }
 
 class LibraryLayoutStore {
@@ -34,80 +36,40 @@ class LibraryLayoutStore {
 final libraryLayoutStoreProvider =
     Provider<LibraryLayoutStore>((ref) => LibraryLayoutStore());
 
-class LibraryLayoutPreference {
-  const LibraryLayoutPreference(this.preferred, {this.notice});
-  final LibraryLayout preferred;
-  final String? notice;
-}
-
 final libraryLayoutProvider =
-    StateNotifierProvider<LibraryLayoutController, LibraryLayoutPreference>(
+    StateNotifierProvider<LibraryLayoutController, LibraryLayout>(
         (ref) => LibraryLayoutController(ref.read(libraryLayoutStoreProvider)));
 
-class LibraryLayoutController extends StateNotifier<LibraryLayoutPreference> {
-  LibraryLayoutController(this._store)
-      : super(const LibraryLayoutPreference(LibraryLayout.list)) {
+class LibraryLayoutController extends StateNotifier<LibraryLayout> {
+  LibraryLayoutController(this._store) : super(LibraryLayout.list) {
     unawaited(_restore());
   }
 
   final LibraryLayoutStore _store;
-  int _revision = 0;
+  bool _chosen = false;
   Future<void> _writes = Future<void>.value();
 
   Future<void> _restore() async {
-    final revision = _revision;
     try {
-      final preferred = await _store.load();
-      if (mounted && revision == _revision) {
-        state = LibraryLayoutPreference(preferred);
-      }
+      final saved = await _store.load();
+      if (mounted && !_chosen) state = saved;
     } catch (_) {
-      if (mounted && revision == _revision) {
-        state = const LibraryLayoutPreference(LibraryLayout.list,
-            notice: '보기 설정을 읽지 못했어요. 원하는 보기를 다시 선택해 주세요.');
-      }
+      // An unreadable preference keeps the default list.
     }
   }
 
+  /// Applies [layout] at once; persisting it for the next launch is best
+  /// effort and writes are kept in order.
   Future<void> select(LibraryLayout layout) async {
-    final revision = ++_revision;
-    state = LibraryLayoutPreference(layout);
+    _chosen = true;
+    state = layout;
     _writes = _writes.catchError((_) {}).then((_) => _store.save(layout));
     try {
       await _writes;
     } catch (_) {
-      if (mounted && revision == _revision) {
-        state = LibraryLayoutPreference(layout,
-            notice: '보기 설정을 저장하지 못했어요. 다음 실행에는 유지되지 않을 수 있어요.');
-      }
+      // The choice still applies for this session.
     }
   }
-}
 
-const libraryGridGap = 12.0;
-const libraryGridPadding = 10.0;
-const libraryGridTitleStyle =
-    TextStyle(fontSize: 14, height: 1.35, fontWeight: FontWeight.w700);
-
-LibraryLayout effectiveLibraryLayout(LibraryLayout preferred,
-    {required double availableWidth,
-    required TextScaler textScaler,
-    required TextDirection textDirection,
-    String? fontFamily}) {
-  final title = TextPainter(
-      text: TextSpan(
-          text: '책의제목',
-          style: libraryGridTitleStyle.copyWith(fontFamily: fontFamily)),
-      textScaler: textScaler,
-      textDirection: textDirection)
-    ..layout();
-  final minimumWidth = title.width;
-  title.dispose();
-  for (var columns = preferred.columns; columns > 1; columns--) {
-    final innerWidth =
-        (availableWidth - libraryGridGap * (columns - 1)) / columns -
-            libraryGridPadding * 2;
-    if (innerWidth >= minimumWidth) return LibraryLayout.values[columns - 1];
-  }
-  return LibraryLayout.list;
+  Future<void> toggle() => select(state.toggled);
 }

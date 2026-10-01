@@ -34,11 +34,11 @@ void main() {
       (tester) async {
     final api = _ArchiveApi();
     await _pump(tester, api);
-    await _reveal(tester, find.text('첫 번째 책'));
+    await _reveal(tester, find.text('첫 번째 책').last);
     await _reveal(tester, find.text('지난 기록 더 보기'));
     await tester.tap(find.text('지난 기록 더 보기'));
     await tester.pumpAndSettle();
-    await _reveal(tester, find.text('두 번째 책'));
+    await _reveal(tester, find.text('두 번째 책').last);
     expect(api.cursors, [null, 20]);
     expect(api.paths.every((path) => path == '/api/v3/me/reading-diaries'),
         isTrue);

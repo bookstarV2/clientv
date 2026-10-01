@@ -5,7 +5,7 @@ import 'package:bookstar/modules/learning/data/reading_graph.dart';
 import 'package:bookstar/modules/learning/view/learning_archive_screen.dart';
 import 'package:bookstar/modules/learning/view/learning_design.dart';
 import 'package:bookstar/modules/learning/view/learning_home_screen.dart';
-import 'package:bookstar/modules/learning/view/reading_graph_screen.dart';
+import 'package:bookstar/modules/learning/view/reading_map_screen.dart';
 import 'package:bookstar/modules/learning/view/learning_library_screen.dart';
 import 'package:bookstar/modules/learning/view/learning_review_screen.dart';
 import 'package:bookstar/modules/learning/view/learning_search_screen.dart';
@@ -101,13 +101,13 @@ void main() {
       try {
         await _pump(tester, const LearningLibraryScreen());
         if (finished) {
-          await _reveal(tester, find.text('퀴즈를 마친 책'));
-          await tester.tap(find.text('퀴즈를 마친 책'));
+          await _reveal(tester, find.text('완독한 책'));
+          await tester.tap(find.text('완독한 책'));
           await tester.pumpAndSettle();
         }
-        await _reveal(tester, find.text(_title));
+        await _reveal(tester, find.text(_title).first);
         final label =
-            '$_title, $_author, ${finished ? '퀴즈를 마친 책' : '읽고 있는 책'}, 목차 열기';
+            '$_title, $_author, ${finished ? '완독한 책' : '읽는중 책'}, 0% 진행, 목차 열기';
         final node = _singleNode(tester, label);
         expect(node.getSemanticsData().label.split(_title), hasLength(2));
         await _open(tester, node, '/library/7/chapters');
@@ -117,39 +117,47 @@ void main() {
     });
   }
 
-  testWidgets(
-      'search retains author and prepared count without claiming another add',
+  testWidgets('search result retains author and opens the book detail',
       (tester) async {
     final handle = tester.ensureSemantics();
     try {
       await _pump(tester, const LearningSearchScreen(), page: true);
-      await _reveal(tester, find.text(_title));
-      final node =
-          _singleNode(tester, '$_title, $_author, 목차 퀴즈 5개 준비됨, 목차 열기');
+      await tester.enterText(find.byType(TextField), _title);
+      await tester.testTextInput.receiveAction(TextInputAction.search);
+      await tester.pumpAndSettle();
+      await _reveal(tester, find.text(_title).last);
+      final node = _singleNode(tester, '$_title, $_author, 책 상세 보기');
       expect(node.getSemanticsData().label, isNot(contains('추가')));
-      await _open(tester, node, '/library/7/chapters');
+      await _open(tester, node, '/library/book/5');
     } finally {
       handle.dispose();
     }
   });
 
-  for (final due in [true, false]) {
-    testWidgets(
-        'review card retains question and ${due ? 'due state' : 'next date'}',
-        (tester) async {
-      final handle = tester.ensureSemantics();
-      try {
-        await _pump(tester, LearningReviewScreen(allQuizzes: !due), due: due);
-        await _reveal(tester, find.text(_question));
-        final label =
-            '$_title, 보존할 목차, $_question, ${due ? '지금 떠올려 볼 시간' : '9월 10일 09:30 예정'}, 복습하기';
-        final node = _singleNode(tester, label);
-        await _open(tester, node, '/review/quiz/12');
-      } finally {
-        handle.dispose();
-      }
-    });
-  }
+  testWidgets('review hero action opens the due quiz', (tester) async {
+    final handle = tester.ensureSemantics();
+    try {
+      await _pump(tester, const LearningReviewScreen());
+      await _reveal(tester, find.text('퀴즈 다시 풀기'));
+      expect(find.text(_question), findsOneWidget);
+      await _open(tester, _singleNode(tester, '퀴즈 다시 풀기'), '/review/quiz/12');
+    } finally {
+      handle.dispose();
+    }
+  });
+
+  testWidgets('reviewed quiz row retains question and book once',
+      (tester) async {
+    final handle = tester.ensureSemantics();
+    try {
+      await _pump(tester, const LearningReviewHistoryPage(), page: true);
+      await _reveal(tester, find.text(_question));
+      final node = _singleNode(tester, '$_question, $_title ($_author), 다시 풀기');
+      await _open(tester, node, '/review/quiz/12');
+    } finally {
+      handle.dispose();
+    }
+  });
 
   testWidgets(
       'archive card retains date and preview without repeated book title',
@@ -167,7 +175,7 @@ void main() {
   });
 
   testWidgets(
-      'quiz home provides an accessible primary start route to the library',
+      'quiz home provides an accessible primary start route to the chapters',
       (tester) async {
     final handle = tester.ensureSemantics();
     try {
@@ -182,7 +190,7 @@ void main() {
       await _open(
           tester,
           tester.getSemantics(find.bySemanticsLabel('내 책으로 퀴즈 풀기')),
-          '/library');
+          '/library/7/chapters');
     } finally {
       handle.dispose();
     }
@@ -193,18 +201,18 @@ void main() {
       (tester) async {
     final handle = tester.ensureSemantics();
     try {
-      await _pump(tester, const ReadingGraphScreen());
-      await _reveal(tester, find.byType(ListTile));
-      await tester.tap(find.byType(ListTile));
+      await _pump(tester, const ReadingMapAllScreen(), page: true);
+      final book = find
+          .ancestor(of: find.text(_title).first, matching: find.byType(InkWell))
+          .first;
+      await _reveal(tester, book);
+      await tester.tap(book);
       await tester.pumpAndSettle();
       await _reveal(tester, find.text('보존할 목차'));
       await tester.tap(find.text('보존할 목차'));
       await tester.pumpAndSettle();
-      await _reveal(tester, find.text('이 목차 다시 열기'));
-      await _open(
-          tester,
-          tester.getSemantics(find.bySemanticsLabel('이 목차 다시 열기')),
-          '/review/quiz/12');
+      await _reveal(tester, find.text('퀴즈 다시 풀기'));
+      await _open(tester, _singleNode(tester, '퀴즈 다시 풀기'), '/review/quiz/12');
     } finally {
       handle.dispose();
     }
@@ -252,7 +260,10 @@ class _Repository extends LearningRepository {
       due: due,
       nextReviewAt: DateTime(2026, 9, 10, 9, 30));
   @override
-  Future<ReviewPage> getReviews({int? cursor, bool dueOnly = false}) async =>
+  Future<ReviewPage> getReviews(
+          {int? cursor,
+          bool dueOnly = false,
+          bool reviewedOnly = false}) async =>
       ReviewPage(
           items: dueOnly && !due ? [] : [item],
           totalCount: 1,
@@ -307,6 +318,7 @@ Future<void> _pump(WidgetTester tester, Widget screen,
         builder: (_, __) => page ? screen : Scaffold(body: screen)),
     for (final path in [
       '/library/7/chapters',
+      '/library/book/5',
       '/review/quiz/12',
       '/settings/archive/20',
       '/library'

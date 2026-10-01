@@ -1,14 +1,16 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+import 'bs_ui.dart';
+
 abstract final class LearningColors {
   static const paper = Colors.white;
-  static const ink = Color(0xFF28262C);
-  static const muted = Color(0xFF69656E);
-  static const primary = Color(0xFF6049BE);
-  static const lavender = Color(0xFFEFEBF7);
-  static const line = Color(0xFFE6E6E6);
-  static const surface = Color(0xFFF3F3F3);
+  static const ink = Color(0xFF191919);
+  static const muted = Color(0xFF6B6B75);
+  static const primary = Color(0xFF775DFF);
+  static const lavender = Color(0xFFEFECFD);
+  static const line = Color(0xFFEFF0F2);
+  static const surface = Color(0xFFEFF0F2);
   static const green = Color(0xFF267565);
   static const greenSoft = Color(0xFFEAF3EE);
   static const amber = Color(0xFF926029);
@@ -153,17 +155,29 @@ class LearningPage extends StatelessWidget {
   Widget build(BuildContext context) => Theme(
         data: LearningColors.theme,
         child: Scaffold(
-          backgroundColor: LearningColors.paper,
-          appBar: title == null
-              ? null
-              : AppBar(title: Text(title!), actions: actions),
-          body: SafeArea(child: child),
+          backgroundColor: Bs.bg,
+          body: SafeArea(
+            child: Column(
+              children: [
+                if (title != null)
+                  BsTopBar(
+                    title: title,
+                    showBack: ModalRoute.of(context)?.canPop ?? false,
+                    trailing: actions == null
+                        ? null
+                        : Row(
+                            mainAxisSize: MainAxisSize.min, children: actions!),
+                  ),
+                Expanded(child: child),
+              ],
+            ),
+          ),
           bottomNavigationBar: bottom == null
               ? null
               : SafeArea(
                   top: false,
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                     child: bottom,
                   ),
                 ),

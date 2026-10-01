@@ -2,12 +2,14 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:bookstar/modules/learning/data/footprint_export.dart';
 import 'package:bookstar/modules/learning/data/learning_access.dart';
 import 'package:bookstar/modules/learning/data/learning_repository.dart';
 import 'package:bookstar/modules/learning/data/reading_graph.dart';
 import 'package:bookstar/modules/learning/view/learning_design.dart';
 import 'package:bookstar/modules/learning/view/reading_graph_canvas.dart';
-import 'package:bookstar/modules/learning/view/reading_graph_screen.dart';
+import 'package:bookstar/modules/learning/view/reading_map_preview.dart';
+import 'package:bookstar/modules/learning/view/reading_map_screen.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -49,7 +51,8 @@ class GraphApi extends LearningRepository {
   final calls = <int?>[];
   bool fail = false;
   @override
-  Future<ReviewPage> getReviews({int? cursor, bool dueOnly = false}) async {
+  Future<ReviewPage> getReviews(
+      {int? cursor, bool dueOnly = false, bool reviewedOnly = false}) async {
     expect(dueOnly, isFalse);
     if (fail) throw StateError('offline');
     calls.add(cursor);
@@ -61,7 +64,8 @@ class DeferredGraphApi extends GraphApi {
   DeferredGraphApi() : super([]);
   final pending = [Completer<ReviewPage>(), Completer<ReviewPage>()];
   @override
-  Future<ReviewPage> getReviews({int? cursor, bool dueOnly = false}) {
+  Future<ReviewPage> getReviews(
+      {int? cursor, bool dueOnly = false, bool reviewedOnly = false}) {
     calls.add(cursor);
     return pending[calls.length - 1].future;
   }
@@ -69,8 +73,20 @@ class DeferredGraphApi extends GraphApi {
 
 final account = StateProvider<int?>((ref) => 7);
 
+class FakeExport extends FootprintExport {
+  final shared = <Uint8List>[];
+  @override
+  Future<void> share(
+      Uint8List bytes, Rect origin, bool Function() stillOwner) async {
+    if (stillOwner()) shared.add(bytes);
+  }
+}
+
 Future<ProviderContainer> pumpGraph(WidgetTester tester, GraphApi api,
-    {double scale = 1, double width = 375}) async {
+    {double scale = 1,
+    double width = 375,
+    Widget screen = const ReadingMapAllScreen(),
+    FakeExport? exporter}) async {
   tester.view.physicalSize = Size(width, 812);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
@@ -78,16 +94,12 @@ Future<ProviderContainer> pumpGraph(WidgetTester tester, GraphApi api,
   final container = ProviderContainer(overrides: [
     learningAccountProvider.overrideWith((ref) => ref.watch(account)),
     learningRepositoryProvider.overrideWithValue(api),
+    footprintExportProvider.overrideWithValue(exporter ?? FakeExport()),
   ]);
   addTearDown(container.dispose);
   final router = GoRouter(routes: [
-    GoRoute(
-        path: '/',
-        builder: (_, __) =>
-            const Scaffold(body: SafeArea(child: ReadingGraphScreen()))),
-    GoRoute(
-        path: '/library/search',
-        builder: (_, __) => const Scaffold(body: Text('책 검색 화면'))),
+    GoRoute(path: '/', builder: (_, __) => screen),
+    GoRoute(path: '/map/all', builder: (_, __) => const ReadingMapAllScreen()),
     GoRoute(
         path: '/library',
         builder: (_, __) => const Scaffold(body: Text('서재 화면'))),
@@ -108,6 +120,17 @@ Future<ProviderContainer> pumpGraph(WidgetTester tester, GraphApi api,
               child: child!))));
   await tester.pumpAndSettle();
   return container;
+}
+
+Finder bookRow(String title) => find
+    .ancestor(of: find.text(title).first, matching: find.byType(InkWell))
+    .first;
+
+Future<void> tapBookRow(WidgetTester tester, String title) async {
+  await tester.ensureVisible(bookRow(title));
+  await tester.pumpAndSettle();
+  await tester.tap(bookRow(title));
+  await tester.pumpAndSettle();
 }
 
 void main() {
@@ -206,7 +229,7 @@ void main() {
   });
 
   for (final scale in [1.0, 2.0, 3.0]) {
-    testWidgets('320px graph and book selection fit text scale $scale',
+    testWidgets('320px map, book list and selection fit text scale $scale',
         (tester) async {
       await pumpGraph(
           tester,
@@ -221,27 +244,27 @@ void main() {
           width: 320,
           scale: scale);
       expect(find.byType(ReadingGraphCanvas), findsOneWidget);
-      await tester.scrollUntilVisible(find.text('지도 속 책'), 300);
-      await tester.ensureVisible(find.byType(ListTile).first);
-      await tester.pumpAndSettle();
-      await tester.tap(find.byType(ListTile).first);
-      await tester.pumpAndSettle();
+      await tapBookRow(tester, '긴 제목과 부제목이 여러 줄이 되는 가상의 독서 기록 1');
       expect(
-          find.byWidgetPredicate(
-              (widget) => widget is ListTile && widget.selected),
-          findsOneWidget);
+          tester
+              .getSemantics(bookRow('긴 제목과 부제목이 여러 줄이 되는 가상의 독서 기록 1'))
+              .hasFlag(ui.SemanticsFlag.isSelected),
+          isTrue);
+      expect(find.text('목차 1'), findsOneWidget);
+      expect(find.text('목차 2'), findsOneWidget);
+      expect(find.text('목차 3'), findsNothing);
       expect(tester.takeException(), isNull);
     });
   }
 
-  testWidgets('empty state contains no fake nodes and opens real book search',
+  testWidgets('empty map contains no fake nodes and adds a book in 내 서재',
       (tester) async {
     await pumpGraph(tester, GraphApi([page([])]));
     expect(find.byType(ReadingGraphCanvas), findsNothing);
-    expect(find.text('내 독서 지도 공유'), findsNothing);
-    await tester.tap(find.text('첫 책 찾기'));
+    expect(find.byTooltip('독서 지도 이미지로 공유'), findsNothing);
+    await tester.tap(find.text('책 추가하기'));
     await tester.pumpAndSettle();
-    expect(find.text('책 검색 화면'), findsOneWidget);
+    expect(find.text('서재 화면'), findsOneWidget);
   });
 
   testWidgets('tap actual point selects question and opens its own chapter',
@@ -252,48 +275,76 @@ void main() {
           page([
             item(101, bookId: 1, chapter: 11),
             item(102, bookId: 1, chapter: 12),
-            item(201, bookId: 2, chapter: 21),
-            item(202, bookId: 2, chapter: 22),
+            item(201, bookId: 2, chapter: 21, title: '다른 책'),
+            item(202, bookId: 2, chapter: 22, title: '다른 책'),
           ])
         ]));
     final canvas = find.byType(ReadingGraphCanvas);
     final widget = tester.widget<ReadingGraphCanvas>(canvas);
-    expect(widget.graph.books.map((node) => node.label), ['같은 제목', '같은 제목']);
     expect(widget.graph.books.map((node) => node.bookId), [1, 2]);
     final layout = ReadingGraphLayout(widget.graph, tester.getSize(canvas));
     await tester.tapAt(tester.getTopLeft(canvas) + layout.positions['q202']!);
     await tester.pumpAndSettle();
-    expect(tester.widget<ReadingGraphCanvas>(canvas).selectedId, 'q202');
-    final selected = widget.graph.nodes.firstWhere((node) => node.id == 'q202');
-    expect(selected.bookId, 2);
-    expect(selected.parentId, 'c22');
-    expect(selected.chapterId, 22);
-    final card = find
-        .ancestor(of: find.text('풀어본 질문 202'), matching: find.byType(Container))
-        .first;
-    expect(find.descendant(of: card, matching: find.text('풀어본 질문 202')),
-        findsOneWidget);
-    expect(find.descendant(of: card, matching: find.text('같은 제목')),
-        findsOneWidget);
+    expect(tester.widget<ReadingGraphCanvas>(canvas).selectedId, 'c22');
+    expect(find.text('풀어본 질문 202'), findsOneWidget);
+    expect(find.text('목차 22'), findsOneWidget);
     for (final other in [101, 102, 201]) {
       expect(find.text('풀어본 질문 $other'), findsNothing);
     }
-    await tester.scrollUntilVisible(find.text('이 목차 다시 열기'), 180);
-    await tester.tap(find.text('이 목차 다시 열기'));
+    await tester.tap(find.text('퀴즈 다시 풀기'));
     await tester.pumpAndSettle();
     expect(find.text('목차 열기 22'), findsOneWidget);
-    expect(find.text('목차 열기 11'), findsNothing);
     GoRouter.of(tester.element(find.text('목차 열기 22'))).pop();
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('선택 해제'), 180);
-    await tester.tap(find.text('선택 해제'));
-    await tester.pumpAndSettle();
+
+    // Tapping the selected book row steps back: chapter → book → nothing.
+    await tapBookRow(tester, '다른 책');
     expect(find.text('풀어본 질문 202'), findsNothing);
-    expect(find.text('이 목차 다시 열기'), findsNothing);
-    expect(find.text('선택 해제'), findsNothing);
-    await tester.scrollUntilVisible(canvas, -180);
+    expect(find.text('목차 21'), findsOneWidget);
+    expect(tester.widget<ReadingGraphCanvas>(canvas).selectedId, 'b2');
+    await tapBookRow(tester, '다른 책');
+    expect(find.text('목차 21'), findsNothing);
     expect(tester.widget<ReadingGraphCanvas>(canvas).selectedId, isNull);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('selecting a book reveals its chapters; a chapter its quizzes',
+      (tester) async {
+    await pumpGraph(
+        tester,
+        GraphApi([
+          page([
+            item(101, bookId: 1, chapter: 11, title: '소년이 온다'),
+            item(102, bookId: 1, chapter: 11, title: '소년이 온다'),
+            item(103, bookId: 1, chapter: 12, title: '소년이 온다'),
+            item(201, bookId: 2, chapter: 21, title: '눈물꽃 소년'),
+          ])
+        ]));
+    expect(
+        find.byWidgetPredicate((widget) =>
+            widget is RichText &&
+            widget.text.toPlainText().startsWith('4') &&
+            widget.text.toPlainText().endsWith('개 퀴즈')),
+        findsOneWidget);
+    expect(find.text('풀어본 퀴즈 3개'), findsOneWidget);
+    expect(find.text('풀어본 퀴즈 1개'), findsOneWidget);
+    await tapBookRow(tester, '소년이 온다');
+    final scroll =
+        tester.state<ScrollableState>(find.byType(Scrollable).first).position;
+    expect(scroll.pixels, scroll.maxScrollExtent,
+        reason: 'the selection panel is scrolled into view');
+    expect(find.text('목차 11'), findsOneWidget);
+    expect(find.text('목차 21'), findsNothing);
+    await tester.tap(find.text('목차 11'));
+    await tester.pumpAndSettle();
+    expect(find.text('풀어본 질문 101'), findsOneWidget);
+    expect(find.text('풀어본 질문 102'), findsOneWidget);
+    expect(find.text('풀어본 질문 103'), findsNothing);
+    expect(find.text('퀴즈 다시 풀기'), findsOneWidget);
+    await tester.tap(find.text('소년이 온다').last);
+    await tester.pumpAndSettle();
+    expect(find.text('목차 12'), findsOneWidget,
+        reason: 'the book label in the panel returns to its chapter list');
   });
 
   testWidgets('error is not an empty achievement and retry restores graph',
@@ -303,9 +354,9 @@ void main() {
     ])
       ..fail = true;
     await pumpGraph(tester, api);
-    expect(find.text('첫 책 찾기'), findsNothing);
+    expect(find.text('책 추가하기'), findsNothing);
     api.fail = false;
-    await tester.tap(find.text('지도 다시 불러오기'));
+    await tester.tap(find.text('다시 불러오기'));
     await tester.pumpAndSettle();
     expect(find.byType(ReadingGraphCanvas), findsOneWidget);
   });
@@ -323,71 +374,113 @@ void main() {
     expect(find.text('같은 제목'), findsNothing);
   });
 
-  testWidgets('zoom and reset remain bounded', (tester) async {
+  testWidgets('drag over the map scrolls the page', (tester) async {
     await pumpGraph(
         tester,
         GraphApi([
-          page([item(1)])
+          page([item(1), item(2, bookId: 2, chapter: 22)])
         ]));
-    expect(find.byType(InteractiveViewer), findsNothing);
-    final center =
-        tester.getSize(find.byType(ReadingGraphCanvas)).center(Offset.zero);
-    final before = center;
-    await tester.tap(find.byTooltip('지도 확대'));
+    final position =
+        tester.state<ScrollableState>(find.byType(Scrollable).first).position;
+    await tester.dragFrom(tester.getCenter(find.byType(ReadingGraphCanvas)),
+        const Offset(0, -150));
     await tester.pumpAndSettle();
-    final viewerBefore =
-        tester.widget<InteractiveViewer>(find.byType(InteractiveViewer));
-    expect(viewerBefore.transformationController!.value.getMaxScaleOnAxis(),
-        greaterThan(1));
-    expect(
-        (MatrixUtils.transformPoint(
-                    viewerBefore.transformationController!.value, center) -
-                before)
-            .distance,
-        lessThan(.001));
-    for (var i = 0; i < 12; i++) {
-      await tester.tap(find.byTooltip('지도 확대'));
+    expect(position.pixels, greaterThan(0));
+  });
+
+  testWidgets('pinching the full map zooms it', (tester) async {
+    await pumpGraph(
+        tester,
+        GraphApi([
+          page([item(1), item(2, bookId: 2, chapter: 22)])
+        ]));
+    final center = tester.getCenter(find.byType(ReadingGraphCanvas));
+    final left =
+        await tester.startGesture(center - const Offset(40, 0), pointer: 1);
+    final right =
+        await tester.startGesture(center + const Offset(40, 0), pointer: 2);
+    for (var i = 0; i < 3; i++) {
+      await left.moveBy(const Offset(-25, 0));
+      await right.moveBy(const Offset(25, 0));
+      await tester.pump();
     }
+    await left.up();
+    await right.up();
     await tester.pumpAndSettle();
     final viewer =
         tester.widget<InteractiveViewer>(find.byType(InteractiveViewer));
     expect(viewer.transformationController!.value.getMaxScaleOnAxis(),
-        closeTo(5, .001));
-    await tester.tap(find.byTooltip('지도 전체 보기'));
-    expect(viewer.transformationController!.value.getMaxScaleOnAxis(), 1);
-    await tester.pumpAndSettle();
-    expect(find.byType(InteractiveViewer), findsNothing);
+        greaterThan(1.2));
+    expect(viewer.panEnabled, isTrue);
   });
 
-  testWidgets('drag over default map scrolls page and reset restores scrolling',
+  testWidgets('share asks first and shares the rendered map only on approval',
       (tester) async {
+    final exporter = FakeExport();
     await pumpGraph(
         tester,
         GraphApi([
           page([item(1)])
-        ]));
-    final canvas = find.byType(ReadingGraphCanvas);
-    ScrollPosition position() =>
-        tester.state<ScrollableState>(find.byType(Scrollable).first).position;
-    await tester.dragFrom(tester.getCenter(canvas), const Offset(0, -150));
+        ]),
+        exporter: exporter);
+    await tester.tap(find.byTooltip('독서 지도 이미지로 공유'));
     await tester.pumpAndSettle();
-    expect(position().pixels, greaterThan(0));
-    position().jumpTo(0);
+    expect(find.text('이 지도를 이미지로 공유할까요?'), findsOneWidget);
+    await tester.tap(find.text('취소'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('지도 확대'));
+    expect(exporter.shared, isEmpty);
+    await tester.tap(find.byTooltip('독서 지도 이미지로 공유'));
     await tester.pumpAndSettle();
-    final viewer =
-        tester.widget<InteractiveViewer>(find.byType(InteractiveViewer));
-    final before = viewer.transformationController!.value.clone();
-    await tester.dragFrom(tester.getCenter(canvas), const Offset(0, -60));
+    await tester.tap(find.text('이미지 만들기'));
+    for (var i = 0; i < 20 && exporter.shared.isEmpty; i++) {
+      await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 50)));
+      await tester.pump();
+    }
+    expect(exporter.shared, hasLength(1));
+    expect(exporter.shared.single.take(4), [0x89, 0x50, 0x4E, 0x47]);
+  });
+
+  testWidgets('4.1 tab shows the summary and opens the full map',
+      (tester) async {
+    await pumpGraph(
+        tester,
+        GraphApi([
+          page([
+            item(1),
+            item(2),
+            item(3, bookId: 2, chapter: 22, title: '두 번째 책')
+          ])
+        ]),
+        screen: const Scaffold(body: ReadingMapScreen()));
+    expect(find.text('2권에서 쌓인 3개의 생각'), findsOneWidget);
+    await tester.tap(find.byType(ReadingGraphCanvas));
     await tester.pumpAndSettle();
-    expect(position().pixels, 0);
-    expect(viewer.transformationController!.value, isNot(before));
-    await tester.tap(find.byTooltip('지도 전체 보기'));
+    expect(find.byType(ReadingMapAllScreen), findsOneWidget);
+    expect(find.text('지도 속 책'), findsOneWidget);
+  });
+
+  testWidgets('4.1 empty tab sends 책 추가하기 to 내 서재', (tester) async {
+    await pumpGraph(tester, GraphApi([page([])]),
+        screen: const Scaffold(body: ReadingMapScreen()));
+    expect(find.text('아직 읽은 책이 없어요'), findsOneWidget);
+    await tester.tap(find.text('책 추가하기'));
     await tester.pumpAndSettle();
-    await tester.dragFrom(tester.getCenter(canvas), const Offset(0, -150));
-    await tester.pumpAndSettle();
-    expect(position().pixels, greaterThan(0));
+    expect(find.text('서재 화면'), findsOneWidget);
+  });
+
+  testWidgets('home preview reports taps through onOpen', (tester) async {
+    var opened = 0;
+    await pumpGraph(
+        tester,
+        GraphApi([
+          page([item(1)])
+        ]),
+        screen: Scaffold(
+            body: ReadingMapPreview(mapHeight: 240, onOpen: () => opened++)));
+    expect(find.text('1권에서 쌓인 1개의 생각'), findsOneWidget);
+    await tester.tap(find.byType(ReadingGraphCanvas));
+    expect(opened, 1);
   });
 
   for (final badId in [0, -1]) {
@@ -438,8 +531,7 @@ void main() {
     await tester.pumpWidget(UncontrolledProviderScope(
         container: container,
         child: MaterialApp(
-            theme: LearningColors.theme,
-            home: const Scaffold(body: ReadingGraphScreen()))));
+            theme: LearningColors.theme, home: const ReadingMapAllScreen())));
     await tester.pump();
     container.read(account.notifier).state = 8;
     await tester.pump();
@@ -500,62 +592,5 @@ void main() {
       image.dispose();
       codec.dispose();
     });
-  });
-
-  testWidgets('book row selection exits exploration and restores page drags',
-      (tester) async {
-    await pumpGraph(
-        tester,
-        GraphApi([
-          page(List.generate(
-              24,
-              (index) => item(index + 1,
-                  bookId: index + 1,
-                  chapter: index + 101,
-                  title: '독서 지도 책 ${index + 1}')))
-        ]));
-    tester.view.physicalSize = const Size(375, 1600);
-    await tester.pumpAndSettle();
-    final canvas = find.byType(ReadingGraphCanvas);
-    final pageView = find.byType(ListView);
-
-    for (var selection = 0; selection < 2; selection++) {
-      await tester.tap(find.byTooltip('지도 확대'));
-      await tester.pumpAndSettle();
-      expect(tester.widget<ReadingGraphCanvas>(canvas).exploring, isTrue);
-      expect(find.byType(InteractiveViewer), findsOneWidget);
-      expect(tester.widget<ListView>(pageView).physics,
-          isA<NeverScrollableScrollPhysics>());
-
-      final bookRow = find.byType(ListTile).first;
-      expect(tester.getRect(bookRow).bottom, lessThan(1600));
-      await tester.tap(bookRow);
-      await tester.pumpAndSettle();
-      expect(tester.widget<ListView>(pageView).physics,
-          isA<AlwaysScrollableScrollPhysics>());
-      final position =
-          tester.state<ScrollableState>(find.byType(Scrollable).first).position;
-      final selectionOffset = position.pixels;
-      await tester.dragFrom(const Offset(180, 500), const Offset(0, 650));
-      await tester.pumpAndSettle();
-      expect(position.pixels, lessThan(selectionOffset),
-          reason: 'The selection card must not leave its page scroll locked.');
-      expect(tester.widget<ReadingGraphCanvas>(canvas).selectedId, 'b1');
-      expect(tester.widget<ReadingGraphCanvas>(canvas).exploring, isFalse);
-      expect(find.byType(InteractiveViewer), findsNothing);
-
-      final before = position.pixels;
-      await tester.dragFrom(const Offset(180, 500), const Offset(0, -220));
-      await tester.pumpAndSettle();
-      final below = position.pixels;
-      expect(below, greaterThan(before),
-          reason: 'Book selection must restore upward drags over the map.');
-      await tester.dragFrom(const Offset(180, 500), const Offset(0, 500));
-      await tester.pumpAndSettle();
-      expect(position.pixels, lessThan(below),
-          reason: 'Downward page drags must also work after selecting a book.');
-      expect(tester.widget<ReadingGraphCanvas>(canvas).selectedId, 'b1');
-    }
-    expect(tester.takeException(), isNull);
   });
 }

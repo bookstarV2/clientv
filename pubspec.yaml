@@ -124,6 +124,7 @@ flutter:
   assets:
     - assets/env/.env
     - assets/images/
+    - assets/images/learning/
     - assets/icons/
     - assets/fonts/
     - assets/images/sample_book.jpg

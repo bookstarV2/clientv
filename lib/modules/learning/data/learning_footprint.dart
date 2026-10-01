@@ -16,11 +16,15 @@ class LearningFootprint {
       {required this.answeredQuizCount,
       required this.reviewedQuizCount,
       required this.bookCount,
-      required this.generatedAt});
+      required this.generatedAt,
+      this.chapterCount = 0});
   final int answeredQuizCount;
   final int reviewedQuizCount;
   final int bookCount;
   final DateTime generatedAt;
+
+  /// Distinct chapters with at least one answered quiz (2.1 `N목차`).
+  final int chapterCount;
 
   factory LearningFootprint.fromJson(Map<String, dynamic> json) {
     if (json['scope'] != 'STORED_RECORDS') {
@@ -31,6 +35,7 @@ class LearningFootprint {
       reviewedQuizCount: (json['reviewedQuizCount'] as num).toInt(),
       bookCount: (json['bookCount'] as num).toInt(),
       generatedAt: DateTime.parse(json['generatedAt'] as String),
+      chapterCount: (json['chapterCount'] as num?)?.toInt() ?? 0,
     );
     if (result.answeredQuizCount < 0 ||
         result.reviewedQuizCount < 0 ||

@@ -1,15 +1,18 @@
 import 'dart:async';
 
-import 'package:bookstar/modules/book_pick/repository/search_book_repository.dart';
-import 'package:bookstar/modules/reading_challenge/repository/reading_challenge_repository.dart';
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/learning_repository.dart';
-import 'learning_design.dart';
+import 'bs_ui.dart';
+import 'library_widgets.dart';
 
+enum _SearchMode { recommend, prompt, typing, results }
+
+/// 2.4 책 찾기 (추천하는 책 with the 베스트셀러순/유저 인기순 toggle) and
+/// 2.4.1 책 검색 (Default prompt, Active suggestions, Completed results).
+/// Tapping a book opens 2.4.2 상세; saving happens there.
 class LearningSearchScreen extends ConsumerStatefulWidget {
   const LearningSearchScreen({super.key});
 
@@ -20,62 +23,105 @@ class LearningSearchScreen extends ConsumerStatefulWidget {
 
 class _LearningSearchScreenState extends ConsumerState<LearningSearchScreen> {
   final _controller = TextEditingController();
+  final _focus = FocusNode();
   Timer? _debounce;
-  List<LearningBook> _books = [];
-  bool _loading = true;
+  var _sort = BookRecommendationSort.bestseller;
+  bool _submitted = false;
+  List<LearningBook> _results = [];
+  String? _resultsQuery;
+  bool _loading = false;
   bool _loadingMore = false;
   bool _hasNext = false;
   int? _cursor;
-  int? _openingId;
-  int _requestVersion = 0;
+  int _version = 0;
   String? _error;
 
   @override
   void initState() {
     super.initState();
-    _search();
+    _focus.addListener(() {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
     _debounce?.cancel();
+    _focus.dispose();
     _controller.dispose();
     super.dispose();
   }
 
+  String get _text => _controller.text.trim();
+
+  _SearchMode get _mode {
+    if (_text.isEmpty) {
+      return _focus.hasFocus ? _SearchMode.prompt : _SearchMode.recommend;
+    }
+    return _submitted ? _SearchMode.results : _SearchMode.typing;
+  }
+
+  BookRecommendationSort get _otherSort =>
+      _sort == BookRecommendationSort.bestseller
+          ? BookRecommendationSort.popular
+          : BookRecommendationSort.bestseller;
+
+  void _onChanged(String value) {
+    _debounce?.cancel();
+    setState(() {
+      _submitted = false;
+      _error = null;
+    });
+    if (value.trim().isNotEmpty) {
+      _debounce = Timer(const Duration(milliseconds: 300), _search);
+    }
+  }
+
+  void _submit() {
+    if (_text.isEmpty) {
+      _focus.requestFocus();
+      return;
+    }
+    _focus.unfocus();
+    setState(() => _submitted = true);
+    if (_resultsQuery != _text ||
+        _error != null ||
+        _debounce?.isActive == true) {
+      _search();
+    }
+  }
+
   Future<void> _search({bool more = false}) async {
     _debounce?.cancel();
-    if (more && (_loadingMore || !_hasNext)) return;
-    final version = more ? _requestVersion : ++_requestVersion;
-    final query = _controller.text.trim();
+    final query = more ? _resultsQuery : _text;
+    if (query == null || query.isEmpty) return;
+    if (more && (_loadingMore || _loading || !_hasNext)) return;
+    final version = more ? _version : ++_version;
     setState(() {
       _error = null;
       if (more) {
         _loadingMore = true;
       } else {
         _loading = true;
-        _loadingMore = false;
-        _books = [];
-        _cursor = null;
-        _hasNext = false;
       }
     });
     try {
-      final result = await ref
+      final page = await ref
           .read(learningRepositoryProvider)
           .searchBooks(query, cursor: more ? _cursor : null);
-      if (!mounted || version != _requestVersion) return;
+      if (!mounted || version != _version) return;
       setState(() {
-        _books = more ? [..._books, ...result.items] : result.items;
-        _hasNext = result.hasNext;
-        _cursor = result.nextCursor;
+        _results = more ? [..._results, ...page.items] : page.items;
+        _resultsQuery = query;
+        _hasNext = page.hasNext;
+        _cursor = page.nextCursor;
       });
     } catch (error) {
-      if (mounted && version == _requestVersion) {
+      if (mounted && version == _version) {
         setState(() => _error = learningErrorMessage(error));
       }
     } finally {
-      if (mounted && version == _requestVersion) {
+      if (mounted && version == _version) {
         setState(() {
           _loading = false;
           _loadingMore = false;
@@ -84,210 +130,231 @@ class _LearningSearchScreenState extends ConsumerState<LearningSearchScreen> {
     }
   }
 
-  Future<void> _openBook(LearningBook book) async {
-    if (_openingId != null) return;
-    FocusScope.of(context).unfocus();
-    setState(() => _openingId = book.bookId);
-    try {
-      final ongoing = await ref
-          .read(readingChallengeRepositoryProvider)
-          .getOngoingChallenges();
-      var id = ongoing.data.challenges
-          .firstWhereOrNull((item) => item.bookId == book.bookId)
-          ?.challengeId;
-      if (id == null) {
-        final completed = await ref
-            .read(readingChallengeRepositoryProvider)
-            .getCompletedChallenges();
-        id = completed.data.challenges
-            .firstWhereOrNull((item) => item.bookId == book.bookId)
-            ?.challengeId;
-      }
-      if (id == null) {
-        final created = await ref
-            .read(searchBookRepositoryProvider)
-            .createChallenges(book.bookId);
-        id = created.data.challengeId;
-        if (id <= 0) {
-          final refreshed = await ref
-              .read(readingChallengeRepositoryProvider)
-              .getOngoingChallenges();
-          id = refreshed.data.challenges
-              .firstWhereOrNull((item) => item.bookId == book.bookId)
-              ?.challengeId;
-        }
-      }
-      if (id == null || id <= 0) throw StateError('Book could not be added');
-      ref.invalidate(learningBooksProvider);
-      if (mounted) context.pushReplacement('/library/$id/chapters');
-    } catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(learningErrorMessage(error))));
-      }
-    } finally {
-      if (mounted) setState(() => _openingId = null);
-    }
+  void _open(LearningBook book) {
+    _focus.unfocus();
+    context.push('/library/book/${book.bookId}');
   }
 
   @override
-  Widget build(BuildContext context) => LearningPage(
-        title: '기억하고 싶은 책 찾기',
-        child: Column(children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              TextField(
+  Widget build(BuildContext context) => LibraryPage(
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 26, 16, 0),
+              child: _field(),
+            ),
+            Expanded(
+              child: switch (_mode) {
+                _SearchMode.recommend => _recommendations(),
+                _SearchMode.prompt => _message('읽고 싶은 책을\n찾아 보세요'),
+                _SearchMode.typing => _suggestions(),
+                _SearchMode.results => _resultList(),
+              },
+            ),
+          ],
+        ),
+      );
+
+  Widget _field() => Container(
+        height: 48,
+        padding: const EdgeInsets.only(left: 16, right: 4),
+        decoration: BoxDecoration(
+            color: Bs.surface, borderRadius: BorderRadius.circular(8)),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
                 controller: _controller,
-                textInputAction: TextInputAction.search,
+                focusNode: _focus,
                 maxLength: 100,
+                textInputAction: TextInputAction.search,
+                cursorColor: Bs.primary,
+                style: Bs.text(16, weight: FontWeight.w500),
                 decoration: InputDecoration(
-                  hintText: '책 제목이나 저자를 검색해 주세요',
+                  hintText: '책 제목이나 저자를 검색해 보세요',
+                  hintStyle: Bs.text(16, weight: FontWeight.w500, color: Bs.g3),
                   counterText: '',
-                  prefixIcon: const Icon(Icons.search_rounded),
-                  suffixIcon: _controller.text.isEmpty
-                      ? null
-                      : IconButton(
-                          tooltip: '검색어 지우기',
-                          onPressed: () {
-                            _controller.clear();
-                            _search();
-                          },
-                          icon: const Icon(Icons.close_rounded),
-                        ),
-                  filled: true,
-                  fillColor: LearningColors.surface,
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: LearningColors.line)),
-                  enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: LearningColors.line)),
+                  filled: false,
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
                 ),
-                onChanged: (_) {
-                  setState(() {
-                    _requestVersion++;
-                    _books = [];
-                    _hasNext = false;
-                    _loading = true;
-                    _error = null;
-                  });
-                  _debounce?.cancel();
-                  _debounce = Timer(const Duration(milliseconds: 350), _search);
-                },
-                onSubmitted: (_) => _search(),
+                onChanged: _onChanged,
+                onSubmitted: (_) => _submit(),
               ),
-              if (MediaQuery.viewInsetsOf(context).bottom == 0) ...[
-                const SizedBox(height: 12),
-                Wrap(
-                    spacing: 8,
-                    children: ['습관', '철학', '심리']
-                        .map((word) => ActionChip(
-                              label: Text(word),
-                              onPressed: () {
-                                _controller.text = word;
-                                _search();
-                              },
-                            ))
-                        .toList()),
-                const SizedBox(height: 10),
-                const Text('바로 풀 수 있는 퀴즈가 준비된 책을 보여드려요.',
-                    style: TextStyle(
-                        fontSize: 12,
-                        height: 1.5,
-                        color: LearningColors.muted)),
-              ],
-            ]),
+            ),
+            IconButton(
+              tooltip: '검색',
+              onPressed: _submit,
+              icon: const BsIcon('ic_search', size: 22, color: Bs.g3),
+            ),
+          ],
+        ),
+      );
+
+  Widget _sortToggle() => LibraryToggle(
+        label: _sort.label,
+        expanded: _sort == BookRecommendationSort.popular,
+        semanticsLabel: '${_sort.label}, ${_otherSort.label}으로 바꾸기',
+        onTap: () => setState(() => _sort = _otherSort),
+      );
+
+  EdgeInsets _listPadding(double top) => EdgeInsets.fromLTRB(
+      16, top, 16, 24 + MediaQuery.paddingOf(context).bottom);
+
+  Widget _recommendations() {
+    final page = ref.watch(recommendedBooksProvider(_sort));
+    final header = Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        Text('추천하는 책',
+            style: Bs.text(18, weight: FontWeight.w600, color: Bs.g7)),
+        _sortToggle(),
+      ],
+    );
+    return page.when(
+      data: (data) => ListView.builder(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        padding: _listPadding(19),
+        itemCount: data.items.length + 1,
+        itemBuilder: (context, index) => index == 0
+            ? header
+            : _row(data.items[index - 1], divider: index > 1),
+      ),
+      loading: () => Column(children: [
+        Padding(padding: _listPadding(19).copyWith(bottom: 0), child: header),
+        const Expanded(
+            child: Center(child: CircularProgressIndicator(color: Bs.primary))),
+      ]),
+      error: (error, _) => _message(learningErrorMessage(error),
+          onRetry: () => ref.invalidate(recommendedBooksProvider(_sort))),
+    );
+  }
+
+  Widget _row(LearningBook book, {required bool divider, double top = 17}) =>
+      Column(
+        children: [
+          if (divider)
+            const Divider(height: 1, thickness: 1, color: Bs.surface),
+          LibraryBookRow(
+            key: ValueKey('search-book-${book.bookId}'),
+            title: libraryTitle(book.title),
+            author: book.author,
+            cover: book.bookCover,
+            titleMaxLines: 1,
+            padding: EdgeInsets.only(top: top, bottom: 16),
+            semanticsLabel: _label(book),
+            onTap: () => _open(book),
           ),
-          Expanded(
-              child: _loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _error != null && _books.isEmpty
-                      ? SingleChildScrollView(
-                          child:
-                              LearningError(message: _error!, onRetry: _search))
-                      : ListView.separated(
-                          keyboardDismissBehavior:
-                              ScrollViewKeyboardDismissBehavior.onDrag,
-                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                          itemCount: _books.length + 1,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 12),
-                          itemBuilder: (context, index) {
-                            if (index == _books.length) {
-                              if (_books.isEmpty) {
-                                return const LearningEmpty(
-                                  title: '아직 준비되지 않은 책이에요',
-                                  message:
-                                      '다른 제목이나 저자로 검색해 보세요.\n현재는 퀴즈가 준비된 책부터 이용할 수 있어요.',
-                                  icon: Icons.search_off_rounded,
-                                );
-                              }
-                              if (_error != null) {
-                                return LearningError(
-                                    message: _error!,
-                                    onRetry: () => _search(more: true));
-                              }
-                              return _hasNext
-                                  ? OutlinedButton(
-                                      onPressed: _loadingMore
-                                          ? null
-                                          : () => _search(more: true),
-                                      child: Text(
-                                          _loadingMore ? '불러오는 중…' : '책 더 보기'),
-                                    )
-                                  : const SizedBox.shrink();
-                            }
-                            final book = _books[index];
-                            return LearningCard(
-                              flat: true,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 4, vertical: 16),
-                              onTap: _openingId == null
-                                  ? () => _openBook(book)
-                                  : null,
-                              label: '${book.title}, '
-                                  '${book.author.isEmpty ? '' : '${book.author}, '}'
-                                  '목차 퀴즈 ${book.chapterCount}개 준비됨, '
-                                  '${_openingId == book.bookId ? '목차 여는 중' : '목차 열기'}',
-                              excludeChildSemantics: true,
-                              child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    BookCover(
-                                        url: book.bookCover, title: book.title),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                        child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                          Text(book.title,
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(
-                                                  fontSize: 16,
-                                                  height: 1.4,
-                                                  fontWeight: FontWeight.w700)),
-                                          const SizedBox(height: 7),
-                                          Text(book.author,
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(
-                                                  fontSize: 12,
-                                                  height: 1.4,
-                                                  color: LearningColors.muted)),
-                                          const SizedBox(height: 12),
-                                          LearningLabel(_openingId ==
-                                                  book.bookId
-                                              ? '서재에 담는 중…'
-                                              : '목차 퀴즈 ${book.chapterCount}개 준비됨'),
-                                        ])),
-                                  ]),
-                            );
-                          },
-                        )),
-        ]),
+        ],
+      );
+
+  String _label(LearningBook book) {
+    final author = libraryAuthorLabel(book.author);
+    return '${libraryTitle(book.title)}, '
+        '${author.isEmpty ? '' : '$author, '}책 상세 보기';
+  }
+
+  Widget _suggestions() {
+    if (_results.isEmpty) {
+      if (_error != null) return _message(_error!, onRetry: _search);
+      if (_loading || _debounce?.isActive == true || _resultsQuery != _text) {
+        return const Center(
+            child: CircularProgressIndicator(color: Bs.primary));
+      }
+      return _notFound();
+    }
+    return ListView.separated(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: _listPadding(12),
+      itemCount: _results.length,
+      separatorBuilder: (_, __) =>
+          const Divider(height: 1, thickness: 1, color: Bs.surface),
+      itemBuilder: (context, index) {
+        final book = _results[index];
+        return LibraryCompactBookRow(
+          key: ValueKey('search-book-${book.bookId}'),
+          title: libraryTitle(book.title),
+          author: book.author,
+          cover: book.bookCover,
+          semanticsLabel: _label(book),
+          onTap: () => _open(book),
+        );
+      },
+    );
+  }
+
+  Widget _resultList() {
+    if (_resultsQuery != _text || (_loading && _results.isEmpty)) {
+      if (_error != null) return _message(_error!, onRetry: _search);
+      return const Center(child: CircularProgressIndicator(color: Bs.primary));
+    }
+    if (_results.isEmpty) return _notFound();
+    final books = _ranked(
+        _results, ref.watch(recommendedBooksProvider(_sort)).valueOrNull);
+    return ListView.builder(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: _listPadding(16),
+      itemCount: books.length + 2,
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          return Align(alignment: Alignment.centerRight, child: _sortToggle());
+        }
+        if (index > books.length) {
+          if (_hasNext && !_loadingMore && _error == null) {
+            WidgetsBinding.instance
+                .addPostFrameCallback((_) => _search(more: true));
+          }
+          return _error != null && _hasNext
+              ? Center(
+                  child: TextButton(
+                      onPressed: () => _search(more: true),
+                      child: const Text('다시 불러오기')))
+              : const Divider(height: 1, thickness: 1, color: Bs.surface);
+        }
+        return _row(books[index - 1],
+            divider: index > 1, top: index == 1 ? 4 : 16);
+      },
+    );
+  }
+
+  /// Orders search results by the chosen recommendation ranking; books that
+  /// are not ranked keep the server order after the ranked ones.
+  List<LearningBook> _ranked(List<LearningBook> books, LearningBookPage? page) {
+    if (page == null || page.items.isEmpty) return books;
+    final rank = {
+      for (final (index, book) in page.items.indexed) book.bookId: index
+    };
+    final entries = books.indexed.toList()
+      ..sort((a, b) => (rank[a.$2.bookId] ?? page.items.length + a.$1)
+          .compareTo(rank[b.$2.bookId] ?? page.items.length + b.$1));
+    return [for (final entry in entries) entry.$2];
+  }
+
+  Widget _notFound() => _message('아직 준비되지 않은 책이에요\n현재는 퀴즈가 준비된 책부터 찾을 수 있어요');
+
+  Widget _message(String message, {VoidCallback? onRetry}) => LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Align(
+              alignment: const Alignment(0, -0.18),
+              child: Padding(
+                padding: Bs.pagePadding,
+                child: BsEmptyState(
+                  message: message,
+                  action: onRetry == null
+                      ? null
+                      : BsSecondaryButton(
+                          label: '다시 불러오기', expand: false, onPressed: onRetry),
+                ),
+              ),
+            ),
+          ),
+        ),
       );
 }

@@ -74,6 +74,22 @@ class ReadingGraph {
   int get chapterCount =>
       nodes.where((node) => node.kind == ReadingNodeKind.chapter).length;
 
+  ReadingNode? nodeById(String? id) =>
+      id == null ? null : nodes.where((node) => node.id == id).firstOrNull;
+
+  List<ReadingNode> chaptersOf(int bookId) => nodes
+      .where((node) =>
+          node.bookId == bookId && node.kind == ReadingNodeKind.chapter)
+      .toList();
+
+  List<ReadingNode> questionsOf(String chapterNodeId) =>
+      nodes.where((node) => node.parentId == chapterNodeId).toList();
+
+  int questionCountOf(int bookId) => nodes
+      .where((node) =>
+          node.bookId == bookId && node.kind == ReadingNodeKind.question)
+      .length;
+
   factory ReadingGraph.fromReviews(List<ReviewItem> reviews,
       {bool truncated = false, int unavailableCount = 0}) {
     final unique = <int, ReviewItem>{};

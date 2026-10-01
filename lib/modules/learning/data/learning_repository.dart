@@ -5,6 +5,7 @@ import 'package:bookstar/modules/reading_challenge/model/challenge_detail_chapte
 import 'package:bookstar/modules/reading_challenge/model/challenge_detail_response.dart';
 import 'package:bookstar/modules/reading_challenge/model/choice_result.dart';
 import 'package:bookstar/modules/reading_challenge/model/challenge_response.dart';
+import 'package:bookstar/modules/book_pick/repository/search_book_repository.dart';
 import 'package:bookstar/modules/reading_challenge/repository/reading_challenge_repository.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -39,6 +40,63 @@ final finishedLearningBooksProvider =
 final reviewOverviewProvider = FutureProvider<ReviewPage>(
   (ref) => ref.watch(learningRepositoryProvider).getReviews(dueOnly: true),
 );
+
+/// 2.4 책 찾기 – 베스트셀러순 / 유저 인기순 추천.
+final recommendedBooksProvider = FutureProvider.autoDispose
+    .family<LearningBookPage, BookRecommendationSort>((ref, sort) {
+  if (ref.watch(learningAccountProvider) == null) {
+    return const LearningBookPage([], false, null);
+  }
+  return ref.watch(learningRepositoryProvider).getRecommendedBooks(sort);
+});
+
+/// 2.4.2 검색한 책 상세 – 줄거리·목차·이미 담은 챌린지.
+final learningBookDetailProvider =
+    FutureProvider.autoDispose.family<LearningBookDetail, int>((ref, bookId) {
+  ref.watch(learningAccountProvider);
+  return ref.watch(learningRepositoryProvider).getBookDetail(bookId);
+});
+
+/// 3.3 복습한 퀴즈 – 한 번 이상 복습한 퀴즈, 최근 복습순.
+final reviewedQuizzesProvider = FutureProvider.autoDispose<ReviewPage>((ref) {
+  ref.watch(learningAccountProvider);
+  return ref.watch(learningRepositoryProvider).getReviews(reviewedOnly: true);
+});
+
+/// Saves [bookId] to 내 서재 (2.4.2 "퀴즈 풀기") and returns its challengeId.
+/// Reuses an ongoing or completed challenge when the book is already saved.
+Future<int> registerLearningBook(Ref ref, int bookId) async {
+  final challenges = ref.read(readingChallengeRepositoryProvider);
+  int? find(List<ChallengeResponse> items) {
+    for (final item in items) {
+      if (item.bookId == bookId && item.challengeId > 0) {
+        return item.challengeId;
+      }
+    }
+    return null;
+  }
+
+  var id = find((await challenges.getOngoingChallenges()).data.challenges) ??
+      find((await challenges.getCompletedChallenges()).data.challenges);
+  if (id == null) {
+    final created =
+        await ref.read(searchBookRepositoryProvider).createChallenges(bookId);
+    id = created.data.challengeId > 0
+        ? created.data.challengeId
+        : find((await challenges.getOngoingChallenges()).data.challenges);
+  }
+  if (id == null || id <= 0) throw StateError('Book could not be added');
+  ref.invalidate(learningBooksProvider);
+  ref.invalidate(finishedLearningBooksProvider);
+  ref.invalidate(learningBookDetailProvider(bookId));
+  ref.invalidate(learningFootprintProvider);
+  return id;
+}
+
+/// Lets widgets call [registerLearningBook] with their [WidgetRef].
+final learningBookRegistrarProvider =
+    Provider<Future<int> Function(int bookId)>(
+        (ref) => (bookId) => registerLearningBook(ref, bookId));
 
 class LearningRepository {
   LearningRepository(this._dio);
@@ -103,12 +161,30 @@ class LearningRepository {
         response.data!['data'] as Map<String, dynamic>);
   }
 
-  Future<ReviewPage> getReviews({int? cursor, bool dueOnly = false}) async {
+  Future<LearningBookPage> getRecommendedBooks(BookRecommendationSort sort,
+      {int size = 20}) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+        '/api/v3/learning/books/recommendations',
+        queryParameters: {'sort': sort.apiValue, 'size': size});
+    return LearningBookPage.fromJson(
+        response.data!['data'] as Map<String, dynamic>);
+  }
+
+  Future<LearningBookDetail> getBookDetail(int bookId) async {
+    final response =
+        await _dio.get<Map<String, dynamic>>('/api/v3/learning/books/$bookId');
+    return LearningBookDetail.fromJson(
+        response.data!['data'] as Map<String, dynamic>);
+  }
+
+  Future<ReviewPage> getReviews(
+      {int? cursor, bool dueOnly = false, bool reviewedOnly = false}) async {
     final response = await _dio.get<Map<String, dynamic>>(
       '/api/v3/quiz-reviews',
       queryParameters: {
         'size': 30,
         'dueOnly': dueOnly,
+        if (reviewedOnly) 'reviewedOnly': true,
         if (cursor != null) 'cursor': cursor
       },
     );
@@ -123,6 +199,21 @@ class LearningRepository {
     );
     return LearningQuizResult.fromJson(
         response.data!['data'] as Map<String, dynamic>);
+  }
+
+  /// 2.3.1 오류 신고. [errorType] is one of DIFFERENT_FROM_BOOK, NOT_IN_BOOK,
+  /// SUBJECTIVE_CONTENT, OTHER.
+  Future<void> reportQuiz(int quizId,
+      {required String errorType,
+      String content = '',
+      required String requestId}) async {
+    await _dio.post<Map<String, dynamic>>(
+        '/api/v3/quizzes/$quizId/error-report',
+        data: {
+          'errorType': errorType,
+          'content': content,
+          'requestId': requestId
+        });
   }
 
   Future<bool> hasAnswered(int quizId) async {
@@ -215,10 +306,12 @@ class ReviewItem {
     required this.chapterTitle,
     required this.bookTitle,
     required this.bookCover,
+    this.bookAuthor = '',
     required this.question,
     required this.reviewCount,
     required this.due,
     required this.nextReviewAt,
+    this.lastReviewedAt,
   });
 
   final int quizId;
@@ -227,10 +320,14 @@ class ReviewItem {
   final String chapterTitle;
   final String bookTitle;
   final String bookCover;
+  final String bookAuthor;
   final String question;
   final int reviewCount;
   final bool due;
   final DateTime nextReviewAt;
+
+  /// Last time this quiz was reviewed (3.3 복습한 퀴즈). Null if never.
+  final DateTime? lastReviewedAt;
 
   factory ReviewItem.fromJson(Map<String, dynamic> json) => ReviewItem(
         bookId: (json['bookId'] as num?)?.toInt(),
@@ -239,10 +336,87 @@ class ReviewItem {
         chapterTitle: json['chapterTitle'] as String,
         bookTitle: json['bookTitle'] as String,
         bookCover: json['bookCover'] as String? ?? '',
+        bookAuthor: json['bookAuthor'] as String? ?? '',
         question: json['question'] as String,
         reviewCount: (json['reviewCount'] as num).toInt(),
         due: json['due'] == true,
         nextReviewAt: DateTime.parse(json['nextReviewAt'] as String),
+        lastReviewedAt: json['lastReviewedAt'] == null
+            ? null
+            : DateTime.tryParse(json['lastReviewedAt'] as String),
+      );
+}
+
+enum BookRecommendationSort {
+  bestseller('BESTSELLER', '베스트셀러순'),
+  popular('POPULAR', '유저 인기순');
+
+  const BookRecommendationSort(this.apiValue, this.label);
+  final String apiValue;
+  final String label;
+}
+
+class LearningBookDetail {
+  const LearningBookDetail({
+    required this.bookId,
+    required this.title,
+    required this.author,
+    required this.bookCover,
+    required this.publisher,
+    required this.description,
+    required this.chapterCount,
+    required this.chapters,
+    this.challengeId,
+    this.completed = false,
+  });
+
+  final int bookId;
+  final String title;
+  final String author;
+  final String bookCover;
+  final String publisher;
+  final String description;
+  final int chapterCount;
+  final List<LearningBookChapter> chapters;
+
+  /// Challenge of the signed-in member for this book, null if not saved yet.
+  final int? challengeId;
+  final bool completed;
+
+  factory LearningBookDetail.fromJson(Map<String, dynamic> json) =>
+      LearningBookDetail(
+        bookId: (json['bookId'] as num).toInt(),
+        title: json['title'] as String? ?? '',
+        author: json['author'] as String? ?? '',
+        bookCover: json['bookCover'] as String? ?? '',
+        publisher: json['publisher'] as String? ?? '',
+        description: json['description'] as String? ?? '',
+        chapterCount: (json['chapterCount'] as num?)?.toInt() ?? 0,
+        chapters: (json['chapters'] as List<dynamic>? ?? const [])
+            .map((e) => LearningBookChapter.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        challengeId: (json['challengeId'] as num?)?.toInt(),
+        completed: json['completed'] == true,
+      );
+}
+
+class LearningBookChapter {
+  const LearningBookChapter(
+      {required this.chapterId,
+      required this.chapterNumber,
+      required this.title,
+      required this.hasQuiz});
+  final int chapterId;
+  final int chapterNumber;
+  final String title;
+  final bool hasQuiz;
+
+  factory LearningBookChapter.fromJson(Map<String, dynamic> json) =>
+      LearningBookChapter(
+        chapterId: (json['chapterId'] as num).toInt(),
+        chapterNumber: (json['chapterNumber'] as num?)?.toInt() ?? 0,
+        title: json['title'] as String? ?? '',
+        hasQuiz: json['hasQuiz'] == true,
       );
 }
 

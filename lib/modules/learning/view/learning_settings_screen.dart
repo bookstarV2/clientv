@@ -5,130 +5,220 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'learning_design.dart';
+import 'bs_ui.dart';
+import 'learning_guide_sheet.dart';
 
+const _contactEmail = 'bookstar816@gmail.com';
+const _logoutRed = Color(0xFFFF6469);
+
+/// 1.2 / 1.3 설정. iOS follows 1.2 (disclosure chevrons, separators only
+/// between the rows of a group); other platforms follow 1.3 (no chevrons and
+/// a divider under every row).
 class LearningSettingsScreen extends ConsumerWidget {
   const LearningSettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authViewModelProvider).valueOrNull;
-    return LearningPage(
+    final ios = switch (Theme.of(context).platform) {
+      TargetPlatform.iOS || TargetPlatform.macOS => true,
+      _ => false,
+    };
+    return BsScaffold(
       title: '설정',
-      actions: [
-        IconButton(
-            tooltip: '오늘 퀴즈로',
-            onPressed: () => context.go('/quiz'),
-            icon: const Icon(Icons.home_outlined))
-      ],
-      child: ListView(padding: const EdgeInsets.all(20), children: [
-        const LearningLabel('나를 위한 독서'),
-        const SizedBox(height: 12),
-        const Text('읽은 책이\n내 지식이 되는 곳', style: learningTitleStyle),
-        const SizedBox(height: 12),
-        const Text('한 문제로 되짚고, 다시 꺼내 보며\n내 속도로 오래 기억하는 독서를 해요.',
-            style: learningBodyStyle),
-        const SizedBox(height: 28),
-        LearningCard(
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const LearningLabel('로그인 정보'),
-          const SizedBox(height: 12),
-          Text(
-              user is AuthSuccess
-                  ? '${user.providerType} 계정'
-                  : '계정 정보를 확인하고 있어요',
-              style:
-                  const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-          if (user is AuthSuccess && user.email.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Text(user.email, style: learningBodyStyle),
-          ],
-        ])),
-        const SizedBox(height: 20),
-        _row(Icons.inventory_2_outlined, '나의 지난 독서 기록',
-            () => context.push('/settings/archive')),
-        _row(Icons.help_outline_rounded, 'AI 퀴즈 이용 안내',
-            () => _showGuide(context)),
-        _row(Icons.mail_outline_rounded, '문의하기', () async {
-          await Clipboard.setData(
-              const ClipboardData(text: 'bookstar816@gmail.com'));
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                  content: Text('문의 이메일을 복사했어요: bookstar816@gmail.com')),
-            );
-          }
-        }),
-        _row(Icons.play_circle_outline_rounded, '퀴즈 체험 다시 보기',
-            () => context.push('/preview')),
-        _row(Icons.description_outlined, '서비스 이용약관',
-            () => context.push('/policies/service')),
-        _row(Icons.privacy_tip_outlined, '개인정보 수집 및 이용',
-            () => context.push('/policies/privacy')),
-        _row(Icons.notifications_none_rounded, '알림 설정',
-            () => context.push('/settings/notifications')),
-        const SizedBox(height: 18),
-        const Divider(),
-        _row(Icons.logout_rounded, '로그아웃', () => _signOut(context, ref)),
-        TextButton(
-          style: TextButton.styleFrom(foregroundColor: LearningColors.muted),
-          onPressed: () => context.push('/settings/delete-account'),
-          child: const Text('회원 탈퇴'),
-        ),
-        const SizedBox(height: 28),
-        const Center(
-            child: Text('BookStar · 읽고, 떠올리고, 기억하다',
-                style: TextStyle(fontSize: 12, color: LearningColors.muted))),
-      ]),
+      showBack: true,
+      onBack: () => context.canPop() ? context.pop() : context.go('/quiz'),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 26.5, 16, 24),
+        children: [
+          _LoginCard(account: user is AuthSuccess ? user : null),
+          _Section(title: '서비스', ios: ios, gap: 24.9, rows: [
+            ('나의 지난 독서 기록', () => context.push('/settings/archive')),
+            (
+              'AI 퀴즈 이용 안내',
+              () => showQuizGuideSheet(context, primaryLabel: '확인')
+            ),
+            ('퀴즈 체험 다시 보기', () => context.push('/preview')),
+            ('문의하기', () => _contact(context)),
+          ]),
+          _Section(title: '알림', ios: ios, gap: ios ? 13.4 : 24.4, rows: [
+            ('알림 설정', () => context.push('/settings/notifications')),
+          ]),
+          _Section(title: '약관 및 개인정보', ios: ios, gap: ios ? 13.4 : 24.4, rows: [
+            ('서비스 이용 약관', () => context.push('/policies/service')),
+            ('개인정보 수집 및 이용', () => context.push('/policies/privacy')),
+          ]),
+          SizedBox(height: ios ? 4.2 : 15.2),
+          _TextAction('로그아웃',
+              color: _logoutRed,
+              top: 17.8,
+              onTap: () => _signOut(context, ref)),
+          _TextAction('회원탈퇴',
+              color: Bs.g3,
+              top: 7.8,
+              onTap: () => context.push('/settings/delete-account')),
+        ],
+      ),
     );
   }
 
-  Widget _row(IconData icon, String title, VoidCallback onTap) => ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-        leading: Icon(icon, color: LearningColors.muted),
-        title: Text(title, style: const TextStyle(fontSize: 15)),
-        trailing: const Icon(Icons.chevron_right_rounded,
-            color: LearningColors.muted),
-        onTap: onTap,
+  Future<void> _contact(BuildContext context) async {
+    await Clipboard.setData(const ClipboardData(text: _contactEmail));
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('문의 이메일을 복사했어요: $_contactEmail')),
       );
-
-  void _showGuide(BuildContext context) => showDialog<void>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('AI 퀴즈 이용 안내'),
-          content: const SingleChildScrollView(
-              child: Text(
-            '퀴즈는 책 정보와 목차를 참고해 AI가 만들어요. 책 원문 전체를 검증한 문제는 아니며, 오류나 다른 해석이 있을 수 있어요.\n\n'
-            '처음 푼 문제는 복습에 저장돼요. 복습에서 정답을 연속으로 맞히면 1일, 3일, 7일, 14일 간격으로 다음 일정을 잡아요. 틀리면 다음날 다시 보게 돼요.\n\n'
-            '복습 일정은 초기 운영 규칙이며, 개인의 기억력을 측정한 결과는 아니에요. 예정일 전에도 다시 풀 수 있어요. 푸시 알림은 제공하지 않으니 복습 탭에서 일정을 확인해 주세요.',
-            style: TextStyle(height: 1.6),
-          )),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('확인했어요'))
-          ],
-        ),
-      );
+    }
+  }
 
   Future<void> _signOut(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-              title: const Text('로그아웃할까요?'),
-              content: const Text('독서와 복습 기록은 계정에 남아 있어요.'),
-              actions: [
-                TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: const Text('취소')),
-                TextButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    child: const Text('로그아웃')),
-              ],
-            ));
+    final confirmed = await showBsConfirmDialog(
+      context,
+      title: '로그아웃할까요?',
+      message: '독서와 복습 기록은 계정에 남아 있어요.',
+      confirmLabel: '로그아웃',
+    );
     if (confirmed == true) {
       await ref.read(authViewModelProvider.notifier).signOut();
     }
   }
+}
+
+String _accountLabel(String provider) => switch (provider.toUpperCase()) {
+      'KAKAO' => '카카오 계정',
+      'APPLE' => 'Apple 계정',
+      'GOOGLE' => 'Google 계정',
+      _ => '소셜 로그인 계정',
+    };
+
+class _LoginCard extends StatelessWidget {
+  const _LoginCard({required this.account});
+
+  final AuthSuccess? account;
+
+  @override
+  Widget build(BuildContext context) {
+    final email = account?.email ?? '';
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 19.9, 24.5, 20),
+      decoration: BoxDecoration(
+          color: Bs.surface, borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('로그인 정보', style: Bs.text(14, color: Bs.g3)),
+          const SizedBox(height: 4.7),
+          Text(
+              account == null
+                  ? '계정 정보를 확인하고 있어요'
+                  : _accountLabel(account!.providerType),
+              style: Bs.text(18, weight: FontWeight.w700, color: Bs.g7)),
+          if (email.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Container(
+              width: double.infinity,
+              constraints: const BoxConstraints(minHeight: 49.5),
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                  color: Bs.white, borderRadius: BorderRadius.circular(12)),
+              child: Text(email,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Bs.text(16, color: Bs.g6, letterSpacing: 0)),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _Section extends StatelessWidget {
+  const _Section(
+      {required this.title,
+      required this.rows,
+      required this.ios,
+      required this.gap});
+
+  final String title;
+  final List<(String, VoidCallback)> rows;
+  final bool ios;
+
+  /// Space above the section title.
+  final double gap;
+
+  static const _divider = Divider(height: 1, thickness: 1, color: Bs.surface);
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 1),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: gap),
+            Semantics(
+                header: true,
+                child: Text(title, style: Bs.text(14, color: Bs.g3))),
+            const SizedBox(height: 4.8),
+            for (final (index, (label, onTap)) in rows.indexed) ...[
+              if (ios && index > 0) _divider,
+              Semantics(
+                button: true,
+                child: InkWell(
+                  onTap: onTap,
+                  child: Container(
+                    constraints: const BoxConstraints(minHeight: 47),
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Row(
+                      children: [
+                        Expanded(
+                            child:
+                                Text(label, style: Bs.text(16, color: Bs.g7))),
+                        if (ios) ...[
+                          const SizedBox(
+                            width: 9.7,
+                            height: 16.6,
+                            child: BsIcon('ic_chevron_right',
+                                size: 16.6, color: Bs.g3),
+                          ),
+                          const SizedBox(width: 5.9),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              if (!ios) _divider,
+            ],
+          ],
+        ),
+      );
+}
+
+/// 로그아웃 / 회원탈퇴 text rows: 36pt apart in the design, each with a 46pt
+/// tap area ([top] places the text inside it).
+class _TextAction extends StatelessWidget {
+  const _TextAction(this.label,
+      {required this.color, required this.top, required this.onTap});
+
+  final String label;
+  final Color color;
+  final double top;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(1, top, 1, 22.8 - top),
+            child: SizedBox(
+              width: double.infinity,
+              child: Text(label, style: Bs.text(16, color: color)),
+            ),
+          ),
+        ),
+      );
 }

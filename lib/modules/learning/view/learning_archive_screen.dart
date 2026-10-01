@@ -7,7 +7,7 @@ import 'package:intl/intl.dart';
 
 import '../data/diary_archive_repository.dart';
 import '../data/learning_repository.dart';
-import 'learning_design.dart';
+import 'bs_ui.dart';
 
 class LearningArchiveScreen extends ConsumerStatefulWidget {
   const LearningArchiveScreen({super.key});
@@ -69,93 +69,144 @@ class _LearningArchiveScreenState extends ConsumerState<LearningArchiveScreen> {
   }
 
   @override
-  Widget build(BuildContext context) => LearningPage(
-      title: '나의 지난 독서 기록',
-      child: RefreshIndicator(
+  Widget build(BuildContext context) => BsScaffold(
+        title: '나의 지난 독서 기록',
+        showBack: true,
+        body: RefreshIndicator(
+          color: Bs.primary,
           onRefresh: _load,
           child: ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(20),
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
+            children: [
+              Text('내가 남긴 기록 보관함', style: Bs.text(14, color: Bs.g3)),
+              const SizedBox(height: 8),
+              Text('예전에 작성한 글을\n이곳에서 다시 읽어요.', style: Bs.title),
+              const SizedBox(height: 12),
+              Text(
+                  '본인이 작성한 기록만 모았어요.\n이 화면에서는 작성·수정·댓글을 제공하지 않아요.\n기존 글의 공개 설정은 바꾸지 않았어요.',
+                  style: Bs.text(14, color: Bs.g3, height: 1.5)),
+              const SizedBox(height: 24),
+              if (_loading)
+                const Padding(
+                    padding: EdgeInsets.all(40),
+                    child: Center(
+                        child: CircularProgressIndicator(color: Bs.primary)))
+              else ...[
+                if (_items.isEmpty && _error == null) const _ArchiveEmpty(),
+                for (final item in _items)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _ArchiveCard(
+                        item: item,
+                        onTap: () =>
+                            context.push('/settings/archive/${item.id}')),
+                  ),
+                if (_error != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: BsEmptyState(
+                      message: _error!,
+                      action: BsPrimaryButton(
+                          label: '다시 불러오기',
+                          onPressed: () =>
+                              _load(more: _items.isNotEmpty && _hasNext)),
+                    ),
+                  ),
+                if (_hasNext && _error == null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: BsSecondaryButton(
+                        label: _more ? '불러오는 중' : '지난 기록 더 보기',
+                        onPressed: _more ? null : () => _load(more: true)),
+                  ),
+              ],
+            ],
+          ),
+        ),
+      );
+}
+
+class _ArchiveCard extends StatelessWidget {
+  const _ArchiveCard({required this.item, required this.onTap});
+
+  final DiaryArchiveItem item;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final preview = item.content.trim().isEmpty ? '기록 내용 보기' : item.content;
+    return Semantics(
+      button: true,
+      enabled: true,
+      onTap: onTap,
+      label:
+          '${item.bookTitle}, ${_archiveDate(item.createdAt)}, $preview, 지난 기록 읽기',
+      excludeSemantics: true,
+      child: Material(
+        color: Bs.white,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const LearningLabel('내가 남긴 기록 보관함'),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    BsBookCover(
+                        url: item.bookCover, title: item.bookTitle, width: 42),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(item.bookTitle,
+                              style: Bs.text(16, weight: FontWeight.w600)),
+                          const SizedBox(height: 4),
+                          Text(_archiveDate(item.createdAt), style: Bs.caption),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 12),
-                const Text('예전에 작성한 글을\n이곳에서 다시 읽어요.',
-                    style: learningTitleStyle),
-                const SizedBox(height: 12),
-                const Text(
-                    '본인이 작성한 기록만 모았어요.\n이 화면에서는 작성·수정·댓글을 제공하지 않아요.\n기존 글의 공개 설정은 바꾸지 않았어요.',
-                    style: learningBodyStyle),
-                const SizedBox(height: 24),
-                if (_loading)
-                  const Padding(
-                      padding: EdgeInsets.all(40),
-                      child: Center(child: CircularProgressIndicator()))
-                else ...[
-                  if (_items.isEmpty && _error == null)
-                    const LearningEmpty(
-                        title: '아직 지난 기록이 없어요',
-                        message: '예전에 작성한 독서 기록이 있으면\n이곳에서 다시 볼 수 있어요.'),
-                  ..._items.map((item) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: LearningCard(
-                          onTap: () =>
-                              context.push('/settings/archive/${item.id}'),
-                          label:
-                              '${item.bookTitle}, ${_archiveDate(item.createdAt)}, '
-                              '${item.content.trim().isEmpty ? '기록 내용 보기' : item.content}, '
-                              '지난 기록 읽기',
-                          excludeChildSemantics: true,
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      BookCover(
-                                          url: item.bookCover,
-                                          title: item.bookTitle,
-                                          width: 42),
-                                      const SizedBox(width: 14),
-                                      Expanded(
-                                          child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                            Text(item.bookTitle,
-                                                style: const TextStyle(
-                                                    fontSize: 17,
-                                                    height: 1.5,
-                                                    fontWeight:
-                                                        FontWeight.w700)),
-                                            const SizedBox(height: 6),
-                                            Text(_archiveDate(item.createdAt),
-                                                style: const TextStyle(
-                                                    fontSize: 12,
-                                                    color:
-                                                        LearningColors.muted)),
-                                          ])),
-                                    ]),
-                                const SizedBox(height: 14),
-                                Text(
-                                    item.content.trim().isEmpty
-                                        ? '기록 내용 보기'
-                                        : item.content,
-                                    maxLines: 3,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: learningBodyStyle),
-                              ])))),
-                  if (_error != null)
-                    LearningError(
-                        message: _error!,
-                        onRetry: () =>
-                            _load(more: _items.isNotEmpty && _hasNext)),
-                  if (_hasNext && _error == null)
-                    TextButton(
-                        onPressed: _more ? null : () => _load(more: true),
-                        child: Text(_more ? '불러오는 중' : '지난 기록 더 보기')),
-                ],
-              ])));
+                Text(preview,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: Bs.text(14, color: Bs.g6, height: 1.5)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ArchiveEmpty extends StatelessWidget {
+  const _ArchiveEmpty();
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 32),
+        child: Column(
+          children: [
+            const BsCharacterImage(BsCharacter.dizzy),
+            const SizedBox(height: 16),
+            Text('아직 지난 기록이 없어요',
+                textAlign: TextAlign.center,
+                style: Bs.text(16, weight: FontWeight.w600)),
+            const SizedBox(height: 6),
+            Text('예전에 작성한 독서 기록이 있으면\n이곳에서 다시 볼 수 있어요.',
+                textAlign: TextAlign.center,
+                style: Bs.text(14, color: Bs.g3, height: 1.5)),
+          ],
+        ),
+      );
 }
 
 final archiveDetailProvider = FutureProvider.autoDispose
@@ -167,50 +218,72 @@ class LearningArchiveDetailScreen extends ConsumerWidget {
   final int diaryId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => LearningPage(
-      title: '지난 독서 기록',
-      child: ref.watch(archiveDetailProvider(diaryId)).when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, _) => SingleChildScrollView(
-                child: LearningError(
+  Widget build(BuildContext context, WidgetRef ref) => BsScaffold(
+        title: '지난 독서 기록',
+        showBack: true,
+        body: ref.watch(archiveDetailProvider(diaryId)).when(
+              loading: () => const Center(
+                  child: CircularProgressIndicator(color: Bs.primary)),
+              error: (error, _) => Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: BsEmptyState(
                     message: _archiveError(error),
-                    onRetry: () =>
-                        ref.invalidate(archiveDetailProvider(diaryId)))),
-            data: (item) =>
-                ListView(padding: const EdgeInsets.all(20), children: [
-              Text(item.bookTitle, style: learningTitleStyle),
-              const SizedBox(height: 12),
-              Text(_archiveDate(item.createdAt), style: learningBodyStyle),
-              const SizedBox(height: 24),
-              if (item.content.isNotEmpty)
-                SelectableText(item.content,
-                    style: const TextStyle(
-                        fontSize: 17, height: 1.8, color: LearningColors.ink)),
-              ...item.images.asMap().entries.map((entry) => Padding(
-                  padding: const EdgeInsets.only(top: 20),
-                  child: Semantics(
-                      image: true,
-                      label: '기록 사진 ${entry.key + 1}',
-                      child: CachedNetworkImage(
-                          imageUrl: entry.value,
-                          fit: BoxFit.contain,
-                          placeholder: (_, __) => const SizedBox(
-                              height: 120,
-                              child:
-                                  Center(child: CircularProgressIndicator())),
-                          errorWidget: (_, __, ___) => const Padding(
-                              padding: EdgeInsets.all(20),
-                              child: Text('사진을 불러오지 못했어요.',
-                                  style: learningBodyStyle)))))),
-              if (item.content.isEmpty && item.images.isEmpty)
-                const LearningEmpty(
-                    title: '내용이 비어 있는 기록이에요',
-                    message: '이 기록에는 글이나 사진이 남아 있지 않아요.'),
-              const SizedBox(height: 28),
-              const Text('나의 지난 기록 · 읽기 전용',
-                  style: TextStyle(fontSize: 12, color: LearningColors.muted)),
-            ]),
-          ));
+                    action: BsPrimaryButton(
+                        label: '다시 불러오기',
+                        onPressed: () =>
+                            ref.invalidate(archiveDetailProvider(diaryId))),
+                  ),
+                ),
+              ),
+              data: (item) => ListView(
+                padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
+                children: [
+                  Text(item.bookTitle, style: Bs.title),
+                  const SizedBox(height: 8),
+                  Text(_archiveDate(item.createdAt),
+                      style: Bs.text(14, color: Bs.g3)),
+                  const SizedBox(height: 24),
+                  if (item.content.isNotEmpty)
+                    SelectableText(item.content,
+                        style: Bs.text(16, color: Bs.g7, height: 1.8)),
+                  for (final (index, url) in item.images.indexed)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 20),
+                      child: Semantics(
+                        image: true,
+                        label: '기록 사진 ${index + 1}',
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(Bs.radius),
+                          child: CachedNetworkImage(
+                            imageUrl: url,
+                            fit: BoxFit.contain,
+                            placeholder: (_, __) => const SizedBox(
+                                height: 120,
+                                child: Center(
+                                    child: CircularProgressIndicator(
+                                        color: Bs.primary))),
+                            errorWidget: (_, __, ___) => Padding(
+                                padding: const EdgeInsets.all(20),
+                                child: Text('사진을 불러오지 못했어요.',
+                                    style: Bs.text(14, color: Bs.g3))),
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (item.content.isEmpty && item.images.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24),
+                      child: BsEmptyState(
+                          message:
+                              '내용이 비어 있는 기록이에요\n이 기록에는 글이나 사진이 남아 있지 않아요.'),
+                    ),
+                  const SizedBox(height: 28),
+                  Text('나의 지난 기록 · 읽기 전용', style: Bs.caption),
+                ],
+              ),
+            ),
+      );
 }
 
 String _archiveDate(DateTime? date) =>
