@@ -102,7 +102,8 @@ class _ReadingMapAllScreenState extends ConsumerState<ReadingMapAllScreen> {
     final books = graph.books;
     return SingleChildScrollView(
       controller: _scroll,
-      padding: const EdgeInsets.only(top: 14, bottom: 28),
+      padding: EdgeInsets.only(
+          top: 14, bottom: 28 + MediaQuery.paddingOf(context).bottom),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

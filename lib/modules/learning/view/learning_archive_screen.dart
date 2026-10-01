@@ -77,7 +77,8 @@ class _LearningArchiveScreenState extends ConsumerState<LearningArchiveScreen> {
           onRefresh: _load,
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
+            padding: EdgeInsets.fromLTRB(
+                16, 24, 16, 24 + MediaQuery.paddingOf(context).bottom),
             children: [
               Text('내가 남긴 기록 보관함', style: Bs.text(14, color: Bs.g3)),
               const SizedBox(height: 8),
@@ -237,7 +238,8 @@ class LearningArchiveDetailScreen extends ConsumerWidget {
                 ),
               ),
               data: (item) => ListView(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
+                padding: EdgeInsets.fromLTRB(
+                    16, 24, 16, 24 + MediaQuery.paddingOf(context).bottom),
                 children: [
                   Text(item.bookTitle, style: Bs.title),
                   const SizedBox(height: 8),

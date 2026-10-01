@@ -230,6 +230,10 @@ class BsScaffold extends StatelessWidget {
                 : null,
           ),
           child: SafeArea(
+            // Without a bottom bar the body runs under the home indicator as
+            // in the Figma frames; scrolling bodies add the bottom inset to
+            // their own end padding instead.
+            bottom: bottom != null,
             child: Column(
               children: [
                 BsTopBar(

@@ -29,7 +29,8 @@ class LearningSettingsScreen extends ConsumerWidget {
       showBack: true,
       onBack: () => context.canPop() ? context.pop() : context.go('/quiz'),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 26.5, 16, 24),
+        padding: EdgeInsets.fromLTRB(
+            16, 26.5, 16, 24 + MediaQuery.paddingOf(context).bottom),
         children: [
           _LoginCard(account: user is AuthSuccess ? user : null),
           _Section(title: '서비스', ios: ios, gap: 24.9, rows: [
