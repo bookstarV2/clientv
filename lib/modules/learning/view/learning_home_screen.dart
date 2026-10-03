@@ -63,7 +63,7 @@ class _LearningHomeScreenState extends ConsumerState<LearningHomeScreen> {
                 final shown = items.take(_carouselLimit).toList();
                 final Widget content;
                 if (shown.isEmpty) {
-                  content = _EmptyHome(onOpenMap: _openMap);
+                  content = const _EmptyHome();
                 } else {
                   final page = _page.clamp(0, shown.length - 1);
                   final carousel = _Carousel(
@@ -176,9 +176,7 @@ class _FirstBookHome extends StatelessWidget {
 
 /// 1.1 메인_Empty: nothing saved yet, the CTA starts a book search.
 class _EmptyHome extends StatelessWidget {
-  const _EmptyHome({required this.onOpenMap});
-
-  final VoidCallback onOpenMap;
+  const _EmptyHome();
 
   @override
   Widget build(BuildContext context) => ListView(
@@ -191,14 +189,12 @@ class _EmptyHome extends StatelessWidget {
           const SizedBox(height: 8),
           Text('읽고 싶은 책을 찾고 목차를 골라,\nAI 퀴즈를 풀어 보세요.',
               style: Bs.text(14, color: Bs.g3, height: 1.5, letterSpacing: 0)),
-          const SizedBox(height: 23.5),
-          const Center(child: BsCharacterImage(BsCharacter.books, width: 112)),
-          const SizedBox(height: 21.5),
+          const SizedBox(height: 100),
+          const Center(child: BsCharacterImage(BsCharacter.books, width: 125)),
+          const SizedBox(height: 40),
           BsPrimaryButton(
               label: '내 책으로 퀴즈 풀기',
               onPressed: () => context.push('/library/search')),
-          const SizedBox(height: 102),
-          ReadingMapPreview(mapHeight: 563, onOpen: onOpenMap),
         ],
       );
 }

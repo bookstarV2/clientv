@@ -181,7 +181,8 @@ void main() {
   testWidgets('1.1 메인_Empty', (tester) async {
     await captureBsScreen(
         tester, _home(books: const [], map: false), '1.1 메인_Empty');
-    expect(find.text('아직 읽은 책이 없어요'), findsOneWidget);
+    expect(find.byType(ReadingMapPreview), findsNothing);
+    expect(find.text('내 책으로 퀴즈 풀기'), findsOneWidget);
   });
 
   testWidgets('1.2 설정_Default (iOS)', (tester) async {
