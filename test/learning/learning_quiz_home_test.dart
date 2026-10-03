@@ -160,7 +160,7 @@ void main() {
       (tester) async {
     await pump(tester, books: const [], map: false);
     expect(find.text('읽고싶은 책이 있나요?'), findsOneWidget);
-    expect(find.text('아직 읽은 책이 없어요'), findsOneWidget);
+    expect(find.byType(ReadingMapPreview), findsNothing);
     await tapVisible(tester, find.text('내 책으로 퀴즈 풀기'));
     expect(find.text('destination /library/search'), findsOneWidget);
   });
