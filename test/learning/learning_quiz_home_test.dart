@@ -29,9 +29,6 @@ final _review = ReviewItem(
     due: false,
     nextReviewAt: DateTime.utc(2030));
 
-/// The visible book's title in the header (the placeholder cover repeats it).
-final _graph = StateProvider<ReadingGraph?>((ref) => null);
-
 Finder _header(String title) => find.byWidgetPredicate((widget) =>
     widget is Text && widget.data == title && widget.style?.fontSize == 20);
 
@@ -65,8 +62,7 @@ void main() {
         return books;
       }),
       readingGraphProvider.overrideWith((ref) async =>
-          ref.watch(_graph) ??
-          (map ? ReadingGraph.fromReviews([_review]) : const ReadingGraph([]))),
+          map ? ReadingGraph.fromReviews([_review]) : const ReadingGraph([])),
     ], child: MaterialApp.router(routerConfig: router)));
     await tester.pumpAndSettle();
   }
@@ -111,40 +107,15 @@ void main() {
     expect(find.text('destination /settings'), findsOneWidget);
   });
 
-  testWidgets('map data shows the reading map preview that opens the map tab',
+  testWidgets('map data does not add a map section to the quiz home',
       (tester) async {
     await pump(tester);
-    expect(find.byType(ReadingMapPreview), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('1권에서 쌓인 1개의 생각'), 200,
-        scrollable: find.byType(Scrollable).first);
-    await tester.pumpAndSettle();
-    expect(find.text('1권에서 쌓인 1개의 생각'), findsOneWidget);
-    final preview = find.byType(ReadingMapPreview);
-    await tester.ensureVisible(preview);
-    await tester.pumpAndSettle();
-    final rect = tester.getRect(preview);
-    await tester.tapAt(Offset(rect.center.dx, rect.top + 160));
-    await tester.pumpAndSettle();
-    expect(find.text('destination /map'), findsOneWidget);
-  });
-
-  testWidgets('switching to Default-1 keeps the book that was on screen',
-      (tester) async {
-    await pump(tester);
-    await tester.fling(find.byType(PageView), const Offset(-400, 0), 1500);
-    await tester.pumpAndSettle();
-    ProviderScope.containerOf(tester.element(find.byType(LearningHomeScreen)))
-        .read(_graph.notifier)
-        .state = const ReadingGraph([]);
-    await tester.pumpAndSettle();
     expect(find.byType(ReadingMapPreview), findsNothing);
-    expect(_header('작별인사'), findsOneWidget);
-    expect(tester.widget<PageView>(find.byType(PageView)).controller!.page, 1);
-    await tapVisible(tester, find.text('내 책으로 퀴즈 풀기'));
-    expect(find.text('destination /library/8/chapters'), findsOneWidget);
+    expect(find.text('독서 지도'), findsNothing);
+    expect(find.text('내 책으로 퀴즈 풀기'), findsOneWidget);
   });
 
-  testWidgets('books without map data use the Default-1 layout',
+  testWidgets('books without map data use the same layout',
       (tester) async {
     await pump(tester, map: false);
     expect(find.byType(ReadingMapPreview), findsNothing);

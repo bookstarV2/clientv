@@ -6,8 +6,8 @@ import '../data/reading_graph.dart';
 import 'bs_ui.dart';
 import 'reading_graph_canvas.dart';
 
-/// "독서 지도 / N권에서 쌓인 N개의 생각" header + map card used on the
-/// AI 퀴즈 home (1.1) and the 독서 지도 tab (4.1).
+/// "독서 지도 / N권에서 쌓인 N개의 생각" header + map card used on
+/// the 독서 지도 tab (4.1).
 class ReadingMapPreview extends ConsumerWidget {
   const ReadingMapPreview({super.key, this.mapHeight = 300, this.onOpen});
 
