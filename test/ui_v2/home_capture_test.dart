@@ -169,12 +169,6 @@ void main() {
   testWidgets('1.1 메인_Default', (tester) async {
     await captureBsScreen(
         tester, _home(books: _books, map: true), '1.1 메인_Default');
-    expect(find.text('3권에서 쌓인 6개의 생각'), findsOneWidget);
-  });
-
-  testWidgets('1.1 메인_Default-1', (tester) async {
-    await captureBsScreen(
-        tester, _home(books: _books, map: false), '1.1 메인_Default-1');
     expect(find.byType(ReadingMapPreview), findsNothing);
   });
 

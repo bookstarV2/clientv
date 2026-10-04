@@ -4,16 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/learning_repository.dart';
-import '../data/reading_graph.dart';
 import 'bs_ui.dart';
-import 'reading_map_preview.dart';
 
 /// Books shown in the 1.1 carousel; the rest are one tap away in 전체 보기.
 const _carouselLimit = 5;
 
-/// 1.1 메인 (AI 퀴즈 tab). `Default`: book carousel, single CTA and the
-/// 독서 지도 preview. `Default-1`: the same books before any answered quiz has
-/// built the map (bigger cover, no map section). `Empty`: no book saved yet.
+/// 1.1 메인 (AI 퀴즈 tab): book carousel and a single CTA.
+/// The reading map has its own bottom-navigation tab.
 class LearningHomeScreen extends ConsumerStatefulWidget {
   const LearningHomeScreen({super.key});
 
@@ -25,19 +22,15 @@ class _LearningHomeScreenState extends ConsumerState<LearningHomeScreen> {
   int _page = 0;
 
   Future<void> _refresh() async {
-    ref.invalidate(readingGraphProvider);
     ref.invalidate(learningBooksProvider);
     try {
       await ref.read(learningBooksProvider.future);
     } catch (_) {}
   }
 
-  void _openMap() => context.go('/map');
-
   @override
   Widget build(BuildContext context) {
     final books = ref.watch(learningBooksProvider);
-    final map = ref.watch(readingGraphProvider);
     return ColoredBox(
       color: Bs.bg,
       child: Column(
@@ -74,9 +67,7 @@ class _LearningHomeScreenState extends ConsumerState<LearningHomeScreen> {
                     onStart: () => context
                         .push('/library/${shown[page].challengeId}/chapters'),
                   );
-                  content = map.valueOrNull?.nodes.isEmpty == true
-                      ? _FirstBookHome(carousel: carousel)
-                      : _BookHome(carousel: carousel, onOpenMap: _openMap);
+                  content = _BookHome(carousel: carousel);
                 }
                 return RefreshIndicator(
                     color: Bs.primary, onRefresh: _refresh, child: content);
@@ -89,7 +80,7 @@ class _LearningHomeScreenState extends ConsumerState<LearningHomeScreen> {
   }
 }
 
-/// Current carousel state shared by the Default and Default-1 layouts.
+/// Current carousel state.
 class _Carousel {
   const _Carousel({
     required this.books,
@@ -120,38 +111,9 @@ class _Carousel {
       );
 }
 
-/// 1.1 메인_Default.
+/// 1.1 메인_Default: books with no map section.
 class _BookHome extends StatelessWidget {
-  const _BookHome({required this.carousel, required this.onOpenMap});
-
-  final _Carousel carousel;
-  final VoidCallback onOpenMap;
-
-  @override
-  Widget build(BuildContext context) => ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.only(
-            top: 26.5, bottom: MediaQuery.paddingOf(context).bottom + 24),
-        children: [
-          _BookHeader(book: carousel.book, onAll: carousel.onAll),
-          const SizedBox(height: 11.5),
-          carousel.covers(138),
-          const SizedBox(height: 22),
-          Center(child: carousel.dots()),
-          const SizedBox(height: 33),
-          carousel.cta(),
-          const SizedBox(height: 43),
-          Padding(
-            padding: Bs.pagePadding,
-            child: ReadingMapPreview(mapHeight: 563, onOpen: onOpenMap),
-          ),
-        ],
-      );
-}
-
-/// 1.1 메인_Default-1: books but no reading-map data yet.
-class _FirstBookHome extends StatelessWidget {
-  const _FirstBookHome({required this.carousel});
+  const _BookHome({required this.carousel});
 
   final _Carousel carousel;
 
@@ -267,7 +229,7 @@ class _BookHeader extends StatelessWidget {
 }
 
 /// Swipeable covers. Each layout owns its controller, starting from the page
-/// shown before a Default ↔ Default-1 switch.
+/// shown while the carousel stays mounted.
 class _CoverPager extends StatefulWidget {
   const _CoverPager(
       {required this.books,

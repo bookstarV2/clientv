@@ -73,36 +73,18 @@ void main() {
     });
   }
 
-  testWidgets(
-      'map failure never blocks quiz home and retry restores secondary map',
-      (tester) async {
+  testWidgets('quiz home does not fetch reading map data', (tester) async {
     var calls = 0;
     await _pump(tester, const LearningHomeScreen(), overrides: [
       learningBooksProvider.overrideWith((ref) async => [_book]),
       readingGraphProvider.overrideWith((ref) async {
-        if (++calls == 1) throw StateError('map unavailable');
-        return ReadingGraph.fromReviews([
-          ReviewItem(
-              bookId: 5,
-              quizId: 1,
-              chapterId: 2,
-              chapterTitle: '목차',
-              bookTitle: _title,
-              bookCover: '',
-              question: '질문',
-              reviewCount: 0,
-              due: false,
-              nextReviewAt: DateTime.utc(2030))
-        ]);
+        calls++;
+        throw StateError('map unavailable');
       }),
     ]);
     await _reveal(tester, find.text('내 책으로 퀴즈 풀기'));
     expect(find.text('내 책으로 퀴즈 풀기').hitTestable(), findsOneWidget);
-    await _reveal(tester, find.text('다시 불러오기'));
-    await tester.tap(find.text('다시 불러오기'));
-    await tester.pumpAndSettle();
-    expect(calls, 2);
-    await _reveal(tester, find.text('1권에서 쌓인 1개의 생각'));
+    expect(calls, 0);
     expect(tester.takeException(), isNull);
   });
 
