@@ -27,7 +27,7 @@ TestFlight **외부 베타 심사**와 App Store **정식 앱 심사**는 별개
 | --- | --- | --- |
 | 11 | [App Store Connect · iOS 버전](https://appstoreconnect.apple.com/apps/6818694367/distribution/ios/version/inflight) | 업로드된 빌드의 앱 버전과 스토어 버전을 맞추고 빌드를 선택한다. `1.0.17 (410)`을 선택할 경우 스토어 버전도 `1.0.17`이어야 한다. |
 | 12 | 같은 화면의 `미리보기 및 스크린샷` | iPhone 6.5형에 [실제 앱 캡처 4장](북스타-AppStore-스크린샷)을 순서대로 올린다. 각 이미지 크기는 `1284×2778` PNG다. 스크린샷은 시뮬레이터에서 앱을 열고 `xcrun simctl io <기기 UUID> screenshot <파일.png>`로 다시 만들 수 있다. |
-| 13 | 같은 화면의 앱 설명 및 왼쪽 `앱 정보`, `앱 심사`, `앱이 수집하는 개인정보`, `앱의 손쉬운 사용` | 설명·키워드·지원 URL·저작권·카테고리·연령 등급·개인정보 처리방침·데이터 수집 정보·심사 연락처와 로그인 방법을 실제 앱 동작에 맞게 입력한다. |
+| 13 | 같은 화면의 앱 설명 및 왼쪽 `앱 정보`, `앱 심사`, [`앱이 수집하는 개인정보`](https://developer.apple.com/help/app-store-connect/manage-app-information/manage-app-privacy), `앱의 손쉬운 사용` | 설명·키워드·지원 URL·저작권·카테고리·연령 등급·공개 개인정보 처리방침 URL·데이터 수집 정보·심사 연락처를 실제 앱 동작에 맞게 입력한다. 계정 기능의 심사를 위해 [활성 데모 계정 또는 전체 기능 데모 모드](https://developer.apple.com/app-store/review/guidelines/)를 제공한다. |
 | 14 | [App Store Connect · iOS 버전](https://appstoreconnect.apple.com/apps/6818694367/distribution/ios/version/inflight) | `저장` → `심사에 추가` → 제출 항목을 확인하고 `앱 심사에 제출`을 누른다. 제출 후 버전 상태가 `심사 대기 중`인지 확인한다. |
 
-2026-10-04 현재 정식 App Store 심사는 아직 제출되지 않았다. 6.5형 스크린샷 4장은 준비됐고, App Store Connect 로그인 복구 후 메타데이터 입력과 업로드가 필요하다.
+2026-10-04 현재 정식 App Store 심사는 아직 제출되지 않았다. 6.5형 스크린샷 4장은 준비됐고, App Store Connect 재로그인 후 업로드 완료 여부를 확인해야 한다. 스토어 버전은 `1.0.17`로 바꾸고 심사 승인 후 **수동 출시**를 선택했다. 공개 개인정보 처리방침 URL과 심사용 계정 정보도 확인이 필요하다.
