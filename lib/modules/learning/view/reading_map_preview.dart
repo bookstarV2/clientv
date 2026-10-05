@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/reading_graph.dart';
+import '../data/reading_map_remote.dart';
 import 'bs_ui.dart';
 import 'reading_graph_canvas.dart';
 
@@ -20,6 +21,8 @@ class ReadingMapPreview extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(readingGraphProvider);
+    final links = ref.watch(readingMapStateProvider).valueOrNull?.links ??
+        const <ReadingMapLink>[];
     final retrying = state.hasError;
     final title = state.when(
       skipLoadingOnRefresh: !retrying,
@@ -67,7 +70,7 @@ class ReadingMapPreview extends ConsumerWidget {
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
                         child: ReadingGraphCanvas(
-                            graph: graph, interactive: false),
+                            graph: graph, links: links, interactive: false),
                       ),
                     ),
                   ),

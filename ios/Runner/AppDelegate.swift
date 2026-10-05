@@ -8,7 +8,7 @@ import SwiftUI
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
-    private let CHANNEL = "com.company.bookstar/control"
+    private let CHANNEL = "com.sunwon.bookstar/control"
 
     override func application(
         _ application: UIApplication,

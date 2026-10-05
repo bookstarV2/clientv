@@ -72,6 +72,9 @@ ios/Flutter/Keys.xcconfig
 
 .claude/**
 docs/**
+!docs/기획/
+!docs/기획/목차퀴즈-사상-연결-독서지도.md
+!docs/기획/독서지도-포인트-요청형-생성-스펙.md
 
 # Android keystore files
 key.properties
@@ -83,3 +86,6 @@ coverage/
 
 # FVM Version Cache
 .fvm/
+
+# Local account credentials (never commit)
+/.env
