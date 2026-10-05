@@ -9,11 +9,16 @@ import '../../modules/auth/view_model/auth_view_model.dart';
 
 part 'dio_client.g.dart';
 
+String get apiBaseUrl {
+  const override = String.fromEnvironment('API_BASE_URL');
+  return override.isNotEmpty ? override : dotenv.env['BASE_URL']!;
+}
+
 @Riverpod(keepAlive: true)
 Dio dioClient(Ref ref) {
   final dio = Dio(
     BaseOptions(
-      baseUrl: dotenv.env['BASE_URL']!,
+      baseUrl: apiBaseUrl,
       connectTimeout: const Duration(seconds: 5),
       receiveTimeout: const Duration(seconds: 30),
       contentType: 'application/json',
@@ -29,7 +34,7 @@ Dio dioClient(Ref ref) {
 Dio baseDio(Ref ref) {
   return Dio(
     BaseOptions(
-      baseUrl: dotenv.env['BASE_URL']!,
+      baseUrl: apiBaseUrl,
       connectTimeout: const Duration(seconds: 5),
       receiveTimeout: const Duration(seconds: 30),
       contentType: 'application/json',
@@ -38,36 +43,64 @@ Dio baseDio(Ref ref) {
 }
 
 class CustomInterceptor extends Interceptor {
+  static const _sessionKey = 'bookstar.authSessionVersion';
   final Ref _ref;
 
   CustomInterceptor(this._ref);
+
+  bool _isCurrent(RequestOptions options) =>
+      options.cancelToken?.isCancelled != true &&
+      options.extra[_sessionKey] ==
+          _ref.read(authViewModelProvider.notifier).sessionVersion;
+
+  DioException _staleRequest(RequestOptions options) => DioException(
+        requestOptions: options,
+        type: DioExceptionType.cancel,
+        message: 'The request belongs to an ended session or was cancelled.',
+      );
 
   @override
   Future<void> onRequest(
       RequestOptions options, RequestInterceptorHandler handler) async {
     if (kDebugMode) {
-      dev.log('[DIO] REQUEST: ${options.method} ${options.path}', name: 'NETWORK');
+      dev.log('[DIO] REQUEST: ${options.method} ${options.path}',
+          name: 'NETWORK');
     }
-    
-    if (options.path == '/login') {
-      // login은 토큰이 없어도 가능
-    } else {
-      final tokens = await _ref.read(authViewModelProvider.notifier).getTokens();
-      if (tokens.accessToken != null) {
-        if (options.path == '/renew') {
-          options.headers['Authorization'] = 'Bearer ${tokens.refreshToken}';
-        } else {
-          options.headers['Authorization'] = 'Bearer ${tokens.accessToken}';
+
+    final auth = _ref.read(authViewModelProvider.notifier);
+    options.extra[_sessionKey] = auth.sessionVersion;
+    try {
+      if (options.path != '/login') {
+        final tokens = await auth.getTokens();
+        if (!_isCurrent(options)) {
+          return handler.reject(_staleRequest(options));
+        }
+        if (tokens.accessToken != null) {
+          options.headers['Authorization'] = options.path == '/renew'
+              ? 'Bearer ${tokens.refreshToken}'
+              : 'Bearer ${tokens.accessToken}';
         }
       }
+      if (!_isCurrent(options)) {
+        return handler.reject(_staleRequest(options));
+      }
+      handler.next(options);
+    } catch (_) {
+      handler.reject(DioException(
+          requestOptions: options,
+          message: 'Session credentials unavailable.'));
     }
-    super.onRequest(options, handler);
   }
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
+    if (!_isCurrent(response.requestOptions)) {
+      return handler.reject(_staleRequest(response.requestOptions));
+    }
     if (kDebugMode) {
-      dev.log('[DIO] RESPONSE: ${response.statusCode} ${response.requestOptions.path}', name: 'NETWORK');
+      dev.log(
+          '[DIO] RESPONSE: ${response.statusCode} ${response.requestOptions.path}',
+          name: 'NETWORK');
     }
     super.onResponse(response, handler);
   }
@@ -76,25 +109,36 @@ class CustomInterceptor extends Interceptor {
   Future<void> onError(
       DioException err, ErrorInterceptorHandler handler) async {
     if (kDebugMode) {
-      dev.log('[DIO] ERROR: ${err.response?.statusCode} ${err.requestOptions.path}', name: 'NETWORK');
+      dev.log(
+          '[DIO] ERROR: ${err.response?.statusCode} ${err.requestOptions.path}',
+          name: 'NETWORK');
     }
 
+    if (!_isCurrent(err.requestOptions)) {
+      return handler.next(_staleRequest(err.requestOptions));
+    }
     if (err.response?.statusCode == 401 &&
         err.requestOptions.path != '/login' &&
         err.requestOptions.path != '/renew') {
-      final newAuthData =
-          await _ref.read(authViewModelProvider.notifier).refreshToken();
-
-      if (newAuthData != null) {
-        final options = err.requestOptions;
-        options.headers['Authorization'] = 'Bearer ${newAuthData.accessToken}';
-
-        try {
-          final response = await _ref.read(baseDioProvider).fetch(options);
-          return handler.resolve(response);
-        } on DioException catch (e) {
-          return handler.next(e);
+      final options = err.requestOptions;
+      try {
+        final newAuthData =
+            await _ref.read(authViewModelProvider.notifier).refreshToken();
+        if (!_isCurrent(options)) {
+          return handler.next(_staleRequest(options));
         }
+        if (newAuthData == null) return handler.next(err);
+        options.headers['Authorization'] = 'Bearer ${newAuthData.accessToken}';
+        final response = await _ref.read(baseDioProvider).fetch(options);
+        if (!_isCurrent(options)) {
+          return handler.next(_staleRequest(options));
+        }
+        return handler.resolve(response);
+      } on DioException catch (error) {
+        return handler
+            .next(_isCurrent(options) ? error : _staleRequest(options));
+      } catch (_) {
+        return handler.next(err);
       }
     }
     super.onError(err, handler);

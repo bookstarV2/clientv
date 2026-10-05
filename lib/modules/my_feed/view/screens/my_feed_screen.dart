@@ -195,6 +195,7 @@ class _MyFeedScreenState extends BaseScreenState<MyFeedScreen> {
                   alignment: Alignment.topCenter,
                   child: ProfileSpeechBubble(
                       text: bookLog.profile.introduction,
+                      isMyProfile: true,
                       onTap: () => _onTapBubble(
                           nickName: bookLog.profile.nickName,
                           profileImageUrl: bookLog.profile.profileImageUrl,

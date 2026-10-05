@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 @riverpod
 SocialLoginService socialLoginService(Ref ref) {
@@ -66,7 +66,8 @@ class SocialLoginService {
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
-      final GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
+      final GoogleSignInAuthentication? googleAuth =
+          await googleUser?.authentication;
 
       // final credential = GoogleAuthProvider.credential(
       //   accessToken: googleAuth?.accessToken,
@@ -74,7 +75,6 @@ class SocialLoginService {
       // );
 
       return googleAuth?.idToken;
-
     } catch (e) {
       debugPrint('[ERROR] loginWithGoogle: $e');
 
@@ -84,11 +84,10 @@ class SocialLoginService {
 
   Future<String?> loginWithApple() async {
     try {
-      final appleProvider = AppleAuthProvider();
-
-      final userCredential = await FirebaseAuth.instance.signInWithProvider(appleProvider);
-
-      return userCredential.user?.getIdToken();
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: [AppleIDAuthorizationScopes.email],
+      );
+      return credential.identityToken;
     } catch (e) {
       debugPrint('[ERROR] loginWithApple: $e');
 
