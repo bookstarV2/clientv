@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../data/reading_graph.dart';
+import '../data/reading_map_remote.dart';
 import 'bs_ui.dart';
 
 /// Book colors of the v2 reading map (Figma 4.2 "지도 속 책" dots).
@@ -26,7 +27,8 @@ Color readingBookColor(ReadingGraph graph, int bookId) {
 }
 
 /// Share image (1080×1350) of the whole map with its title and counts.
-Future<Uint8List> renderReadingGraphImage(ReadingGraph graph) async {
+Future<Uint8List> renderReadingGraphImage(ReadingGraph graph,
+    {List<ReadingMapLink> links = const []}) async {
   final recorder = ui.PictureRecorder();
   final canvas = Canvas(recorder)..scale(3);
   canvas.drawColor(Bs.bg, BlendMode.src);
@@ -63,7 +65,7 @@ Future<Uint8List> renderReadingGraphImage(ReadingGraph graph) async {
   canvas.save();
   canvas.translate(card.left + 8, card.top + 8);
   final mapSize = Size(card.width - 16, card.height - 16);
-  ReadingGraphPainter(ReadingGraphLayout(graph, mapSize))
+  ReadingGraphPainter(ReadingGraphLayout(graph, mapSize), links: links)
       .paint(canvas, mapSize);
   canvas.restore();
   text(
@@ -103,12 +105,14 @@ class ReadingGraphCanvas extends StatefulWidget {
     this.onSelected,
     this.interactive = true,
     this.zoomable = false,
+    this.links = const [],
   });
   final ReadingGraph graph;
   final String? selectedId;
   final ValueChanged<ReadingNode>? onSelected;
   final bool interactive;
   final bool zoomable;
+  final List<ReadingMapLink> links;
 
   @override
   State<ReadingGraphCanvas> createState() => _ReadingGraphCanvasState();
@@ -149,7 +153,8 @@ class _ReadingGraphCanvasState extends State<ReadingGraphCanvas> {
           final layout = ReadingGraphLayout(graph, size);
           Widget picture = CustomPaint(
             size: size,
-            painter: ReadingGraphPainter(layout, selectedId: widget.selectedId),
+            painter: ReadingGraphPainter(layout,
+                selectedId: widget.selectedId, links: widget.links),
           );
           final onSelected = widget.onSelected;
           if (widget.interactive && onSelected != null) {
@@ -227,9 +232,10 @@ class ReadingGraphLayout {
 }
 
 class ReadingGraphPainter extends CustomPainter {
-  ReadingGraphPainter(this.layout, {this.selectedId});
+  ReadingGraphPainter(this.layout, {this.selectedId, this.links = const []});
   final ReadingGraphLayout layout;
   final String? selectedId;
+  final List<ReadingMapLink> links;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -268,6 +274,20 @@ class ReadingGraphPainter extends CustomPainter {
               ? colors[node.bookId]!.withValues(alpha: chapter ? .8 : .55)
               : _mutedEdge
           ..strokeWidth = (chapter ? 1.6 : 1.1) * scale
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+
+    for (final link in links) {
+      final first = layout.positions['q${link.quizAId}'];
+      final second = layout.positions['q${link.quizBId}'];
+      if (first == null || second == null) continue;
+      canvas.drawLine(
+        first,
+        second,
+        Paint()
+          ..color = Bs.primary.withValues(alpha: .65)
+          ..strokeWidth = 2.2 * scale
           ..strokeCap = StrokeCap.round,
       );
     }
@@ -384,5 +404,7 @@ class ReadingGraphPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant ReadingGraphPainter oldDelegate) =>
-      oldDelegate.layout != layout || oldDelegate.selectedId != selectedId;
+      oldDelegate.layout != layout ||
+      oldDelegate.selectedId != selectedId ||
+      oldDelegate.links != links;
 }

@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../data/learning_footprint.dart';
 import '../data/learning_repository.dart';
 import '../data/reading_graph.dart';
+import '../data/reading_map_remote.dart';
 import 'bs_ui.dart';
 import 'learning_chapters_screen.dart';
 import 'learning_report_screen.dart';
@@ -108,6 +109,7 @@ class _LearningQuizScreenState extends ConsumerState<LearningQuizScreen> {
       ref.invalidate(finishedLearningBooksProvider);
       ref.invalidate(learningFootprintProvider);
       ref.invalidate(readingGraphProvider);
+      ref.invalidate(readingMapStateProvider);
       if (widget.challengeId != null) {
         ref.invalidate(learningChaptersProvider(widget.challengeId!));
       }
@@ -304,6 +306,11 @@ class _LearningQuizScreenState extends ConsumerState<LearningQuizScreen> {
             label: result.isCorrect ? '정답이에요.' : '아쉬워요. 정답을 확인해 보세요.',
             child: BsExplanationCard(body: _explanation(result)),
           ),
+          if (result.earnedPoints > 0) ...[
+            const SizedBox(height: 12),
+            Text('+${result.earnedPoints}P · 독서지도에서 사용할 수 있어요',
+                style: Bs.text(14, weight: FontWeight.w600, color: Bs.primary)),
+          ],
         ],
       ],
     );

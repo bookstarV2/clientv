@@ -426,12 +426,14 @@ class LearningQuizResult {
     required this.choiceResults,
     this.nextReviewAt,
     this.reviewCount = 0,
+    this.earnedPoints = 0,
   });
 
   final bool isCorrect;
   final List<ChoiceResult> choiceResults;
   final DateTime? nextReviewAt;
   final int reviewCount;
+  final int earnedPoints;
 
   factory LearningQuizResult.fromJson(Map<String, dynamic> json) =>
       LearningQuizResult(
@@ -443,6 +445,7 @@ class LearningQuizResult {
             ? null
             : DateTime.parse(json['nextReviewAt'] as String),
         reviewCount: (json['reviewCount'] as num?)?.toInt() ?? 0,
+        earnedPoints: (json['earnedPoints'] as num?)?.toInt() ?? 0,
       );
 }
 

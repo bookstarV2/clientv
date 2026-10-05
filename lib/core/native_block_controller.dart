@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 
 class NativeBlockController {
-  static const MethodChannel _channel = MethodChannel('com.company.bookstar/control');
+  static const MethodChannel _channel = MethodChannel('com.sunwon.bookstar/control');
 
   /// 네이티브에 차단 모드 시작을 요청합니다.
   Future<void> startBlocking() async {

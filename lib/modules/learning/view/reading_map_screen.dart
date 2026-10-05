@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -8,6 +9,8 @@ import 'package:go_router/go_router.dart';
 import '../data/footprint_export.dart';
 import '../data/learning_access.dart';
 import '../data/reading_graph.dart';
+import '../data/reading_map_remote.dart';
+import '../data/learning_repository.dart';
 import 'bs_ui.dart';
 import 'reading_graph_canvas.dart';
 import 'reading_map_preview.dart';
@@ -23,8 +26,12 @@ class ReadingMapScreen extends ConsumerWidget {
           color: Bs.primary,
           onRefresh: () async {
             ref.invalidate(readingGraphProvider);
+            ref.invalidate(readingMapStateProvider);
             try {
-              await ref.read(readingGraphProvider.future);
+              await Future.wait([
+                ref.read(readingGraphProvider.future),
+                ref.read(readingMapStateProvider.future),
+              ]);
             } catch (_) {}
           },
           child: ListView(
@@ -59,10 +66,14 @@ class _ReadingMapAllScreenState extends ConsumerState<ReadingMapAllScreen> {
   int? _bookId;
   String? _chapterId;
   bool _exporting = false;
+  bool _requesting = false;
+  String? _mapError;
+  Timer? _pollTimer;
   int? _owner;
 
   @override
   void dispose() {
+    _pollTimer?.cancel();
     _scroll.dispose();
     super.dispose();
   }
@@ -76,6 +87,17 @@ class _ReadingMapAllScreenState extends ConsumerState<ReadingMapAllScreen> {
       _chapterId = null;
     }
     final state = ref.watch(readingGraphProvider);
+    final mapState = ref.watch(readingMapStateProvider);
+    ref.listen(readingMapStateProvider, (_, next) {
+      if (next.valueOrNull?.isWorking == true) {
+        _pollTimer ??= Timer.periodic(const Duration(seconds: 3), (_) {
+          if (mounted) ref.invalidate(readingMapStateProvider);
+        });
+      } else if (next.hasValue) {
+        _pollTimer?.cancel();
+        _pollTimer = null;
+      }
+    });
     return BsScaffold(
       showBack: true,
       title: '독서 지도',
@@ -91,12 +113,14 @@ class _ReadingMapAllScreenState extends ConsumerState<ReadingMapAllScreen> {
         ),
         data: (graph) => graph.nodes.isEmpty
             ? const ReadingMapMessage.empty()
-            : _content(graph),
+            : _content(graph, mapState.valueOrNull,
+                mapLoading: mapState.isLoading, mapFailed: mapState.hasError),
       ),
     );
   }
 
-  Widget _content(ReadingGraph graph) {
+  Widget _content(ReadingGraph graph, ReadingMapState? mapState,
+      {required bool mapLoading, required bool mapFailed}) {
     final book = _bookId == null ? null : graph.nodeById('b$_bookId');
     final chapter = book == null ? null : graph.nodeById(_chapterId);
     final books = graph.books;
@@ -148,6 +172,7 @@ class _ReadingMapAllScreenState extends ConsumerState<ReadingMapAllScreen> {
               ],
             ),
           ),
+          _mapControls(mapState, loading: mapLoading, failed: mapFailed),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 22, 16, 0),
             child: Container(
@@ -157,12 +182,21 @@ class _ReadingMapAllScreenState extends ConsumerState<ReadingMapAllScreen> {
                   color: Bs.white, borderRadius: BorderRadius.circular(18)),
               child: ReadingGraphCanvas(
                 graph: graph,
+                links: mapState?.links ?? const [],
                 selectedId: chapter?.id ?? book?.id,
                 onSelected: _selectNode,
                 zoomable: true,
               ),
             ),
           ),
+          if (mapState != null && mapState.links.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 24, 16, 10),
+              child:
+                  Text('이어진 생각', style: Bs.text(18, weight: FontWeight.w700)),
+            ),
+            for (final link in mapState.links) _connectionCard(graph, link),
+          ],
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 32.5, 16, 5),
             child: Text('지도 속 책',
@@ -179,6 +213,156 @@ class _ReadingMapAllScreenState extends ConsumerState<ReadingMapAllScreen> {
               child: _panel(graph, book, chapter),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _mapControls(ReadingMapState? state,
+      {required bool loading, required bool failed}) {
+    if (state == null) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
+        child: failed
+            ? BsSecondaryButton(
+                label: '포인트 다시 불러오기',
+                onPressed: () => ref.invalidate(readingMapStateProvider))
+            : const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      );
+    }
+    final creating = state.version == 0;
+    final cost = creating ? state.createCost : state.refreshCost;
+    final canRequest = !state.isWorking &&
+        !_requesting &&
+        state.balance >= cost &&
+        (creating ? state.answeredQuizCount >= 2 : state.hasNewQuizzes);
+    final label = creating ? '지도 만들기 · ${cost}P' : '지도 갱신하기 · ${cost}P';
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+            color: Bs.white, borderRadius: BorderRadius.circular(18)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('내 포인트 ${state.balance}P',
+                style: Bs.text(16, weight: FontWeight.w700)),
+            const SizedBox(height: 5),
+            Text(_mapHint(state, cost),
+                style: Bs.text(13, color: Bs.g3, height: 1.5)),
+            if (_mapError != null) ...[
+              const SizedBox(height: 8),
+              Text(_mapError!, style: Bs.text(13, color: Bs.primary)),
+            ],
+            const SizedBox(height: 14),
+            BsPrimaryButton(
+              label: state.isWorking ? '생각을 연결하고 있어요' : label,
+              loading: _requesting || (loading && state.isWorking),
+              onPressed: canRequest ? () => _requestMap(state) : null,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _mapHint(ReadingMapState state, int cost) {
+    if (state.isWorking) return '앱을 나가도 작업은 계속돼요. 완료되면 지도가 갱신됩니다.';
+    if (state.status == 'FAILED') return '작업이 실패해 포인트를 돌려드렸어요. 다시 시도할 수 있어요.';
+    if (state.status == 'NO_LINK') {
+      return '이번 기록에서 확인할 수 있는 연결이 없어 포인트를 돌려드렸어요.';
+    }
+    if (state.version == 0 && state.answeredQuizCount < 2) {
+      return '퀴즈를 2개 이상 풀면 생각 연결을 만들 수 있어요.';
+    }
+    if (state.version > 0 && !state.hasNewQuizzes) {
+      return '새 퀴즈를 풀면 지도를 갱신할 수 있어요.';
+    }
+    if (state.balance < cost) return '포인트가 부족해요. 퀴즈를 풀어 모아 보세요.';
+    return '최근 최대 40개 퀴즈를 분석해요. 실패하거나 연결이 없으면 돌려드려요.';
+  }
+
+  Future<void> _requestMap(ReadingMapState state) async {
+    final creating = state.version == 0;
+    final cost = creating ? state.createCost : state.refreshCost;
+    final approved = await showBsConfirmDialog(
+      context,
+      title: creating ? '독서지도를 만들까요?' : '독서지도를 갱신할까요?',
+      message: '${cost}P를 사용해 푼 퀴즈의 생각을 연결해요.\n실패하거나 연결이 없으면 포인트를 돌려드려요.',
+      confirmLabel: creating ? '지도 만들기' : '지도 갱신하기',
+    );
+    if (approved != true || !mounted) return;
+    setState(() {
+      _requesting = true;
+      _mapError = null;
+    });
+    try {
+      await ref.read(readingMapRemoteProvider).request(
+          LearningRepository.newRequestId(), creating ? 'CREATE' : 'REFRESH');
+      ref.invalidate(readingMapStateProvider);
+    } catch (_) {
+      if (mounted) {
+        ref.invalidate(readingMapStateProvider);
+        setState(() => _mapError = '요청 상태를 확인하고 있어요. 잠시 후 다시 확인해 주세요.');
+      }
+    } finally {
+      if (mounted) setState(() => _requesting = false);
+    }
+  }
+
+  Widget _connectionCard(ReadingGraph graph, ReadingMapLink link) {
+    final first = graph.nodeById('q${link.quizAId}');
+    final second = graph.nodeById('q${link.quizBId}');
+    if (first == null || second == null) return const SizedBox.shrink();
+    final title = switch (link.type) {
+      'SAME_CONCEPT' => '같은 개념',
+      'COMPLEMENTS' => '서로 보완하는 생각',
+      'CONTRASTS' => '다른 관점',
+      'PREREQUISITE' => '먼저 이해할 생각',
+      _ => '이어진 생각',
+    };
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+            color: Bs.white, borderRadius: BorderRadius.circular(16)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title,
+                style: Bs.text(14, weight: FontWeight.w700, color: Bs.primary)),
+            const SizedBox(height: 8),
+            Text(link.reason, style: Bs.text(15, color: Bs.g7, height: 1.5)),
+            const SizedBox(height: 10),
+            Text('${first.bookTitle} · ${first.label}',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Bs.text(13, color: Bs.g3)),
+            const SizedBox(height: 3),
+            Text('${second.bookTitle} · ${second.label}',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Bs.text(13, color: Bs.g3)),
+            const SizedBox(height: 8),
+            Text('① ${link.supportA}',
+                style: Bs.text(13, color: Bs.g5, height: 1.4)),
+            const SizedBox(height: 3),
+            Text('② ${link.supportB}',
+                style: Bs.text(13, color: Bs.g5, height: 1.4)),
+            const SizedBox(height: 10),
+            Row(children: [
+              TextButton(
+                  onPressed: () =>
+                      context.push('/review/quiz/${first.chapterId}'),
+                  child: const Text('첫 퀴즈 복습')),
+              TextButton(
+                  onPressed: () =>
+                      context.push('/review/quiz/${second.chapterId}'),
+                  child: const Text('두 번째 퀴즈 복습')),
+            ]),
+          ],
+        ),
       ),
     );
   }
@@ -392,7 +576,9 @@ class _ReadingMapAllScreenState extends ConsumerState<ReadingMapAllScreen> {
     if (approved != true || !stillOwner()) return;
     setState(() => _exporting = true);
     try {
-      final bytes = await renderReadingGraphImage(graph);
+      final links = ref.read(readingMapStateProvider).valueOrNull?.links ??
+          const <ReadingMapLink>[];
+      final bytes = await renderReadingGraphImage(graph, links: links);
       if (!stillOwner()) return;
       final box =
           (_shareKey.currentContext ?? context).findRenderObject() as RenderBox;
