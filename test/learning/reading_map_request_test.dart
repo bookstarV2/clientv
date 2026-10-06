@@ -97,9 +97,9 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    expect(find.text('내 포인트 20P'), findsOneWidget);
-    expect(find.text('지도 만들기 20P · 선 다시 연결하기 10P'), findsOneWidget);
-    await tester.tap(find.text('지도 만들기'));
+    expect(find.text('보유 포인트 20P'), findsOneWidget);
+    expect(find.text('지도 만들기 · 20P'), findsOneWidget);
+    await tester.tap(find.text('지도 만들기 · 20P'));
     await tester.pumpAndSettle();
     expect(find.text('지도 만들기 · 20P'), findsOneWidget);
 
@@ -131,7 +131,7 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    expect(find.text('내 포인트 20P'), findsOneWidget);
+    expect(find.text('보유 포인트 20P'), findsOneWidget);
     expect(find.text('지도 만들기 · 20P'), findsOneWidget);
     expect(find.text('책 추가하기'), findsOneWidget);
   });
@@ -221,7 +221,7 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    expect(find.text('내 포인트 20P'), findsOneWidget);
+    expect(find.text('보유 포인트 20P'), findsOneWidget);
     await tester.tap(find.text('지도 만들기 · 20P'));
     await tester.pumpAndSettle();
     expect(remote.requests, 0);
@@ -230,7 +230,7 @@ void main() {
 
     expect(remote.requests, 1);
     expect(remote.requestedMode, 'CREATE');
-    expect(find.text('내 포인트 0P'), findsOneWidget);
+    expect(find.text('보유 포인트 0P'), findsOneWidget);
     await tester.ensureVisible(find.text('두 생각이 서로 보완해요.'));
     expect(find.text('두 생각이 서로 보완해요.'), findsOneWidget);
     expect(find.text('① 첫 근거'), findsOneWidget);

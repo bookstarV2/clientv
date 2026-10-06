@@ -224,6 +224,11 @@ class _LearningQuizScreenState extends ConsumerState<LearningQuizScreen> {
                                   context, quiz.chapter.quizId),
                         ),
                       ),
+                      if (_result != null)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                          child: _pointResult(_result!),
+                        ),
                       Expanded(
                         child: loading
                             ? const Center(
@@ -306,13 +311,49 @@ class _LearningQuizScreenState extends ConsumerState<LearningQuizScreen> {
             label: result.isCorrect ? '정답이에요.' : '아쉬워요. 정답을 확인해 보세요.',
             child: BsExplanationCard(body: _explanation(result)),
           ),
-          if (result.earnedPoints > 0) ...[
-            const SizedBox(height: 12),
-            Text('+${result.earnedPoints}P · 독서지도에서 사용할 수 있어요',
-                style: Bs.text(14, weight: FontWeight.w600, color: Bs.primary)),
-          ],
         ],
       ],
+    );
+  }
+
+  Widget _pointResult(LearningQuizResult result) {
+    final earned = result.earnedPoints > 0;
+    return Semantics(
+      liveRegion: true,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Bs.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: earned ? Bs.primary : Bs.surface),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(earned ? '퀴즈 포인트 적립 완료' : '복습 완료',
+                      style: Bs.text(16, weight: FontWeight.w700)),
+                  const SizedBox(height: 4),
+                  Text(
+                      earned
+                          ? '독서 지도 만들기와 선 연결에 사용할 수 있어요.'
+                          : '포인트는 퀴즈 첫 풀이에 한 번 적립돼요.',
+                      style: Bs.text(13, color: Bs.g3, height: 1.4)),
+                ],
+              ),
+            ),
+            if (earned) ...[
+              const SizedBox(width: 8),
+              Text('+${result.earnedPoints}P',
+                  style:
+                      Bs.text(22, weight: FontWeight.w700, color: Bs.primary)),
+            ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -368,6 +409,11 @@ class _LearningQuizScreenState extends ConsumerState<LearningQuizScreen> {
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (!quiz.isReview && !_answered) ...[
+            Text('첫 풀이를 완료하면 포인트가 적립돼요.',
+                textAlign: TextAlign.center, style: Bs.text(13, color: Bs.g3)),
+            const SizedBox(height: 8),
+          ],
           if (_error != null) ...[
             Semantics(
               liveRegion: true,
