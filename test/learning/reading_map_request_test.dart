@@ -2,6 +2,7 @@ import 'package:bookstar/modules/learning/data/learning_access.dart';
 import 'package:bookstar/modules/learning/data/learning_repository.dart';
 import 'package:bookstar/modules/learning/data/reading_graph.dart';
 import 'package:bookstar/modules/learning/data/reading_map_remote.dart';
+import 'package:bookstar/modules/learning/view/reading_graph_canvas.dart';
 import 'package:bookstar/modules/learning/view/reading_map_screen.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -73,6 +74,135 @@ ReviewItem item(int id) => ReviewItem(
     );
 
 void main() {
+  testWidgets('map tab shows balance, both costs, and a settings entry',
+      (tester) async {
+    final remote = FakeMapRemote();
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (_, __) => const ReadingMapScreen()),
+      GoRoute(
+          path: '/map/all', builder: (_, __) => const ReadingMapAllScreen()),
+      GoRoute(
+          path: '/settings',
+          builder: (_, __) => const Scaffold(body: Text('설정 화면'))),
+    ]);
+    addTearDown(router.dispose);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        learningAccountProvider.overrideWithValue(1),
+        readingGraphProvider.overrideWith(
+            (ref) async => ReadingGraph.fromReviews([item(1), item(2)])),
+        readingMapRemoteProvider.overrideWithValue(remote),
+      ],
+      child: MaterialApp.router(routerConfig: router),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('내 포인트 20P'), findsOneWidget);
+    expect(find.text('지도 만들기 20P · 선 다시 연결하기 10P'), findsOneWidget);
+    await tester.tap(find.text('지도 만들기'));
+    await tester.pumpAndSettle();
+    expect(find.text('지도 만들기 · 20P'), findsOneWidget);
+
+    router.go('/');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('설정'));
+    await tester.pumpAndSettle();
+    expect(find.text('설정 화면'), findsOneWidget);
+  });
+
+  testWidgets('empty full map still shows points and creation cost',
+      (tester) async {
+    final remote = FakeMapRemote();
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (_, __) => const ReadingMapAllScreen()),
+      GoRoute(
+          path: '/library',
+          builder: (_, __) => const Scaffold(body: Text('서재'))),
+    ]);
+    addTearDown(router.dispose);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        learningAccountProvider.overrideWithValue(1),
+        readingGraphProvider
+            .overrideWith((ref) async => const ReadingGraph([])),
+        readingMapRemoteProvider.overrideWithValue(remote),
+      ],
+      child: MaterialApp.router(routerConfig: router),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('내 포인트 20P'), findsOneWidget);
+    expect(find.text('지도 만들기 · 20P'), findsOneWidget);
+    expect(find.text('책 추가하기'), findsOneWidget);
+  });
+
+  testWidgets('selected quiz shows only its own connection without scrolling',
+      (tester) async {
+    final remote = FakeMapRemote()
+      ..state = const ReadingMapState(
+        balance: 15,
+        createCost: 20,
+        refreshCost: 10,
+        answeredQuizCount: 3,
+        analyzedQuizCount: 3,
+        hasNewQuizzes: false,
+        status: 'SUCCEEDED',
+        jobId: 4,
+        version: 1,
+        links: [
+          ReadingMapLink(
+            quizAId: 1,
+            quizBId: 2,
+            type: 'COMPLEMENTS',
+            reason: '첫 번째 연결',
+            supportA: '근거 1',
+            supportB: '근거 2',
+          ),
+          ReadingMapLink(
+            quizAId: 2,
+            quizBId: 3,
+            type: 'COMPLEMENTS',
+            reason: '두 번째 연결',
+            supportA: '근거 2',
+            supportB: '근거 3',
+          ),
+        ],
+      );
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (_, __) => const ReadingMapAllScreen()),
+    ]);
+    addTearDown(router.dispose);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        learningAccountProvider.overrideWithValue(1),
+        readingGraphProvider.overrideWith((ref) async =>
+            ReadingGraph.fromReviews([item(1), item(2), item(3)])),
+        readingMapRemoteProvider.overrideWithValue(remote),
+      ],
+      child: MaterialApp.router(routerConfig: router),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('첫 번째 연결'), findsOneWidget);
+    expect(find.text('두 번째 연결'), findsOneWidget);
+
+    final canvas = find.byType(ReadingGraphCanvas);
+    final graph = tester.widget<ReadingGraphCanvas>(canvas).graph;
+    final layout = ReadingGraphLayout(graph, tester.getSize(canvas));
+    await tester.ensureVisible(canvas);
+    await tester.pumpAndSettle();
+    final scroll =
+        tester.state<ScrollableState>(find.byType(Scrollable).first).position;
+    final initialOffset = scroll.pixels;
+    await tester.tapAt(tester.getTopLeft(canvas) + layout.positions['q1']!);
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<ReadingGraphCanvas>(canvas).selectedId, 'q1');
+    expect(find.text('첫 번째 연결'), findsOneWidget);
+    expect(find.text('두 번째 연결'), findsNothing);
+    expect(find.text('선택한 생각의 연결'), findsOneWidget);
+    expect(scroll.pixels, initialOffset);
+  });
+
   testWidgets('user spends points to create a map and sees the relation card',
       (tester) async {
     final remote = FakeMapRemote();
