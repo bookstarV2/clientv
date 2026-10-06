@@ -76,14 +76,15 @@ class _ReadingMapCostCard extends ConsumerWidget {
         data: (map) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('내 포인트 ${map.balance}P',
+            Text('보유 포인트 ${map.balance}P',
                 style: Bs.text(18, weight: FontWeight.w700)),
             const SizedBox(height: 8),
-            Text('지도 만들기 ${map.createCost}P · 선 다시 연결하기 ${map.refreshCost}P',
-                style: Bs.text(14, color: Bs.g5)),
+            Text('퀴즈를 처음 풀면 포인트가 적립돼요.', style: Bs.text(14, color: Bs.g5)),
             const SizedBox(height: 12),
             BsPrimaryButton(
-              label: map.version == 0 ? '지도 만들기' : '선 다시 연결하기',
+              label: map.version == 0
+                  ? '지도 만들기 · ${map.createCost}P'
+                  : '선 다시 연결하기 · ${map.refreshCost}P',
               height: 44,
               onPressed: () => context.push('/map/all'),
             ),
@@ -340,7 +341,7 @@ class _ReadingMapAllScreenState extends ConsumerState<ReadingMapAllScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('내 포인트 ${state.balance}P',
+            Text('보유 포인트 ${state.balance}P',
                 style: Bs.text(16, weight: FontWeight.w700)),
             const SizedBox(height: 5),
             Text(_mapHint(state, cost),
