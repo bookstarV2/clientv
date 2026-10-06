@@ -283,14 +283,21 @@ void main() {
     final widget = tester.widget<ReadingGraphCanvas>(canvas);
     expect(widget.graph.books.map((node) => node.bookId), [1, 2]);
     final layout = ReadingGraphLayout(widget.graph, tester.getSize(canvas));
+    final scroll =
+        tester.state<ScrollableState>(find.byType(Scrollable).first).position;
     await tester.tapAt(tester.getTopLeft(canvas) + layout.positions['q202']!);
     await tester.pumpAndSettle();
-    expect(tester.widget<ReadingGraphCanvas>(canvas).selectedId, 'c22');
-    expect(find.text('풀어본 질문 202'), findsOneWidget);
+    expect(scroll.pixels, 0, reason: 'the first map tap keeps the map in view');
+    expect(tester.widget<ReadingGraphCanvas>(canvas).selectedId, 'q202');
+    expect(find.text('풀어본 질문 202'), findsNWidgets(2));
     expect(find.text('목차 22'), findsOneWidget);
     for (final other in [101, 102, 201]) {
       expect(find.text('풀어본 질문 $other'), findsNothing);
     }
+    await tester.tapAt(tester.getTopLeft(canvas) + layout.positions['q202']!);
+    await tester.pumpAndSettle();
+    expect(scroll.pixels, greaterThan(0),
+        reason: 'tapping the same map point again opens the details');
     await tester.tap(find.text('퀴즈 다시 풀기'));
     await tester.pumpAndSettle();
     expect(find.text('목차 열기 22'), findsOneWidget);
