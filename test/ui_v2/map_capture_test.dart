@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:bookstar/modules/learning/data/learning_access.dart';
 import 'package:bookstar/modules/learning/data/learning_repository.dart';
 import 'package:bookstar/modules/learning/data/reading_graph.dart';
+import 'package:bookstar/modules/learning/data/reading_map_remote.dart';
 import 'package:bookstar/modules/learning/view/bs_ui.dart';
 import 'package:bookstar/modules/learning/view/learning_shell.dart';
 import 'package:bookstar/modules/learning/view/reading_map_preview.dart';
@@ -60,6 +61,19 @@ Widget _app(Widget screen, ReadingGraph graph, {int? tab}) => ProviderScope(
       overrides: [
         learningAccountProvider.overrideWithValue(7),
         readingGraphProvider.overrideWith((ref) async => graph),
+        readingMapStateProvider
+            .overrideWith((ref) async => const ReadingMapState(
+                  balance: 35,
+                  createCost: 20,
+                  refreshCost: 10,
+                  answeredQuizCount: 6,
+                  analyzedQuizCount: 0,
+                  hasNewQuizzes: true,
+                  status: null,
+                  jobId: null,
+                  version: 0,
+                  links: [],
+                )),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

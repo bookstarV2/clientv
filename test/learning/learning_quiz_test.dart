@@ -137,6 +137,7 @@ class _QuizApi {
       data = {
         'isCorrect': body['choiceId'] == 2,
         'reviewCount': review ? 1 : 0,
+        'earnedPoints': options.path.endsWith('/submit') ? 10 : 0,
         'nextReviewAt': '2026-09-10T12:00:00.123456',
         'choiceResults': List.generate(
             4,
@@ -263,6 +264,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(api.submissions, hasLength(1));
     expect(api.submissions.single['choiceId'], 2);
+    await tester.scrollUntilVisible(find.text('왜 정답인가요?'), 180,
+        scrollable: find.byType(Scrollable).first, maxScrolls: 20);
     expect(find.text('왜 정답인가요?'), findsOneWidget);
     expect(find.text('해설 내용 2'), findsOneWidget);
     expect(_state(tester, api.choiceText(2)), BsOptionState.answer);
@@ -281,6 +284,8 @@ void main() {
     await _check(tester);
     expect(api.submissions, hasLength(2));
     expect(api.submissions.first, api.submissions.last);
+    await tester.scrollUntilVisible(find.text('해설 내용 2'), 180,
+        scrollable: find.byType(Scrollable).first, maxScrolls: 20);
     expect(find.text('해설 내용 2'), findsOneWidget);
     expect(_state(tester, api.choiceText(2)), BsOptionState.answer,
         reason: 'The correct answer carries the ring');
@@ -317,6 +322,11 @@ void main() {
             path.contains('challenge-submit')),
         isFalse);
     expect(api.submissions.single, {'choiceId': 2, 'challengeId': 30});
+    expect(find.text('퀴즈 포인트 적립 완료'), findsOneWidget);
+    expect(find.text('+10P'), findsOneWidget);
+    expect(tester.getTopLeft(find.text('+10P')).dy,
+        lessThan(tester.getTopLeft(find.text('기억에서 떠올려 볼까요?')).dy),
+        reason: 'The reward must appear above the scrollable answer content.');
     expect(find.text('다른 퀴즈 풀기'), findsOneWidget);
     expect(find.text('이 퀴즈 다시 풀기'), findsOneWidget);
   });
@@ -335,6 +345,9 @@ void main() {
     await _choose(tester, api, 2);
     await _check(tester);
     expect(api.paths.last, 'POST /api/v3/quiz-reviews/20');
+    expect(find.text('복습 완료'), findsOneWidget);
+    expect(find.text('+10P'), findsNothing);
+    expect(find.text('포인트는 퀴즈 첫 풀이에 한 번 적립돼요.'), findsOneWidget);
     expect(api.submissions.last['choiceId'], 2);
     expect(api.submissions.last['requestId'], isA<String>());
     expect(_state(tester, api.choiceText(2)), BsOptionState.answer);

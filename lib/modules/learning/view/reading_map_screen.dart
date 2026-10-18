@@ -23,6 +23,11 @@ class ReadingMapScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) => BsScaffold(
         title: '독서 지도',
+        trailing: BsTopBarAction(
+          icon: 'ic_settings',
+          tooltip: '설정',
+          onPressed: () => context.push('/settings'),
+        ),
         body: RefreshIndicator(
           color: Bs.primary,
           onRefresh: () async {
@@ -39,16 +44,67 @@ class ReadingMapScreen extends ConsumerWidget {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(16, 27, 16, 24),
             children: [
-              _PointsLink(),
-              const SizedBox(height: 16),
+              const _ReadingMapCostCard(),
+              const SizedBox(height: 20),
               ReadingMapPreview(
-                mapHeight: 563,
+                mapHeight: 460,
                 onOpen: () => context.push('/map/all'),
               ),
             ],
           ),
         ),
       );
+}
+
+class _ReadingMapCostCard extends ConsumerWidget {
+  const _ReadingMapCostCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(readingMapStateProvider);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+          color: Bs.white, borderRadius: BorderRadius.circular(18)),
+      child: state.when(
+        skipLoadingOnRefresh: true,
+        loading: () => Text('포인트를 불러오고 있어요', style: Bs.text(14, color: Bs.g3)),
+        error: (_, __) => BsSecondaryButton(
+          label: '포인트 다시 불러오기',
+          onPressed: () => ref.invalidate(readingMapStateProvider),
+        ),
+        data: (map) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            InkWell(
+              onTap: () => context.push('/settings/points'),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(children: [
+                  Expanded(
+                      child: Text('내 포인트 ${map.balance}P',
+                          style: Bs.text(18, weight: FontWeight.w700))),
+                  Text('내역 보기', style: Bs.text(13, color: Bs.g3)),
+                  const Icon(Icons.chevron_right, color: Bs.g3, size: 20),
+                ]),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text('퀴즈 첫 풀이마다 10P를 받아요.', style: Bs.text(14, color: Bs.g5)),
+            const SizedBox(height: 12),
+            BsPrimaryButton(
+              label: map.version == 0
+                  ? '연결 만들기 · ${map.createCost}P'
+                  : '연결 추가하기 · ${map.refreshCost}P',
+              height: 44,
+              onPressed: () => context.push('/map/all'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 /// 4.2 독서 지도 전체보기: the whole map, its books (지도 속 책) and the
@@ -68,6 +124,7 @@ class _ReadingMapAllScreenState extends ConsumerState<ReadingMapAllScreen> {
   final _shareKey = GlobalKey();
   int? _bookId;
   String? _chapterId;
+  String? _selectedNodeId;
   bool _exporting = false;
   bool _requesting = false;
   String? _mapError;
@@ -88,6 +145,7 @@ class _ReadingMapAllScreenState extends ConsumerState<ReadingMapAllScreen> {
       _owner = owner;
       _bookId = null;
       _chapterId = null;
+      _selectedNodeId = null;
     }
     final state = ref.watch(readingGraphProvider);
     final mapState = ref.watch(readingMapStateProvider);
@@ -115,10 +173,8 @@ class _ReadingMapAllScreenState extends ConsumerState<ReadingMapAllScreen> {
           actionLabel: '다시 불러오기',
           onAction: () => ref.invalidate(readingGraphProvider),
         ),
-        data: (graph) => graph.nodes.isEmpty
-            ? const ReadingMapMessage.empty()
-            : _content(graph, mapState.valueOrNull,
-                mapLoading: mapState.isLoading, mapFailed: mapState.hasError),
+        data: (graph) => _content(graph, mapState.valueOrNull,
+            mapLoading: mapState.isLoading, mapFailed: mapState.hasError),
       ),
     );
   }
@@ -127,6 +183,13 @@ class _ReadingMapAllScreenState extends ConsumerState<ReadingMapAllScreen> {
       {required bool mapLoading, required bool mapFailed}) {
     final book = _bookId == null ? null : graph.nodeById('b$_bookId');
     final chapter = book == null ? null : graph.nodeById(_chapterId);
+    final selectedNode = graph.nodeById(_selectedNodeId);
+    final links = mapState?.links ?? const <ReadingMapLink>[];
+    final visibleLinks = selectedNode == null
+        ? links
+        : links
+            .where((link) => _linkTouchesNode(graph, link, selectedNode))
+            .toList();
     final books = graph.books;
     return SingleChildScrollView(
       controller: _scroll,
@@ -150,17 +213,18 @@ class _ReadingMapAllScreenState extends ConsumerState<ReadingMapAllScreen> {
                             letterSpacing: 0)),
                   ),
                 ),
-                IconButton(
-                  key: _shareKey,
-                  tooltip: '독서 지도 이미지로 공유',
-                  onPressed: _exporting ? null : () => _share(graph),
-                  icon: _exporting
-                      ? const SizedBox.square(
-                          dimension: 20,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Bs.primary))
-                      : const BsIcon('ic_share', size: 24, color: Bs.g5),
-                ),
+                if (graph.nodes.isNotEmpty)
+                  IconButton(
+                    key: _shareKey,
+                    tooltip: '독서 지도 이미지로 공유',
+                    onPressed: _exporting ? null : () => _share(graph),
+                    icon: _exporting
+                        ? const SizedBox.square(
+                            dimension: 20,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Bs.primary))
+                        : const BsIcon('ic_share', size: 24, color: Bs.g5),
+                  ),
               ],
             ),
           ),
@@ -184,22 +248,63 @@ class _ReadingMapAllScreenState extends ConsumerState<ReadingMapAllScreen> {
               clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
                   color: Bs.white, borderRadius: BorderRadius.circular(18)),
-              child: ReadingGraphCanvas(
-                graph: graph,
-                links: mapState?.links ?? const [],
-                selectedId: chapter?.id ?? book?.id,
-                onSelected: _selectNode,
-                zoomable: true,
-              ),
+              child: graph.nodes.isEmpty
+                  ? const ReadingMapMessage.empty()
+                  : Stack(
+                      children: [
+                        ReadingGraphCanvas(
+                          graph: graph,
+                          links: links,
+                          selectedId:
+                              selectedNode?.id ?? chapter?.id ?? book?.id,
+                          onSelected: (node) =>
+                              _selectNode(node, fromMap: true),
+                          zoomable: true,
+                        ),
+                        if (selectedNode != null)
+                          Positioned(
+                            left: 12,
+                            right: 12,
+                            bottom: 12,
+                            child: IgnorePointer(
+                                child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 9),
+                              decoration: BoxDecoration(
+                                color: Bs.white.withValues(alpha: .94),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(selectedNode.label,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style:
+                                          Bs.text(13, weight: FontWeight.w600)),
+                                  Text('같은 점을 다시 누르면 상세 기록으로 이동해요',
+                                      style: Bs.text(11, color: Bs.g3)),
+                                ],
+                              ),
+                            )),
+                          ),
+                      ],
+                    ),
             ),
           ),
-          if (mapState != null && mapState.links.isNotEmpty) ...[
+          if (mapState != null && links.isNotEmpty) ...[
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 10),
-              child:
-                  Text('이어진 생각', style: Bs.text(18, weight: FontWeight.w700)),
+              child: Text(selectedNode == null ? '이어진 생각' : '선택한 생각의 연결',
+                  style: Bs.text(18, weight: FontWeight.w700)),
             ),
-            for (final link in mapState.links) _connectionCard(graph, link),
+            if (visibleLinks.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text('이 생각과 연결된 퀴즈는 아직 없어요.',
+                    style: Bs.text(14, color: Bs.g3)),
+              ),
+            for (final link in visibleLinks) _connectionCard(graph, link),
           ],
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 32.5, 16, 5),
@@ -384,6 +489,26 @@ class _ReadingMapAllScreenState extends ConsumerState<ReadingMapAllScreen> {
     );
   }
 
+  bool _linkTouchesNode(
+      ReadingGraph graph, ReadingMapLink link, ReadingNode selected) {
+    for (final quizId in [link.quizAId, link.quizBId]) {
+      final quiz = graph.nodeById('q$quizId');
+      if (quiz == null) continue;
+      if (selected.kind == ReadingNodeKind.question && quiz.id == selected.id) {
+        return true;
+      }
+      if (selected.kind == ReadingNodeKind.chapter &&
+          quiz.parentId == selected.id) {
+        return true;
+      }
+      if (selected.kind == ReadingNodeKind.book &&
+          quiz.bookId == selected.bookId) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   Widget _count(int count, String label) => Text.rich(TextSpan(
         style: Bs.text(16, color: Bs.g3, letterSpacing: 0),
         children: [
@@ -534,8 +659,10 @@ class _ReadingMapAllScreenState extends ConsumerState<ReadingMapAllScreen> {
         ),
       );
 
-  void _selectNode(ReadingNode node) {
+  void _selectNode(ReadingNode node, {bool fromMap = false}) {
+    final repeatedMapTap = fromMap && _selectedNodeId == node.id;
     setState(() {
+      _selectedNodeId = node.id;
       _bookId = node.bookId;
       _chapterId = switch (node.kind) {
         ReadingNodeKind.book => null,
@@ -543,11 +670,12 @@ class _ReadingMapAllScreenState extends ConsumerState<ReadingMapAllScreen> {
         ReadingNodeKind.question => node.parentId,
       };
     });
-    _revealPanel();
+    if (!fromMap || repeatedMapTap) _revealPanel();
   }
 
   void _toggleBook(ReadingNode book) {
     setState(() {
+      _selectedNodeId = null;
       if (_bookId != book.bookId) {
         _bookId = book.bookId;
         _chapterId = null;
@@ -611,39 +739,5 @@ class _ReadingMapAllScreenState extends ConsumerState<ReadingMapAllScreen> {
     } finally {
       if (mounted) setState(() => _exporting = false);
     }
-  }
-}
-
-class _PointsLink extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(readingMapStateProvider);
-    return Material(
-      color: Bs.surface,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => context.push('/settings/points'),
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Row(children: [
-            Expanded(
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                  Text('내 포인트', style: Bs.text(14, color: Bs.g5)),
-                  const SizedBox(height: 4),
-                  Text(
-                      state.valueOrNull == null
-                          ? '포인트 내역 보기'
-                          : '${state.valueOrNull!.balance} P',
-                      style: Bs.text(22,
-                          weight: FontWeight.w700, color: Bs.primary)),
-                ])),
-            const Icon(Icons.chevron_right, color: Bs.g3),
-          ]),
-        ),
-      ),
-    );
   }
 }
