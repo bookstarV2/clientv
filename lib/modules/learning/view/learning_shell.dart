@@ -7,6 +7,7 @@ import '../data/learning_footprint.dart';
 import '../data/learning_repository.dart';
 import '../data/reading_graph.dart';
 import '../data/reading_map_remote.dart';
+import '../data/reading_points.dart';
 import 'bs_ui.dart';
 import 'learning_design.dart';
 
@@ -55,6 +56,7 @@ class _LearningShellState extends ConsumerState<LearningShell>
     ref.invalidate(reviewedQuizzesProvider);
     ref.invalidate(readingGraphProvider);
     ref.invalidate(readingMapStateProvider);
+    ref.invalidate(readingPointsProvider);
     ref.invalidate(learningFootprintProvider);
   }
 

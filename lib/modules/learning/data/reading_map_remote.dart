@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'learning_access.dart';
+import 'reading_points.dart';
 
 final readingMapRemoteProvider = Provider<ReadingMapRemote>(
   (ref) => ReadingMapRemote(ref.watch(dioClientProvider)),
@@ -19,6 +20,15 @@ final readingMapStateProvider =
 class ReadingMapRemote {
   const ReadingMapRemote(this._dio);
   final Dio _dio;
+
+  Future<ReadingPoints> points({int? cursor}) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/api/v3/learning/me/points',
+      queryParameters: {if (cursor != null) 'cursor': cursor},
+    );
+    return ReadingPoints.fromJson(
+        response.data!['data'] as Map<String, dynamic>);
+  }
 
   Future<ReadingMapState> get() async {
     final response =

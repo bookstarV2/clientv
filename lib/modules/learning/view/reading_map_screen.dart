@@ -10,6 +10,7 @@ import '../data/footprint_export.dart';
 import '../data/learning_access.dart';
 import '../data/reading_graph.dart';
 import '../data/reading_map_remote.dart';
+import '../data/reading_points.dart';
 import '../data/learning_repository.dart';
 import 'bs_ui.dart';
 import 'reading_graph_canvas.dart';
@@ -38,6 +39,8 @@ class ReadingMapScreen extends ConsumerWidget {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(16, 27, 16, 24),
             children: [
+              _PointsLink(),
+              const SizedBox(height: 16),
               ReadingMapPreview(
                 mapHeight: 563,
                 onOpen: () => context.push('/map/all'),
@@ -89,6 +92,7 @@ class _ReadingMapAllScreenState extends ConsumerState<ReadingMapAllScreen> {
     final state = ref.watch(readingGraphProvider);
     final mapState = ref.watch(readingMapStateProvider);
     ref.listen(readingMapStateProvider, (_, next) {
+      if (next.hasValue) ref.invalidate(readingPointsProvider);
       if (next.valueOrNull?.isWorking == true) {
         _pollTimer ??= Timer.periodic(const Duration(seconds: 3), (_) {
           if (mounted) ref.invalidate(readingMapStateProvider);
@@ -235,7 +239,7 @@ class _ReadingMapAllScreenState extends ConsumerState<ReadingMapAllScreen> {
         !_requesting &&
         state.balance >= cost &&
         (creating ? state.answeredQuizCount >= 2 : state.hasNewQuizzes);
-    final label = creating ? '지도 만들기 · ${cost}P' : '지도 갱신하기 · ${cost}P';
+    final label = creating ? '연결 만들기 · ${cost}P' : '연결 추가하기 · ${cost}P';
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
       child: Container(
@@ -245,8 +249,19 @@ class _ReadingMapAllScreenState extends ConsumerState<ReadingMapAllScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('내 포인트 ${state.balance}P',
-                style: Bs.text(16, weight: FontWeight.w700)),
+            InkWell(
+              onTap: () => context.push('/settings/points'),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(children: [
+                  Expanded(
+                      child: Text('내 포인트 ${state.balance}P',
+                          style: Bs.text(16, weight: FontWeight.w700))),
+                  Text('내역 보기', style: Bs.text(13, color: Bs.g3)),
+                  const Icon(Icons.chevron_right, color: Bs.g3, size: 20),
+                ]),
+              ),
+            ),
             const SizedBox(height: 5),
             Text(_mapHint(state, cost),
                 style: Bs.text(13, color: Bs.g3, height: 1.5)),
@@ -276,10 +291,12 @@ class _ReadingMapAllScreenState extends ConsumerState<ReadingMapAllScreen> {
       return '퀴즈를 2개 이상 풀면 생각 연결을 만들 수 있어요.';
     }
     if (state.version > 0 && !state.hasNewQuizzes) {
-      return '새 퀴즈를 풀면 지도를 갱신할 수 있어요.';
+      return '새 퀴즈를 풀면 연결을 추가할 수 있어요.';
     }
-    if (state.balance < cost) return '포인트가 부족해요. 퀴즈를 풀어 모아 보세요.';
-    return '최근 최대 40개 퀴즈를 분석해요. 실패하거나 연결이 없으면 돌려드려요.';
+    if (state.balance < cost) {
+      return '${cost - state.balance}P가 더 필요해요. 퀴즈 첫 풀이마다 10P를 모아 보세요.';
+    }
+    return '최근 최대 40개 퀴즈에서 관련된 생각을 연결해요. 기존 연결은 유지하고, 새 연결이 없으면 포인트를 돌려드려요.';
   }
 
   Future<void> _requestMap(ReadingMapState state) async {
@@ -287,9 +304,9 @@ class _ReadingMapAllScreenState extends ConsumerState<ReadingMapAllScreen> {
     final cost = creating ? state.createCost : state.refreshCost;
     final approved = await showBsConfirmDialog(
       context,
-      title: creating ? '독서지도를 만들까요?' : '독서지도를 갱신할까요?',
-      message: '${cost}P를 사용해 푼 퀴즈의 생각을 연결해요.\n실패하거나 연결이 없으면 포인트를 돌려드려요.',
-      confirmLabel: creating ? '지도 만들기' : '지도 갱신하기',
+      title: creating ? '생각을 연결할까요?' : '새 연결을 추가할까요?',
+      message: '${cost}P를 사용해 푼 퀴즈의 생각을 연결해요.\n실패하거나 새 연결이 없으면 포인트를 돌려드려요.',
+      confirmLabel: creating ? '연결 만들기' : '연결 추가하기',
     );
     if (approved != true || !mounted) return;
     setState(() {
@@ -594,5 +611,39 @@ class _ReadingMapAllScreenState extends ConsumerState<ReadingMapAllScreen> {
     } finally {
       if (mounted) setState(() => _exporting = false);
     }
+  }
+}
+
+class _PointsLink extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(readingMapStateProvider);
+    return Material(
+      color: Bs.surface,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => context.push('/settings/points'),
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Row(children: [
+            Expanded(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                  Text('내 포인트', style: Bs.text(14, color: Bs.g5)),
+                  const SizedBox(height: 4),
+                  Text(
+                      state.valueOrNull == null
+                          ? '포인트 내역 보기'
+                          : '${state.valueOrNull!.balance} P',
+                      style: Bs.text(22,
+                          weight: FontWeight.w700, color: Bs.primary)),
+                ])),
+            const Icon(Icons.chevron_right, color: Bs.g3),
+          ]),
+        ),
+      ),
+    );
   }
 }

@@ -34,6 +34,7 @@ class LearningSettingsScreen extends ConsumerWidget {
         children: [
           _LoginCard(account: user is AuthSuccess ? user : null),
           _Section(title: '서비스', ios: ios, gap: 24.9, rows: [
+            ('내 포인트', () => context.push('/settings/points')),
             ('나의 지난 독서 기록', () => context.push('/settings/archive')),
             (
               'AI 퀴즈 이용 안내',

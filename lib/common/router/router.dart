@@ -18,6 +18,7 @@ import 'package:bookstar/modules/learning/view/learning_report_screen.dart';
 import 'package:bookstar/modules/learning/view/learning_review_screen.dart';
 import 'package:bookstar/modules/learning/view/learning_search_screen.dart';
 import 'package:bookstar/modules/learning/view/learning_settings_screen.dart';
+import 'package:bookstar/modules/learning/view/learning_points_screen.dart';
 import 'package:bookstar/modules/learning/view/learning_shell.dart';
 import 'package:bookstar/modules/learning/view/reading_map_screen.dart';
 import 'package:bookstar/modules/my_page/view/screens/delete_account_screen.dart';
@@ -133,6 +134,9 @@ GoRouter router(Ref ref) {
           path: '/settings',
           builder: (_, __) => const LearningSettingsScreen(),
           routes: [
+            GoRoute(
+                path: 'points',
+                builder: (_, __) => const LearningPointsScreen()),
             GoRoute(
                 path: 'notifications',
                 builder: (_, __) => const LearningNotificationSettingsScreen()),

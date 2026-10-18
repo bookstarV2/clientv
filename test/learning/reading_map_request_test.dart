@@ -15,9 +15,9 @@ class FakeMapRemote extends ReadingMapRemote {
   int requests = 0;
   String? requestedMode;
   ReadingMapState state = const ReadingMapState(
-    balance: 20,
-    createCost: 20,
-    refreshCost: 10,
+    balance: 100,
+    createCost: 100,
+    refreshCost: 100,
     answeredQuizCount: 2,
     analyzedQuizCount: 0,
     hasNewQuizzes: true,
@@ -36,8 +36,8 @@ class FakeMapRemote extends ReadingMapRemote {
     requestedMode = mode;
     state = const ReadingMapState(
       balance: 0,
-      createCost: 20,
-      refreshCost: 10,
+      createCost: 100,
+      refreshCost: 100,
       answeredQuizCount: 2,
       analyzedQuizCount: 2,
       hasNewQuizzes: false,
@@ -91,11 +91,11 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    expect(find.text('내 포인트 20P'), findsOneWidget);
-    await tester.tap(find.text('지도 만들기 · 20P'));
+    expect(find.text('내 포인트 100P'), findsOneWidget);
+    await tester.tap(find.text('연결 만들기 · 100P'));
     await tester.pumpAndSettle();
     expect(remote.requests, 0);
-    await tester.tap(find.text('지도 만들기').last);
+    await tester.tap(find.text('연결 만들기').last);
     await tester.pumpAndSettle();
 
     expect(remote.requests, 1);

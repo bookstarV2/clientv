@@ -9,6 +9,7 @@ import '../data/learning_footprint.dart';
 import '../data/learning_repository.dart';
 import '../data/reading_graph.dart';
 import '../data/reading_map_remote.dart';
+import '../data/reading_points.dart';
 import 'bs_ui.dart';
 import 'learning_chapters_screen.dart';
 import 'learning_report_screen.dart';
@@ -110,6 +111,7 @@ class _LearningQuizScreenState extends ConsumerState<LearningQuizScreen> {
       ref.invalidate(learningFootprintProvider);
       ref.invalidate(readingGraphProvider);
       ref.invalidate(readingMapStateProvider);
+      ref.invalidate(readingPointsProvider);
       if (widget.challengeId != null) {
         ref.invalidate(learningChaptersProvider(widget.challengeId!));
       }

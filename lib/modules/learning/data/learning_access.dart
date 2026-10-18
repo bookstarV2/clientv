@@ -29,6 +29,9 @@ String learningReturnPath(String? candidate) {
       path == '/library' ||
       path == '/review' ||
       path == '/settings' ||
+      path == '/settings/points' ||
+      path == '/map' ||
+      path == '/map/all' ||
       path == '/library/search' ||
       path == '/library/footprint' ||
       path == '/settings/archive' ||
