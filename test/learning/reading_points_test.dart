@@ -84,10 +84,25 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('110 P'), findsOneWidget);
     expect(find.text('100P'), findsNWidgets(2));
+    await tester.scrollUntilVisible(find.text('퀴즈 첫 풀이 적립'), 250);
+    expect(find.text('퀴즈 첫 풀이 적립'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('지도 연결 포인트 반환'), 250);
     expect(find.text('+100P'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('-100P'), 150);
     expect(find.text('지도 연결 요청'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('keeps the newest debit when it is the only history entry',
+      (tester) async {
+    await tester.pumpWidget(ProviderScope(overrides: [
+      learningAccountProvider.overrideWithValue(1),
+      readingPointsProvider.overrideWith((ref) async =>
+          wallet(balance: 0, items: [entry(1, 'MAP_RESERVE', -100)])),
+    ], child: const MaterialApp(home: LearningPointsScreen())));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('지도 연결 요청'), 250);
+    expect(find.text('-100P'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

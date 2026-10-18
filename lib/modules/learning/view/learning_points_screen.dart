@@ -114,8 +114,9 @@ class _LearningPointsScreenState extends ConsumerState<LearningPointsScreen> {
   Widget _content(ReadingPoints wallet) {
     final cursor = _older.isEmpty ? wallet.nextCursor : _nextCursor;
     final ids = <int>{};
-    final entries =
-        [...wallet.items, ..._older].where((entry) => ids.add(entry.id));
+    final entries = [...wallet.items, ..._older]
+        .where((entry) => ids.add(entry.id))
+        .toList();
     return RefreshIndicator(
       color: Bs.primary,
       onRefresh: _refresh,
