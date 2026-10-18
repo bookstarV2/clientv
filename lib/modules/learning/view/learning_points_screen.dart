@@ -23,6 +23,7 @@ class _LearningPointsScreenState extends ConsumerState<LearningPointsScreen> {
   bool _loadingMore = false;
   String? _pageError;
   int _generation = 0;
+  ReadingPoints? _firstPage;
 
   Future<void> _refresh() async {
     setState(() {
@@ -83,6 +84,15 @@ class _LearningPointsScreenState extends ConsumerState<LearningPointsScreen> {
       _pageError = null;
     }
     final points = ref.watch(readingPointsProvider);
+    final firstPage = points.valueOrNull;
+    if (firstPage != null && !identical(firstPage, _firstPage)) {
+      _firstPage = firstPage;
+      _generation++;
+      _older.clear();
+      _nextCursor = null;
+      _loadingMore = false;
+      _pageError = null;
+    }
     return BsScaffold(
       title: '내 포인트',
       showBack: true,

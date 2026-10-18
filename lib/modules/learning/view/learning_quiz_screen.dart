@@ -412,7 +412,7 @@ class _LearningQuizScreenState extends ConsumerState<LearningQuizScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (!quiz.isReview && !_answered) ...[
-            Text('첫 풀이를 완료하면 포인트가 적립돼요.',
+            Text('첫 풀이를 완료하면 10P가 적립돼요.',
                 textAlign: TextAlign.center, style: Bs.text(13, color: Bs.g3)),
             const SizedBox(height: 8),
           ],

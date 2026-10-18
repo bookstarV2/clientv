@@ -29,6 +29,7 @@ class _Auth extends AuthViewModel {
 }
 
 const _destinations = [
+  '/settings/points',
   '/settings/archive',
   '/preview',
   '/settings/notifications',
@@ -99,17 +100,18 @@ void main() {
       (tester) async {
     await pump(tester);
     expect(chevrons(), findsNothing);
-    expect(find.byType(Divider), findsNWidgets(7));
+    expect(find.byType(Divider), findsNWidgets(8));
   });
 
   testWidgets('iOS follows 1.2: chevrons, separators only inside groups',
       (tester) async {
     await pump(tester, platform: TargetPlatform.iOS);
-    expect(chevrons(), findsNWidgets(7));
-    expect(find.byType(Divider), findsNWidgets(4));
+    expect(chevrons(), findsNWidgets(8));
+    expect(find.byType(Divider), findsNWidgets(5));
   });
 
   for (final (label, path) in [
+    ('내 포인트', '/settings/points'),
     ('나의 지난 독서 기록', '/settings/archive'),
     ('퀴즈 체험 다시 보기', '/preview'),
     ('알림 설정', '/settings/notifications'),

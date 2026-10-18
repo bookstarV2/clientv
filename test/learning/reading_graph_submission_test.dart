@@ -174,6 +174,8 @@ void main() {
 
     repository.submitGate!.complete();
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('왜 정답인가요?'), 200,
+        scrollable: find.byType(Scrollable).last);
     expect(find.text('왜 정답인가요?'), findsOneWidget);
     expect(repository.reviewLoads, 2);
     final refreshed = _renderedGraph(tester, skipOffstage: false);
