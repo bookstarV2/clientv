@@ -67,44 +67,67 @@ class _ReadingMapCostCard extends ConsumerWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
           color: Bs.white, borderRadius: BorderRadius.circular(18)),
-      child: state.when(
-        skipLoadingOnRefresh: true,
-        loading: () => Text('포인트를 불러오고 있어요', style: Bs.text(14, color: Bs.g3)),
-        error: (_, __) => BsSecondaryButton(
-          label: '포인트 다시 불러오기',
-          onPressed: () => ref.invalidate(readingMapStateProvider),
-        ),
-        data: (map) => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            InkWell(
-              onTap: () => context.push('/settings/points'),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(children: [
-                  Expanded(
-                      child: Text('내 포인트 ${map.balance}P',
-                          style: Bs.text(18, weight: FontWeight.w700))),
-                  Text('내역 보기', style: Bs.text(13, color: Bs.g3)),
-                  const Icon(Icons.chevron_right, color: Bs.g3, size: 20),
-                ]),
-              ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _PointsHistoryEntry(balance: state.valueOrNull?.balance),
+          const SizedBox(height: 8),
+          state.when(
+            skipLoadingOnRefresh: true,
+            loading: () =>
+                Text('포인트를 불러오고 있어요', style: Bs.text(14, color: Bs.g3)),
+            error: (_, __) => BsSecondaryButton(
+              label: '포인트 다시 불러오기',
+              onPressed: () => ref.invalidate(readingMapStateProvider),
             ),
-            const SizedBox(height: 8),
-            Text('퀴즈 첫 풀이마다 10P를 받아요.', style: Bs.text(14, color: Bs.g5)),
-            const SizedBox(height: 12),
-            BsPrimaryButton(
-              label: map.version == 0
-                  ? '연결 만들기 · ${map.createCost}P'
-                  : '연결 추가하기 · ${map.refreshCost}P',
-              height: 44,
-              onPressed: () => context.push('/map/all'),
+            data: (map) => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('퀴즈 첫 풀이마다 10P를 받아요.', style: Bs.text(14, color: Bs.g5)),
+                const SizedBox(height: 12),
+                BsPrimaryButton(
+                  label: map.version == 0
+                      ? '연결 만들기 · ${map.createCost}P'
+                      : '연결 추가하기 · ${map.refreshCost}P',
+                  height: 44,
+                  onPressed: () => context.push('/map/all'),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
+}
+
+class _PointsHistoryEntry extends StatelessWidget {
+  const _PointsHistoryEntry({this.balance, this.fontSize = 18});
+
+  final int? balance;
+  final double fontSize;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        child: InkWell(
+          onTap: () => context.push('/settings/points'),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(children: [
+                Expanded(
+                  child: Text(balance == null ? '내 포인트' : '내 포인트 ${balance}P',
+                      style: Bs.text(fontSize, weight: FontWeight.w700)),
+                ),
+                Text('내역 보기', style: Bs.text(13, color: Bs.g3)),
+                const BsIcon('ic_chevron_right', color: Bs.g3, size: 20),
+              ]),
+            ),
+          ),
+        ),
+      );
 }
 
 /// 4.2 독서 지도 전체보기: the whole map, its books (지도 속 책) and the
@@ -331,11 +354,24 @@ class _ReadingMapAllScreenState extends ConsumerState<ReadingMapAllScreen> {
     if (state == null) {
       return Padding(
         padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
-        child: failed
-            ? BsSecondaryButton(
-                label: '포인트 다시 불러오기',
-                onPressed: () => ref.invalidate(readingMapStateProvider))
-            : const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+              color: Bs.white, borderRadius: BorderRadius.circular(18)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const _PointsHistoryEntry(fontSize: 16),
+              const SizedBox(height: 5),
+              if (failed)
+                BsSecondaryButton(
+                    label: '포인트 다시 불러오기',
+                    onPressed: () => ref.invalidate(readingMapStateProvider))
+              else
+                Text('포인트를 불러오고 있어요', style: Bs.text(13, color: Bs.g3)),
+            ],
+          ),
+        ),
       );
     }
     final creating = state.version == 0;
@@ -354,19 +390,7 @@ class _ReadingMapAllScreenState extends ConsumerState<ReadingMapAllScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            InkWell(
-              onTap: () => context.push('/settings/points'),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(children: [
-                  Expanded(
-                      child: Text('내 포인트 ${state.balance}P',
-                          style: Bs.text(16, weight: FontWeight.w700))),
-                  Text('내역 보기', style: Bs.text(13, color: Bs.g3)),
-                  const Icon(Icons.chevron_right, color: Bs.g3, size: 20),
-                ]),
-              ),
-            ),
+            _PointsHistoryEntry(balance: state.balance, fontSize: 16),
             const SizedBox(height: 5),
             Text(_mapHint(state, cost),
                 style: Bs.text(13, color: Bs.g3, height: 1.5)),

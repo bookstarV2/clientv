@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bookstar/modules/learning/data/learning_access.dart';
 import 'package:bookstar/modules/learning/data/learning_repository.dart';
 import 'package:bookstar/modules/learning/data/reading_graph.dart';
@@ -74,6 +76,49 @@ ReviewItem item(int id) => ReviewItem(
     );
 
 void main() {
+  for (final detail in [false, true]) {
+    for (final failed in [false, true]) {
+      testWidgets(
+          'points history stays accessible in ${detail ? 'full map' : 'map tab'} while ${failed ? 'failed' : 'loading'}',
+          (tester) async {
+        tester.view.physicalSize = const Size(375, 812);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final pending = Completer<ReadingMapState>();
+        final router = GoRouter(routes: [
+          GoRoute(
+              path: '/',
+              builder: (_, __) => detail
+                  ? const ReadingMapAllScreen()
+                  : const ReadingMapScreen()),
+          GoRoute(
+              path: '/settings/points',
+              builder: (_, __) => const Scaffold(body: Text('포인트 내역 화면'))),
+        ]);
+        addTearDown(router.dispose);
+        await tester.pumpWidget(ProviderScope(
+          overrides: [
+            learningAccountProvider.overrideWithValue(1),
+            readingGraphProvider.overrideWith(
+                (ref) async => ReadingGraph.fromReviews([item(1), item(2)])),
+            readingMapStateProvider.overrideWith((ref) => failed
+                ? Future<ReadingMapState>.error(StateError('offline'))
+                : pending.future),
+          ],
+          child: MaterialApp.router(routerConfig: router),
+        ));
+        await tester.pumpAndSettle();
+        expect(find.text('내역 보기'), findsOneWidget);
+        expect(find.text('내 포인트 0P'), findsNothing);
+        await tester.tap(find.text('내역 보기'));
+        await tester.pumpAndSettle();
+        expect(find.text('포인트 내역 화면'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      });
+    }
+  }
+
   testWidgets('map tab shows balance, both costs, and a settings entry',
       (tester) async {
     final remote = FakeMapRemote();
